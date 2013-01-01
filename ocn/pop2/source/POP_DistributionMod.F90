@@ -19,7 +19,7 @@
 
    use POP_KindsMod
 !  use POP_ErrorMod
-!  use POP_CommMod
+   use POP_CommMod
    use POP_BlocksMod
    
    use POP_SpaceCurveMod
@@ -119,7 +119,7 @@
 !
 !----------------------------------------------------------------------
 
-   errorCode = POP_Success
+   errorCode = 0
 
    select case (distrbMethod)
 
@@ -139,7 +139,7 @@
       newDistrb = POP_DistributionCreateCartesian(numProcs, &
                                               work_per_block, errorCode) 
       deallocate(work_per_block)
-      if (errorCode /= POP_Success) then
+      if (errorCode /= 0) then
          call LICOM_ErrorSet(errorCode, &
                'POP_DistributionCreate: error in cartesian create')
          return
@@ -162,7 +162,7 @@
                                              work_per_block, errorCode)
 
       deallocate(work_per_block)
-      if (errorCode /= POP_Success) then
+      if (errorCode /= 0) then
          call LICOM_ErrorSet(errorCode, &
                'POP_DistributionCreate: error in rake create')
          return
@@ -173,7 +173,7 @@
       newDistrb = POP_DistributionCreateSpacecurv(numProcs, &
                                              workPerBlock, errorCode)
 
-      if (errorCode /= POP_Success) then
+      if (errorCode /= 0) then
          call LICOM_ErrorSet(errorCode, &
                'POP_DistributionCreate: error in Spacecurve create')
          return
@@ -232,7 +232,7 @@
 !
 !----------------------------------------------------------------------
 
-   errorCode = POP_Success
+   errorCode = 0
 
    distribution%numProcs       = 0
    distribution%communicator   = 0
@@ -326,7 +326,7 @@
 !
 !-----------------------------------------------------------------------
 
-   errorCode = POP_Success
+   errorCode = 0
 
    if (present(numProcs))       numProcs       = distribution%numProcs
    if (present(communicator))   communicator   = distribution%communicator
@@ -411,7 +411,7 @@
 !
 !-----------------------------------------------------------------------
 
-   errorCode = POP_Success
+   errorCode = 0
 
    if (blockID < 0 .or. blockID > POP_numBlocks) then
       call LICOM_ErrorSet(errorCode, &
@@ -491,7 +491,7 @@
 !
 !-----------------------------------------------------------------------
 
-   errorCode = POP_Success
+   errorCode = 0
    blockID   = 0
    iLocal    = 0
    jLocal    = 0
@@ -500,7 +500,7 @@
 
       thisBlock = POP_BlocksGetBlock(iblock, errorCode)
 
-      if (errorCode /= POP_Success) then
+      if (errorCode /= 0) then
          call LICOM_ErrorSet(errorCode, &
             'POP_DistributionGetPointLoc: error retrieving block')
          return
@@ -596,7 +596,7 @@
 !
 !-----------------------------------------------------------------------
 
-   errorCode = POP_Success
+   errorCode = 0
 
    if (localID < 0 .or. localID > distribution%numLocalBlocks) then
       call LICOM_ErrorSet(errorCode, &
@@ -676,7 +676,7 @@
 !
 !----------------------------------------------------------------------
 
-   errorCode = POP_Success
+   errorCode = 0
 
    call POP_CommCreateCommunicator(newDistrb%communicator, numProcs)
 
@@ -691,7 +691,7 @@
    call POP_DistributionProcDecomp(numProcs, &
                                       numProcsX, numProcsY, errorCode)
 
-   if (errorCode /= POP_Success) then
+   if (errorCode /= 0) then
       call LICOM_ErrorSet(errorCode, &
         'POP_DistributionCreateCartesian: error in proc decomposition')
       return
@@ -881,7 +881,7 @@
 !  to avoid processors with no work
 !
 !----------------------------------------------------------------------
-   errorCode = POP_Success
+   errorCode = 0
    !------------------------------------------------------
    ! Space filling curves only work if:
    !
@@ -1152,11 +1152,11 @@
 !
 !----------------------------------------------------------------------
 
-   errorCode = POP_Success
+   errorCode = 0
 
    dist = POP_DistributionCreateCartesian(numProcs, &
                                     workPerBlock, errorCode)
-   if (errorCode /= POP_Success) then
+   if (errorCode /= 0) then
       call LICOM_ErrorSet(errorCode, &
          'POP_DistributionCreateRake: error creating initial dist')
       return
@@ -1215,7 +1215,7 @@
       call POP_DistributionRake (workTmp, procTmp, workPerBlock, &
                                  priority, dist, errorCode)
 
-      if (errorCode /= POP_Success) then 
+      if (errorCode /= 0) then 
          call LICOM_ErrorSet(errorCode, &
             'POP_DistributionCreateRake: error in linear rake')
          return
@@ -1241,7 +1241,7 @@
       call POP_DistributionProcDecomp(dist%numProcs, &
                                    numProcsX, numProcsY, errorCode)
 
-      if (errorCode /= POP_Success) then
+      if (errorCode /= 0) then
          call LICOM_ErrorSet(errorCode, &
            'POP_DistributionCreateRake: error in proc decomposition')
          return
@@ -1301,7 +1301,7 @@
          call POP_DistributionRake (workTmp, procTmp, workPerBlock, &
                                     priority, dist, errorCode)
 
-         if (errorCode /= POP_Success) then 
+         if (errorCode /= 0) then 
             call LICOM_ErrorSet(errorCode, &
                'POP_DistributionCreateRake: error in first rake')
             return
@@ -1362,7 +1362,7 @@
          call POP_DistributionRake (workTmp, procTmp, workPerBlock, &
                                     priority, dist, errorCode)
 
-         if (errorCode /= POP_Success) then 
+         if (errorCode /= 0) then 
             call LICOM_ErrorSet(errorCode, &
                'POP_DistributionCreateRake: error in second rake')
             return
@@ -1458,7 +1458,7 @@
 
    call POP_DistributionDestroy(dist, errorCode)
 
-   if (errorCode /= POP_Success) then
+   if (errorCode /= 0) then
       call LICOM_ErrorSet(errorCode, &
          'POP_DistributionCreateRake: error destroying temp distrib')
       return
@@ -1663,7 +1663,7 @@
 !
 !----------------------------------------------------------------------
 
-   errorCode = POP_Success
+   errorCode = 0
 
    numProcs  = size(procWork)
    numBlocks = size(blockWork)

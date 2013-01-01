@@ -56,4 +56,9 @@ use precision_mod
 !lhl090729
       integer,parameter:: s_imt=192,s_jmt=94
 !lhl090729
+      integer, parameter:: LICOM_blockSizeX = BLCKX ! size of block in first  horizontal dimension
+      integer, parameter:: LICOM_blockSizeY = BLCKY ! size of block in second horizontal dimension
+      integer, parameter:: max_blocks_clinic = MXBLCKS, max_blocks_tropic = MXBLCKS    !   in each distribution
+
+
 end module param_mod

@@ -12,7 +12,7 @@ module POP_SpaceCurveMod
 !  CVS: $Name:  $
 
 ! !USES:
-   use kinds_mod
+   use precision_mod
 
    implicit none
 

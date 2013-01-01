@@ -30,6 +30,9 @@ module licom_comp_mct
    use fluxcpl
    use POP_CplIndices
    use shr_dmodel_mod
+   use POP_CommMod
+   use domain
+   use grid
 
 #include <def-undef.h>
 use param_mod
@@ -168,6 +171,8 @@ use cforce_mod
 
       my_task = mytid
       master_task = 0
+      POP_mytask = mytid
+      POP_mastertask = 0
 !YU
 
 
@@ -212,9 +217,10 @@ use cforce_mod
 !     PARAMETERS RELATED TO LATITUDES (J)
 !---------------------------------------------------------------------
     LOGMSG()
-!  call init_domain_blocks
+   call init_domain_blocks
 !  call init_grid1
-!  call init_domain_distribution(KMT_G)
+   call init_domain_distribution(KMT_G)
+   call init_grid2
       CALL GRIDS
       if (mytid == 0) then
       write(111,*)"OK------4"

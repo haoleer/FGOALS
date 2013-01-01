@@ -6,6 +6,9 @@
 ! !MODULE: POP_BlocksMod
 !
 ! !DESCRIPTION: 
+!  This module is modified basd on the "POP_BlocksMod", in which the meridional direction swithes from 
+!  south-north in POP to north-south in LICOM.
+!
 !  This module contains data types and tools for decomposing a global
 !  horizontal domain into a set of 2d blocks.  It contains a data type 
 !  for describing each block and contains routines for creating and 
@@ -21,6 +24,8 @@
 !
 ! !USES:
 
+   use param_mod
+   use precision_mod
    use POP_KindsMod
 !  use POP_ErrorMod
 !  use POP_DomainSizeMod
@@ -64,37 +69,37 @@
 
    ! size of block domain in i,j direction including ghost cells
    integer (POP_i4), parameter, public :: &
-      POP_nxBlock = POP_blockSizeX + 2*POP_haloWidth,   &
-      POP_nyBlock = POP_blockSizeY + 2*POP_haloWidth
+      POP_nxBlock = licom_blockSizeX + 2*POP_haloWidth,   &
+      POP_nyBlock = licom_blockSizeY + 2*POP_haloWidth
 
    ! predefined directions for neighbor id routine
    integer (POP_i4), parameter, public :: &
-      POP_blocksNorth          =  1,      & ! (i  ,j+1)
-      POP_blocksSouth          =  2,      & ! (i  ,j-1)
+      POP_blocksNorth          =  1,      & ! (i  ,j-1)
+      POP_blocksSouth          =  2,      & ! (i  ,j+1)
       POP_blocksEast           =  3,      & ! (i+1,j  )
       POP_blocksWest           =  4,      & ! (i-1,j  )
-      POP_blocksNorthEast      =  5,      & ! (i+1,j+1)
-      POP_blocksNorthWest      =  6,      & ! (i-1,j+1)
-      POP_blocksSouthEast      =  7,      & ! (i+1,j-1)
-      POP_blocksSouthWest      =  8         ! (i-1,j-1)
+      POP_blocksNorthEast      =  5,      & ! (i+1,j-1)
+      POP_blocksNorthWest      =  6,      & ! (i-1,j-1)
+      POP_blocksSouthEast      =  7,      & ! (i+1,j+1)
+      POP_blocksSouthWest      =  8         ! (i-1,j+1)
    integer (POP_i4), parameter, public :: &
-      POP_blocksNorth2         =  9,      & ! (i  ,j+2)
-      POP_blocksSouth2         = 10,      & ! (i  ,j-2)
+      POP_blocksNorth2         =  9,      & ! (i  ,j-2)
+      POP_blocksSouth2         = 10,      & ! (i  ,j+2)
       POP_blocksEast2          = 11,      & ! (i+2,j  )
       POP_blocksWest2          = 12,      & ! (i-2,j  )
-      POP_blocksNorthEast2     = 13,      & ! (i+2,j+2)
-      POP_blocksNorthWest2     = 14,      & ! (i-2,j+2)
-      POP_blocksSouthEast2     = 15,      & ! (i+2,j-2)
-      POP_blocksSouthWest2     = 16         ! (i-2,j-2)
+      POP_blocksNorthEast2     = 13,      & ! (i+2,j-2)
+      POP_blocksNorthWest2     = 14,      & ! (i-2,j-2)
+      POP_blocksSouthEast2     = 15,      & ! (i+2,j+2)
+      POP_blocksSouthWest2     = 16         ! (i-2,j+2)
    integer (POP_i4), parameter, public :: &
-      POP_blocksEastNorthEast  = 17,      & ! (i+2,j+1)
-      POP_blocksEastSouthEast  = 18,      & ! (i+2,j-1)
-      POP_blocksWestNorthWest  = 19,      & ! (i-2,j+1)
-      POP_blocksWestSouthWest  = 20,      & ! (i-2,j-1)
-      POP_blocksNorthNorthEast = 21,      & ! (i+1,j-2)
-      POP_blocksSouthSouthEast = 22,      & ! (i+1,j-2)
-      POP_blocksNorthNorthWest = 23,      & ! (i-1,j+2)
-      POP_blocksSouthSouthWest = 24         ! (i-1,j-2)
+      POP_blocksEastNorthEast  = 17,      & ! (i+2,j-1)
+      POP_blocksEastSouthEast  = 18,      & ! (i+2,j+1)
+      POP_blocksWestNorthWest  = 19,      & ! (i-2,j-1)
+      POP_blocksWestSouthWest  = 20,      & ! (i-2,j+1)
+      POP_blocksNorthNorthEast = 21,      & ! (i+1,j+2)
+      POP_blocksSouthSouthEast = 22,      & ! (i+1,j+2)
+      POP_blocksNorthNorthWest = 23,      & ! (i-1,j-2)
+      POP_blocksSouthSouthWest = 24         ! (i-1,j+2)
 
 ! !PUBLIC DATA MEMBERS:
 
@@ -180,10 +185,10 @@
 !
 !----------------------------------------------------------------------
 
-   errorCode = POP_success
+   errorCode = 0
 
-   POP_numBlocksX   = (nxGlobal-1)/POP_blockSizeX + 1
-   POP_numBlocksY   = (nyGlobal-1)/POP_blockSizeY + 1
+   POP_numBlocksX   = (nxGlobal-1)/licom_blockSizeX + 1
+   POP_numBlocksY   = (nyGlobal-1)/licom_blockSizeY + 1
    POP_numBlocks = POP_numBlocksX*POP_numBlocksY
 
 !----------------------------------------------------------------------
@@ -227,8 +232,8 @@
       !*** determine start, end of global physical domain in j 
       !*** direction for this row of blocks
 
-      js = (jBlock-1)*POP_blockSizeY + 1
-      je = js + POP_blockSizeY - 1
+      js = (jBlock-1)*licom_blockSizeY + 1
+      je = js + licom_blockSizeY - 1
       if (je > nyGlobal) je = nyGlobal ! pad array
       if (js > nyGlobal) then
          call LICOM_ErrorSet(errorCode, &
@@ -243,8 +248,8 @@
          !*** determine start, end of global physical domain in i 
          !*** direction for this row of blocks
 
-         is = (iBlock-1)*POP_blockSizeX + 1
-         ie = is + POP_blockSizeX - 1
+         is = (iBlock-1)*licom_blockSizeX + 1
+         ie = is + licom_blockSizeX - 1
          if (ie > nxGlobal) ie = nxGlobal
          if (is > nxGlobal) then
             call LICOM_ErrorSet(errorCode, &
@@ -431,7 +436,7 @@ end subroutine POP_BlocksCreate
 !
 !----------------------------------------------------------------------
 
-   errorCode = POP_Success
+   errorCode = 0
 
    if (blockID < 1 .or. blockID > POP_numBlocks) then
       call LICOM_ErrorSet(errorCode, &
@@ -458,30 +463,30 @@ end subroutine POP_BlocksCreate
 ! !DESCRIPTION:
 !  This function returns the block id of a neighboring block in a
 !  requested direction.  Supported directions currently include:
-!      POP\_blocksNorth             (i  ,j+1)
-!      POP\_blocksSouth             (i  ,j-1)
+!      POP\_blocksNorth             (i  ,j-1)
+!      POP\_blocksSouth             (i  ,j+1)
 !      POP\_blocksEast              (i+1,j  )
 !      POP\_blocksWest              (i-1,j  )
-!      POP\_blocksNorthEast         (i+1,j+1)
-!      POP\_blocksNorthWest         (i-1,j+1)
-!      POP\_blocksSouthEast         (i  ,j-1)
-!      POP\_blocksSouthWest         (i-1,j-1)
-!      POP\_blocksNorth2            (i  ,j+2)
-!      POP\_blocksSouth2            (i  ,j-2)
+!      POP\_blocksNorthEast         (i+1,j-1)
+!      POP\_blocksNorthWest         (i-1,j-1)
+!      POP\_blocksSouthEast         (i  ,j+1)
+!      POP\_blocksSouthWest         (i-1,j+1)
+!      POP\_blocksNorth2            (i  ,j-2)
+!      POP\_blocksSouth2            (i  ,j+2)
 !      POP\_blocksEast2             (i+2,j  )
 !      POP\_blocksWest2             (i-2,j  )
-!      POP\_blocksNorthEast2        (i+2,j+2)
-!      POP\_blocksNorthWest2        (i-2,j+2)
-!      POP\_blocksSouthEast2        (i+2,j-2)
-!      POP\_blocksSouthWest2        (i-2,j-2)
-!      POP\_blocksEastNorthEast     (i+2,j+1)
-!      POP\_blocksEastSouthEast     (i+2,j-1)
-!      POP\_blocksWestNorthWest     (i-2,j+1)
-!      POP\_blocksWestSouthWest     (i-2,j-1)
+!      POP\_blocksNorthEast2        (i+2,j-2)
+!      POP\_blocksNorthWest2        (i-2,j-2)
+!      POP\_blocksSouthEast2        (i+2,j+2)
+!      POP\_blocksSouthWest2        (i-2,j+2)
+!      POP\_blocksEastNorthEast     (i+2,j-1)
+!      POP\_blocksEastSouthEast     (i+2,j+1)
+!      POP\_blocksWestNorthWest     (i-2,j-1)
+!      POP\_blocksWestSouthWest     (i-2,j+1)
 !      POP\_blocksNorthNorthEast    (i+1,j-2)
-!      POP\_blocksSouthSouthEast    (i+1,j-2)
-!      POP\_blocksNorthNorthWest    (i-1,j+2)
-!      POP\_blocksSouthSouthWest    (i-1,j-2)
+!      POP\_blocksSouthSouthEast    (i+1,j+2)
+!      POP\_blocksNorthNorthWest    (i-1,j-2)
+!      POP\_blocksSouthSouthWest    (i-1,j+2)
 !
 
 ! !INPUT PARAMETERS:
@@ -522,12 +527,12 @@ end subroutine POP_BlocksCreate
 !
 !----------------------------------------------------------------------
 
-   errorCode = POP_Success
+   errorCode = 0
 
    call POP_BlocksGetBlockInfo(blockID, errorCode, &
                                iBlock=iBlock, jBlock=jBlock)
 
-   if (errorCode /= POP_success) then
+   if (errorCode /= 0) then
       call LICOM_ErrorSet(errorCode, &
                'POP_BlocksGetNbrID: error getting block info')
       return
@@ -544,8 +549,8 @@ end subroutine POP_BlocksCreate
    case (POP_blocksNorth)
 
       inbr = iBlock
-      jnbr = jBlock + 1
-      if (jnbr > POP_numBlocksY) then
+      jnbr = jBlock - 1
+      if (jnbr < 1) then
          select case(jBoundary)
          case ('closed')
             jnbr = 0
@@ -569,8 +574,8 @@ end subroutine POP_BlocksCreate
    case (POP_blocksSouth)
 
       inbr = iBlock
-      jnbr = jBlock - 1
-      if (jnbr < 1) then
+      jnbr = jBlock + 1
+      if (jnbr > POP_numBlocksY) then
          select case(jBoundary)
          case ('closed')
             jnbr = 0
@@ -667,7 +672,7 @@ end subroutine POP_BlocksCreate
                'POP_BlocksGetNbrID: unknown west boundary')
          end select
       endif
-      if (jnbr > POP_numBlocksY) then
+      if (jnbr > POP_numBlocksY ) then
          select case(jBoundary)
          case ('closed')
             jnbr = 0
@@ -720,7 +725,7 @@ end subroutine POP_BlocksCreate
 
    case (POP_blocksSouthWest )
       inbr = iBlock - 1
-      jnbr = jBlock - 1
+      jnbr = jBlock + 1
       if (inbr < 1) then
          select case(iBoundary)
          case ('closed')
@@ -732,7 +737,7 @@ end subroutine POP_BlocksCreate
                'POP_BlocksGetNbrID: unknown west boundary')
          end select
       endif
-      if (jnbr < 1) then
+      if (jnbr > POP_numBlocksY ) then
          select case(jBoundary)
          case ('closed')
             jnbr = 0
@@ -749,8 +754,8 @@ end subroutine POP_BlocksCreate
    case (POP_blocksNorth2)
 
       inbr = iBlock
-      jnbr = jBlock + 2
-      if (jnbr > POP_numBlocksY) then
+      jnbr = jBlock - 2
+      if (jnbr < 1 ) then
          select case(jBoundary)
          case ('closed')
             jnbr = 0
@@ -774,8 +779,8 @@ end subroutine POP_BlocksCreate
    case (POP_blocksSouth2)
 
       inbr = iBlock
-      jnbr = jBlock - 2
-      if (jnbr < 1) then
+      jnbr = jBlock + 2
+      if (jnbr > POP_numBlocksY ) then
          select case(jBoundary)
          case ('closed')
             jnbr = 0
@@ -823,7 +828,7 @@ end subroutine POP_BlocksCreate
    case (POP_blocksNorthEast2)
 
       inbr = iBlock + 2
-      jnbr = jBlock + 2
+      jnbr = jBlock - 2
       if (inbr > POP_numBlocksX) then
          select case(iBoundary)
          case ('closed')
@@ -835,7 +840,7 @@ end subroutine POP_BlocksCreate
                'POP_BlocksGetNbrID: unknown east boundary')
          end select
       endif
-      if (jnbr > POP_numBlocksY) then
+      if (jnbr < 1 ) then
          select case(jBoundary)
          case ('closed')
             jnbr = 0
@@ -860,7 +865,7 @@ end subroutine POP_BlocksCreate
    case (POP_blocksNorthWest2)
 
       inbr = iBlock - 2
-      jnbr = jBlock + 2
+      jnbr = jBlock - 2
       if (inbr < 1) then
          select case(iBoundary)
          case ('closed')
@@ -872,7 +877,7 @@ end subroutine POP_BlocksCreate
                'POP_BlocksGetNbrID: unknown west boundary')
          end select
       endif
-      if (jnbr > POP_numBlocksY) then
+      if (jnbr < 1 ) then
          select case(jBoundary)
          case ('closed')
             jnbr = 0
@@ -897,7 +902,7 @@ end subroutine POP_BlocksCreate
    case (POP_blocksSouthEast2)
 
       inbr = iBlock + 2
-      jnbr = jBlock - 2
+      jnbr = jBlock + 2
       if (inbr > POP_numBlocksX) then
          select case(iBoundary)
          case ('closed')
@@ -909,7 +914,7 @@ end subroutine POP_BlocksCreate
                'POP_BlocksGetNbrID: unknown east boundary')
          end select
       endif
-      if (jnbr < 1) then
+      if (jnbr > POP_numBlocksY ) then
          select case(jBoundary)
          case ('closed')
             jnbr = 0
@@ -925,7 +930,7 @@ end subroutine POP_BlocksCreate
 
    case (POP_blocksSouthWest2)
       inbr = iBlock - 2
-      jnbr = jBlock - 2
+      jnbr = jBlock + 2
       if (inbr < 1) then
          select case(iBoundary)
          case ('closed')
@@ -937,7 +942,7 @@ end subroutine POP_BlocksCreate
                'POP_BlocksGetNbrID: unknown west boundary')
          end select
       endif
-      if (jnbr < 1) then
+      if (jnbr > POP_numBlocksY ) then
          select case(jBoundary)
          case ('closed')
             jnbr = 0
@@ -954,7 +959,7 @@ end subroutine POP_BlocksCreate
    case (POP_blocksEastNorthEast)
 
       inbr = iBlock + 2
-      jnbr = jBlock + 1
+      jnbr = jBlock - 1
       if (inbr > POP_numBlocksX) then
          select case(iBoundary)
          case ('closed')
@@ -966,7 +971,7 @@ end subroutine POP_BlocksCreate
                'POP_BlocksGetNbrID: unknown east boundary')
          end select
       endif
-      if (jnbr > POP_numBlocksY) then
+      if (jnbr < 1 ) then
          select case(jBoundary)
          case ('closed')
             jnbr = 0
@@ -991,7 +996,7 @@ end subroutine POP_BlocksCreate
    case (POP_blocksWestNorthWest)
 
       inbr = iBlock - 2
-      jnbr = jBlock + 1
+      jnbr = jBlock - 1
       if (inbr < 1) then
          select case(iBoundary)
          case ('closed')
@@ -1003,7 +1008,7 @@ end subroutine POP_BlocksCreate
                'POP_BlocksGetNbrID: unknown west boundary')
          end select
       endif
-      if (jnbr > POP_numBlocksY) then
+      if (jnbr < 1) then
          select case(jBoundary)
          case ('closed')
             jnbr = 0
@@ -1028,7 +1033,7 @@ end subroutine POP_BlocksCreate
    case (POP_blocksEastSouthEast)
 
       inbr = iBlock + 2
-      jnbr = jBlock - 1
+      jnbr = jBlock + 1
       if (inbr > POP_numBlocksX) then
          select case(iBoundary)
          case ('closed')
@@ -1040,7 +1045,7 @@ end subroutine POP_BlocksCreate
                'POP_BlocksGetNbrID: unknown east boundary')
          end select
       endif
-      if (jnbr < 1) then
+      if (jnbr > POP_numBlocksY ) then
          select case(jBoundary)
          case ('closed')
             jnbr = 0
@@ -1056,7 +1061,7 @@ end subroutine POP_BlocksCreate
 
    case (POP_blocksWestSouthWest)
       inbr = iBlock - 2
-      jnbr = jBlock - 1
+      jnbr = jBlock + 1
       if (inbr < 1) then
          select case(iBoundary)
          case ('closed')
@@ -1068,7 +1073,7 @@ end subroutine POP_BlocksCreate
                'POP_BlocksGetNbrID: unknown west boundary')
          end select
       endif
-      if (jnbr < 1) then
+      if (jnbr > POP_numBlocksY ) then
          select case(jBoundary)
          case ('closed')
             jnbr = 0
@@ -1085,7 +1090,7 @@ end subroutine POP_BlocksCreate
    case (POP_blocksNorthNorthEast)
 
       inbr = iBlock + 1
-      jnbr = jBlock + 2
+      jnbr = jBlock - 2
       if (inbr > POP_numBlocksX) then
          select case(iBoundary)
          case ('closed')
@@ -1097,7 +1102,7 @@ end subroutine POP_BlocksCreate
                'POP_BlocksGetNbrID: unknown east boundary')
          end select
       endif
-      if (jnbr > POP_numBlocksY) then
+      if (jnbr < 1 ) then
          select case(jBoundary)
          case ('closed')
             jnbr = 0
@@ -1122,7 +1127,7 @@ end subroutine POP_BlocksCreate
    case (POP_blocksNorthNorthWest)
 
       inbr = iBlock - 1
-      jnbr = jBlock + 2
+      jnbr = jBlock - 2
       if (inbr < 1) then
          select case(iBoundary)
          case ('closed')
@@ -1134,7 +1139,7 @@ end subroutine POP_BlocksCreate
                'POP_BlocksGetNbrID: unknown west boundary')
          end select
       endif
-      if (jnbr > POP_numBlocksY) then
+      if (jnbr < 1 ) then
          select case(jBoundary)
          case ('closed')
             jnbr = 0
@@ -1159,7 +1164,7 @@ end subroutine POP_BlocksCreate
    case (POP_blocksSouthSouthEast)
 
       inbr = iBlock + 1
-      jnbr = jBlock - 2
+      jnbr = jBlock + 2
       if (inbr > POP_numBlocksX) then
          select case(iBoundary)
          case ('closed')
@@ -1171,7 +1176,7 @@ end subroutine POP_BlocksCreate
                'POP_BlocksGetNbrID: unknown east boundary')
          end select
       endif
-      if (jnbr < 1) then
+      if (jnbr > POP_numBlocksY ) then
          select case(jBoundary)
          case ('closed')
             jnbr = 0
@@ -1187,7 +1192,7 @@ end subroutine POP_BlocksCreate
 
    case (POP_blocksSouthSouthWest)
       inbr = iBlock - 1
-      jnbr = jBlock - 2
+      jnbr = jBlock + 2
       if (inbr < 1) then
          select case(iBoundary)
          case ('closed')
@@ -1199,7 +1204,7 @@ end subroutine POP_BlocksCreate
                'POP_BlocksGetNbrID: unknown west boundary')
          end select
       endif
-      if (jnbr < 1) then
+      if (jnbr > POP_numBlocksY ) then
          select case(jBoundary)
          case ('closed')
             jnbr = 0
@@ -1293,7 +1298,7 @@ end subroutine POP_BlocksCreate
 !
 !----------------------------------------------------------------------
 
-   errorCode = POP_Success
+   errorCode = 0
    if (blockID < 1 .or. blockID > POP_numBlocks) then
       call LICOM_ErrorSet(errorCode, &
                'POP_BlocksGetBlockInfo: invalid blockID')
@@ -1389,7 +1394,7 @@ end subroutine POP_BlocksCreate
 !
 !----------------------------------------------------------------------
 
-   errorCode = POP_success
+   errorCode = 0
 
    if (blockID < 0 .or. blockID > POP_numBlocks) then
       call LICOM_ErrorSet(errorCode, &
@@ -1480,7 +1485,7 @@ end subroutine POP_BlocksCreate
 !
 !----------------------------------------------------------------------
 
-   errorCode = POP_Success
+   errorCode = 0
 
    deallocate(allBlocks, stat=istat)
    if (istat /= 0) then

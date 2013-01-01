@@ -20,6 +20,7 @@ module precision_mod
 
 #ifdef SPMD
 integer*4, parameter :: MPI_PR = MPI_DOUBLE_PRECISION
+integer*4, parameter :: MPI_DBL = MPI_DOUBLE_PRECISION
 integer*4, parameter :: MPI_PR1 = MPI_REAL
 #endif
 

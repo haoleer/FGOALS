@@ -41,7 +41,8 @@ module POP_CplIndices
   integer :: index_x2o_Foxx_rain       ! water flux due to rain           (kg/m2/s)
   integer :: index_x2o_Foxx_evap       ! evaporation flux                 (kg/m2/s)
   integer :: index_x2o_Foxx_meltw      ! snow melt flux                   (kg/m2/s)
-  integer :: index_x2o_Forr_roff       ! river runoff flux                (kg/m2/s)
+  integer :: index_x2o_Forr_roff       ! river runoff flux                (kg/m2/s) !LPF 20121219
+  !integer :: index_r2o_Forr_roff       ! river runoff flux                (kg/m2/s)  !LPF 20121219
   integer :: index_x2o_Forr_ioff       ! ice runoff flux                  (kg/m2/s)
   integer :: index_x2o_Foxx_bcphidry   ! flux: Black   Carbon hydrophilic dry deposition
   integer :: index_x2o_Foxx_bcphodry   ! flux: Black   Carbon hydrophobic dry deposition
@@ -64,6 +65,8 @@ contains
 
     type(mct_aVect) :: o2x      ! temporary
     type(mct_aVect) :: x2o      ! temporary
+    !type(mct_aVect) :: r2x_rx      ! temporary !LPF 20121219
+    !type(mct_aVect) :: r2x_o      ! temporary !LPF 20121219
 
     ! Determine attribute vector indices
 
@@ -105,7 +108,9 @@ contains
     index_x2o_Foxx_rain     = mct_avect_indexra(x2o,'Foxx_rain')   
     index_x2o_Foxx_evap     = mct_avect_indexra(x2o,'Foxx_evap')
     index_x2o_Foxx_meltw    = mct_avect_indexra(x2o,'Foxx_meltw')
-    index_x2o_Forr_roff     = mct_avect_indexra(x2o,'Forr_roff')
+    index_x2o_Forr_roff     = mct_avect_indexra(x2o,'Forr_roff') !LPF 20121219
+    !index_r2o_Forr_roff     = mct_avect_indexra(r2x_rx,'Forr_roff') !LPF 20121219
+    !index_r2o_Forr_roff     = mct_avect_indexra(r2x_o,'Forr_roff') !LPF 20121219
     index_x2o_Forr_ioff     = mct_avect_indexra(x2o,'Forr_ioff')
     index_x2o_Foxx_bcphidry = mct_avect_indexra(x2o,'Foxx_bcphidry')
     index_x2o_Foxx_bcphodry = mct_avect_indexra(x2o,'Foxx_bcphodry')
@@ -126,6 +131,7 @@ contains
 
     call mct_aVect_clean(x2o)
     call mct_aVect_clean(o2x)
+    !call mct_aVect_clean(r2x_o) !LPF 20121219
 
   end subroutine POP_CplIndicesSet
 

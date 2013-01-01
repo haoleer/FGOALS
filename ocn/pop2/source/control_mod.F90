@@ -59,6 +59,7 @@
   integer       :: diag_now     ! T => create diagnostic data now
   integer       :: diag_eod     ! T => create diagnostic data now
 
+  integer       :: stdout
   integer, private :: ierr         ! error code
   SAVE
 

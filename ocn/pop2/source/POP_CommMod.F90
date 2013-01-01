@@ -22,10 +22,7 @@
 ! !USES:
 
    use POP_KindsMod
-
-#ifdef CCSMCOUPLED
-   use ocn_communicator, only: mpi_communicator_ocn
-#endif
+   use msg_mod, only : mpi_comm_ocn
 
    implicit none
    private
@@ -35,13 +32,7 @@
 
 ! !PUBLIC MEMBER FUNCTIONS:
 
-   public  :: POP_CommInit,                    &
-              POP_CommInitMessageEnvironment,  &
-              POP_CommExitMessageEnvironment,  &
-              POP_CommAbortMessageEnvironment, &
-              POP_CommGetNumProcs,             &
-              POP_CommCreateCommunicator,      &
-              POP_Barrier
+   public  :: POP_CommCreateCommunicator
 
    
 
@@ -65,255 +56,6 @@
 !***********************************************************************
 
  contains
-
-!***********************************************************************
-!BOP
-! !IROUTINE: POP_CommInit
-! !INTERFACE:
-
- subroutine POP_CommInit
-
-! !DESCRIPTION:
-!  This routine sets up MPI environment and defines ocean
-!  communicator.
-!
-! !REVISION HISTORY:
-!  same as module
-!
-! !INCLUDES:
-
-!EOP
-!BOC
-!-----------------------------------------------------------------------
-!
-!  local variables
-!
-!-----------------------------------------------------------------------
-
-   integer (POP_i4) :: ierr  ! MPI error flag
-
-!-----------------------------------------------------------------------
-!
-!  create communicator for internal ocean communications
-!  this process varies for different coupling styles and is often
-!  determined by a library call.  These are determined by a preprocessor
-!  directive.  It is assumed that the MPI initialization occurs within
-!  these calls or that POP_CommInitMessageEnvironment is called from
-!  the driver routine.
-!
-!-----------------------------------------------------------------------
-
-#ifdef CCSMCOUPLED
-!-----------------------------------------------------------------------
-!
-!  call CCSM coupler routine to return communicator
-!
-!-----------------------------------------------------------------------
-   POP_communicator = mpi_communicator_ocn
-
-#else
-!-----------------------------------------------------------------------
-!
-!  when not coupled, simply duplicate global communicator
-!
-!-----------------------------------------------------------------------
-
-   call MPI_COMM_DUP(MPI_COMM_WORLD, POP_communicator, ierr)
-
-#endif
-
-!-----------------------------------------------------------------------
-!
-!  determine task ids
-!
-!-----------------------------------------------------------------------
-
-   POP_masterTask = 0
-   call MPI_COMM_RANK  (POP_communicator, POP_myTask, ierr)
-
-!-----------------------------------------------------------------------
-!
-!  On some machines the MPI implementation makes some assumptions about
-!  these data types, so these are chosen to try and choose the
-!  appropriate kind.
-!
-!-----------------------------------------------------------------------
-
-   POP_mpiR16 = MPI_REAL16
-   POP_mpiR8  = MPI_REAL8
-   POP_mpiR4  = MPI_REAL4
-
-!-----------------------------------------------------------------------
-!EOC
-
- end subroutine POP_CommInit
-
-!***********************************************************************
-!BOP
-! !IROUTINE: POP_CommGetNumProcs
-! !INTERFACE:
-
- function POP_CommGetNumProcs(communicator)
-
-! !DESCRIPTION:
-!  This function returns the number of processor assigned to
-!  a given communicator.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INPUT PARAMETERS:
-
-   integer (POP_i4), intent(in) :: &
-      communicator         ! communicator to query for num processors
-
-! !OUTPUT PARAMETERS:
-
-   integer (POP_i4) :: &
-      POP_CommGetNumProcs  ! number of processors in communicator
-
-!EOP
-!BOC
-!-----------------------------------------------------------------------
-!
-!  local variables
-!
-!-----------------------------------------------------------------------
-
-   integer (POP_i4) :: ierr
-
-!-----------------------------------------------------------------------
-
-   call MPI_COMM_SIZE(communicator, POP_CommGetNumProcs, ierr)
-
-!-----------------------------------------------------------------------
-!EOC
-
- end function POP_CommGetNumProcs
-
-!***********************************************************************
-!BOP
-! !IROUTINE: POP_CommInitMessageEnvironment
-! !INTERFACE:
-
- subroutine POP_CommInitMessageEnvironment
-
-! !DESCRIPTION:
-!  This routine initializes the message environment.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INCLUDES:
-
-!EOP
-!BOC
-!-----------------------------------------------------------------------
-!
-!  local variables
-!
-!-----------------------------------------------------------------------
-
-   integer (POP_i4) :: ierr  ! MPI error flag
-
-!-----------------------------------------------------------------------
-
-#ifdef CCSMCOUPLED
-   ! initialized by cpl library routines
-#else
-   call MPI_INIT(ierr)
-#endif
-
-!-----------------------------------------------------------------------
-!EOC
-
- end subroutine POP_CommInitMessageEnvironment
-
-!***********************************************************************
-!BOP
-! !IROUTINE: POP_CommExitMessageEnvironment
-! !INTERFACE:
-
- subroutine POP_CommExitMessageEnvironment
-
-! !DESCRIPTION:
-!  This routine exits the message environment properly when model
-!  stops.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INCLUDES:
-
-!EOP
-!BOC
-!-----------------------------------------------------------------------
-!
-!  local variables
-!
-!-----------------------------------------------------------------------
-
-   integer (POP_i4) :: ierr  ! MPI error flag
-
-!-----------------------------------------------------------------------
-
-#ifndef CCSMCOUPLED
-   call MPI_FINALIZE(ierr)
-#endif
-
-!-----------------------------------------------------------------------
-!EOC
-
- end subroutine POP_CommExitMessageEnvironment
-
-!***********************************************************************
-!BOP
-! !IROUTINE: POP_CommAbortMessageEnvironment
-! !INTERFACE:
-
- subroutine POP_CommAbortMessageEnvironment
-
-! !DESCRIPTION:
-!  This routine aborts the message environment when model stops.
-!  It will attempt to abort the entire MPI COMM WORLD.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INCLUDES:
-
-!EOP
-!BOC
-!-----------------------------------------------------------------------
-!
-!  local variables
-!
-!-----------------------------------------------------------------------
-
-   integer (POP_i4) :: errorCode, ierr  !MPI error flag
-
-!-----------------------------------------------------------------------
-
-#ifdef CCSMCOUPLED
-!  call MPI_BARRIER(POP_Communicator,ierr)
-   ierr = 13
-   call MPI_ABORT(MPI_COMM_WORLD,errorCode, ierr)
-#else
-   call MPI_BARRIER(POP_Communicator, ierr)
-   call MPI_ABORT(MPI_COMM_WORLD, errorCode, ierr)
-   call MPI_FINALIZE(ierr)
-#endif
-
-!-----------------------------------------------------------------------
-!EOC
-
- end subroutine POP_CommAbortMessageEnvironment
-
-
-!***********************************************************************
-!BOP
-! !IROUTINE: POP_CommCreateCommunicator
-! !INTERFACE:
 
  subroutine POP_CommCreateCommunicator(newCommunicator, numProcs)
 
@@ -360,6 +102,7 @@
 !  determine group of processes assigned to distribution
 !
 !-----------------------------------------------------------------------
+   POP_communicator = mpi_comm_ocn
 
    call MPI_COMM_GROUP (POP_Communicator, MPI_GROUP_OCN, ierr)
 
@@ -385,38 +128,4 @@
 
  end subroutine POP_CommCreateCommunicator
 
-!***********************************************************************
-!BOP
-! !IROUTINE: POP_Barrier
-! !INTERFACE:
-
- subroutine POP_Barrier
-
-! !DESCRIPTION:
-!  This routine performs a barrier.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INCLUDES:
-
-!EOP
-!BOC
-!-----------------------------------------------------------------------
-!
-!  local variables
-!
-!-----------------------------------------------------------------------
-   integer(POP_i4) :: ierr
-
-    call MPI_Barrier(POP_Communicator,ierr)
-
-!-----------------------------------------------------------------------
-!EOC
-
- end subroutine POP_Barrier
-
-
  end module POP_CommMod
-
-!|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
