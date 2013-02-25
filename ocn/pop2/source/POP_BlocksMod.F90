@@ -26,9 +26,6 @@
 
    use param_mod
    use precision_mod
-   use POP_KindsMod
-!  use POP_ErrorMod
-!  use POP_DomainSizeMod
 
    implicit none
    private
@@ -37,7 +34,7 @@
 ! !PUBLIC TYPES:
 
    type, public :: POP_block   ! block data type
-      integer (POP_i4) ::   &
+      integer (i4) ::   &
          blockID           ,&! global block number
          localID           ,&! local address of block in current distrib
          ib, ie, jb, je    ,&! begin,end indices for physical domain
@@ -45,10 +42,10 @@
          nxGlobal, nyGlobal,&! global domain extents
          numActivePoints     ! number of actual active points in block
 
-      logical (POP_logical) :: &
+      logical (log_kind) :: &
          tripole             ! flag is true if block is at tripole bndy
 
-      integer (POP_i4), dimension(:), pointer :: &
+      integer (i4), dimension(:), pointer :: &
          iGlobal, jGlobal    ! global domain location for each point
    end type
 
@@ -64,16 +61,16 @@
 ! !DEFINED PARAMETERS:
   
 
-   integer (POP_i4), parameter, public :: &
+   integer (i4), parameter, public :: &
       POP_haloWidth = 2       ! number of ghost cells around each block
 
    ! size of block domain in i,j direction including ghost cells
-   integer (POP_i4), parameter, public :: &
+   integer (i4), parameter, public :: &
       POP_nxBlock = licom_blockSizeX + 2*POP_haloWidth,   &
       POP_nyBlock = licom_blockSizeY + 2*POP_haloWidth
 
    ! predefined directions for neighbor id routine
-   integer (POP_i4), parameter, public :: &
+   integer (i4), parameter, public :: &
       POP_blocksNorth          =  1,      & ! (i  ,j-1)
       POP_blocksSouth          =  2,      & ! (i  ,j+1)
       POP_blocksEast           =  3,      & ! (i+1,j  )
@@ -82,7 +79,7 @@
       POP_blocksNorthWest      =  6,      & ! (i-1,j-1)
       POP_blocksSouthEast      =  7,      & ! (i+1,j+1)
       POP_blocksSouthWest      =  8         ! (i-1,j+1)
-   integer (POP_i4), parameter, public :: &
+   integer (i4), parameter, public :: &
       POP_blocksNorth2         =  9,      & ! (i  ,j-2)
       POP_blocksSouth2         = 10,      & ! (i  ,j+2)
       POP_blocksEast2          = 11,      & ! (i+2,j  )
@@ -91,7 +88,7 @@
       POP_blocksNorthWest2     = 14,      & ! (i-2,j-2)
       POP_blocksSouthEast2     = 15,      & ! (i+2,j+2)
       POP_blocksSouthWest2     = 16         ! (i-2,j+2)
-   integer (POP_i4), parameter, public :: &
+   integer (i4), parameter, public :: &
       POP_blocksEastNorthEast  = 17,      & ! (i+2,j-1)
       POP_blocksEastSouthEast  = 18,      & ! (i+2,j+1)
       POP_blocksWestNorthWest  = 19,      & ! (i-2,j-1)
@@ -103,7 +100,7 @@
 
 ! !PUBLIC DATA MEMBERS:
 
-   integer (POP_i4), public :: &
+   integer (i4), public :: &
       POP_numBlocks,    &! total number of blocks in decomposition
       POP_numBlocksX,   &! tot num blocks in i direction
       POP_numBlocksY     ! tot num blocks in j direction
@@ -119,12 +116,12 @@
    type (POP_block), dimension(:), allocatable :: &
       allBlocks         ! block information for all blocks in domain
 
-   integer (POP_i4), dimension(:,:),allocatable :: &
+   integer (i4), dimension(:,:),allocatable :: &
       allBlocksIJ       ! block index stored in Cartesian order
                         !   useful for determining block index
                         !   of neighbor blocks
 
-   integer (POP_i4), dimension(:,:), allocatable, target :: &
+   integer (i4), dimension(:,:), allocatable, target :: &
       allIGlobal,         &! global i index for each point in each block
       allJGlobal           ! global j index for each point in each block
 
@@ -150,7 +147,7 @@
 !
 ! !INPUT PARAMETERS:
 
-   integer (POP_i4), intent(in) :: &
+   integer (i4), intent(in) :: &
       nxGlobal, nyGlobal           ! global domain size in x,y
 
    character (*), intent(in) :: &
@@ -159,7 +156,7 @@
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode         ! returned error code
 
 !EOP
@@ -170,7 +167,7 @@
 !
 !----------------------------------------------------------------------
 
-   integer (POP_i4) ::    &
+   integer (i4) ::    &
       blockID,            &! block id for linear list of blocks
       i, j,               &! loop indices
       iBlock, jBlock,     &! block loop indices
@@ -417,7 +414,7 @@ end subroutine POP_BlocksCreate
 !
 ! !INPUT PARAMETERS:
 
-   integer (POP_i4), intent(in) :: &
+   integer (i4), intent(in) :: &
       blockID     ! global block id for requested block info
 
 ! !OUTPUT PARAMETERS:
@@ -425,7 +422,7 @@ end subroutine POP_BlocksCreate
    type (POP_block) :: &
       outBlock    ! block information returned for requested block
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode   ! returned error code
 
 !EOP
@@ -491,7 +488,7 @@ end subroutine POP_BlocksCreate
 
 ! !INPUT PARAMETERS:
 
-   integer (POP_i4), intent(in)  :: &
+   integer (i4), intent(in)  :: &
       blockID,       &! id of block for which neighbor id requested
       direction       ! direction for which to look for neighbor -
                       !   must be one of the predefined module
@@ -503,10 +500,10 @@ end subroutine POP_BlocksCreate
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode       ! returned error code
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       nbrID           ! block ID of neighbor in requested dir
 
 !EOP
@@ -517,7 +514,7 @@ end subroutine POP_BlocksCreate
 !
 !----------------------------------------------------------------------
     
-   integer (POP_i4) :: &
+   integer (i4) :: &
       iBlock, jBlock,  &! i,j block location of current block
       inbr,   jnbr      ! i,j block location of neighboring block
 
@@ -1267,27 +1264,27 @@ end subroutine POP_BlocksCreate
 !
 ! !INPUT PARAMETERS:
 
-   integer (POP_i4), intent(in) :: &
+   integer (i4), intent(in) :: &
       blockID   ! global block id for which parameters are requested
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode ! returned error code
 
    !(optional) parts of block data type to extract if requested
 
-   integer (POP_i4), intent(out), optional :: &
+   integer (i4), intent(out), optional :: &
       localID,          &! local id assigned to block in current distrb
       ib, ie, jb, je,   &! begin,end indices for physical domain
       iBlock, jBlock,   &! cartesian i,j position for block
       nxGlobal, nyGlobal, &! global domain size info
       numActivePoints    ! number of actual active points in block
 
-   logical (POP_logical), intent(out), optional :: &
+   logical (log_kind), intent(out), optional :: &
       tripole              ! flag is true if block on tripole bndy
 
-   integer (POP_i4), dimension(:), pointer, optional :: &
+   integer (i4), dimension(:), pointer, optional :: &
       iGlobal, jGlobal     ! global domain location for each point
 
 !EOP
@@ -1356,26 +1353,26 @@ end subroutine POP_BlocksCreate
 ! !INPUT PARAMETERS:
 
    !*** required argument
-   integer (POP_i4), intent(in) :: &
+   integer (i4), intent(in) :: &
       blockID ! global block id for block to change
 
    !*** optional arguments for parameters to set
-   integer (POP_i4), intent(in), optional ::   &
+   integer (i4), intent(in), optional ::   &
       localID,           &! local address of block in current distrib
       numActivePoints,   &! number of actual active points in block
       ib, ie, jb, je,    &! begin,end indices for physical domain
       iBlock, jBlock,    &! cartesian i,j position for bloc
       nxGlobal, nyGlobal  ! global domain information
 
-   logical (POP_logical), intent(in), optional :: &
+   logical (log_kind), intent(in), optional :: &
       tripole             ! flag is true if block on tripole bndy
 
-   integer (POP_i4), dimension(:), intent(in), optional :: &
+   integer (i4), dimension(:), intent(in), optional :: &
       iGlobal, jGlobal    ! global domain location for each point
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode               ! output error code
 
 !EOP
@@ -1386,7 +1383,7 @@ end subroutine POP_BlocksCreate
 !
 !----------------------------------------------------------------------
 
-   integer (POP_i4) :: i,j  ! dummy loop indices
+   integer (i4) :: i,j  ! dummy loop indices
 
 !----------------------------------------------------------------------
 !
@@ -1466,7 +1463,7 @@ end subroutine POP_BlocksCreate
 !
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode         ! returned error code
 
 !EOP
@@ -1477,7 +1474,7 @@ end subroutine POP_BlocksCreate
 !
 !----------------------------------------------------------------------
 
-   integer (POP_i4) :: istat  ! status flag for deallocate
+   integer (i4) :: istat  ! status flag for deallocate
 
 !----------------------------------------------------------------------
 !

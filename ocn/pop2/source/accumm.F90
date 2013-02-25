@@ -10,117 +10,88 @@ use tracer_mod
 use output_mod
 use pconst_mod
 use forc_mod, only: su,sv,lthf,sshf,lwv,swv,fresh,runoff
+use domain
       IMPLICIT NONE
 
-#ifdef COUP
-       call exchange_2d(runoff,1,1) !LPF 20120904
-       call exchange_2d(fresh,1,1)
-       call exchange_2d(lthf,1,1)
-       call exchange_2d(sshf,1,1)
-       call exchange_2d(lwv,1,1)
-#endif
+      integer :: iblock
 
  
-!$OMP PARALLEL DO PRIVATE (J,I)
+!$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
+   do iblock = 1, nblocks_clinic
       DO J = 1,JMT
          DO I = 1,IMT
-            Z0MON (I,J)= Z0MON (I,J) + H0 (I,J)
-            HIMON (I,J)= HIMON (I,J) + runoff(i,j) !HI (I,J) !LPF 20120824
-            HDMON (I,J)= HDMON (I,J) + ALEAD (I,J)* HI (I,J)
+            Z0MON (I,J,iblock)= Z0MON (I,J,iblock) + H0 (I,J,iblock)
 !
 !linpf091126
-            sumon (I,J)= sumon (I,J) + su(I,J)        !U windstress
-            svmon (I,J)= svmon (I,J) + sv(I,J)        !V windstress
-            lthfmon (I,J)= lthfmon (I,J) + lthf (I,J) !latent flux
-            sshfmon (I,J)= sshfmon (I,J) + sshf (I,J) !sensible flux
-            lwvmon (I,J)= lwvmon (I,J) + lwv (I,J)    !long wave flux
-            swvmon (I,J)= swvmon (I,J) + swv (I,J)    !shortwave flux
+            sumon (I,J,iblock)= sumon (I,J,iblock) + su(I,J,iblock)        !U windstress
+            svmon (I,J,iblock)= svmon (I,J,iblock) + sv(I,J,iblock)        !V windstress
+            lthfmon (I,J,iblock)= lthfmon (I,J,iblock) + lthf (I,J,iblock) !latent flux
+            sshfmon (I,J,iblock)= sshfmon (I,J,iblock) + sshf (I,J,iblock) !sensible flux
+            lwvmon (I,J,iblock)= lwvmon (I,J,iblock) + lwv (I,J,iblock)    !long wave flux
+            swvmon (I,J,iblock)= swvmon (I,J,iblock) + swv (I,J,iblock)    !shortwave flux
 !linpf091126 
+            mldmon (I,J,iblock)= mldmon (I,J,iblock) + amld (I,J,iblock)/100.
+!
+            akmmon (I,J,K,iblock)= akmmon (I,J,K,iblock) + akmu(I,J,K,iblock)
+            aktmon (I,J,K,iblock)= aktmon (I,J,K,iblock) + akt(I,J,K,1,iblock)
+            aksmon (I,J,K,iblock)= aksmon (I,J,K,iblock) + akt(I,J,K,2,iblock)
+            netmon (I,J,1,iblock)= netmon (I,J,1,iblock) + net (I,J,1,iblock)
+            netmon (I,J,2,iblock)= netmon (I,J,2,iblock) + net (I,J,2,iblock)
          END DO
       END DO
+   end do
  
 !$OMP PARALLEL DO PRIVATE (K,J,I)
+   do iblock = 1, nblocks_clinic
       DO K = 1,KM
          DO J = 1,JMT
             DO I = 1,IMT
-               WSMON (I,J,K)= WSMON (I,J,K) + WS (I,J,K)
-               TSMON (I,J,K)= TSMON (I,J,K) + AT (I,J,K,1)
-               SSMON (I,J,K)= SSMON (I,J,K) + (AT (I,J,K,2)*1000.+35.)
-               USMON (I,J,K)= USMON (I,J,K) + U (I,J,K)
-               VSMON (I,J,K)= VSMON (I,J,K) - V (I,J,K)
+               WSMON (I,J,K,iblock)= WSMON (I,J,K,iblock) + WS (I,J,K,iblock)
+               TSMON (I,J,K,iblock)= TSMON (I,J,K,iblock) + AT (I,J,K,1,iblock)
+               SSMON (I,J,K,iblock)= SSMON (I,J,K,iblock) + (AT (I,J,K,2,iblock)*1000.+35.)
+               USMON (I,J,K,iblock)= USMON (I,J,K,iblock) + U (I,J,K,iblock)
+               VSMON (I,J,K,iblock)= VSMON (I,J,K,iblock) - V (I,J,K,iblock)
 #if (defined SMAG_OUT)
-               AM3MON (I,J,K)= AM3MON (I,J,K) + AM3 (I,J,K)
+               AM3MON (I,J,K,iblock)= AM3MON (I,J,K,iblock) + AM3 (I,J,K,iblock)
 #endif
+               penmon (I,J,K,iblock)= penmon (I,J,K,iblock)+penetrate(i,j,k,iblock)
             END DO
          END DO
       END DO
+   end do
 
-!$OMP PARALLEL DO PRIVATE (N,K,J,I)
+!$OMP PARALLEL DO PRIVATE (IBLOCK,N,K,J,I)
+   do iblock = 1, nblocks_clinic
       DO N = 1,NTRA
       DO K = 1,KM
          DO J = 1,JMT
             DO I = 1,IMT
-               trendmon (I,J,K,N)= trendmon (I,J,K,N)+trend(i,j,k,n)
-               axmon (I,J,K,N)= axmon (I,J,K,N)+ax(i,j,k,n)
-               aymon (I,J,K,N)= aymon (I,J,K,N)+ay(i,j,k,n)
-               azmon (I,J,K,N)= azmon (I,J,K,N)+az(i,j,k,n)
-               dxmon (I,J,K,N)= dxmon (I,J,K,N)+dx(i,j,k,n)
-               dymon (I,J,K,N)= dymon (I,J,K,N)+dy(i,j,k,n)
-               dzmon (I,J,K,N)= dzmon (I,J,K,N)+dz(i,j,k,n)
+               trendmon (I,J,K,N,IBLOCK)= trendmon (I,J,K,N,IBLOCK)+trend(i,j,k,n,IBLOCK)
+               axmon (I,J,K,N,IBLOCK)= axmon (I,J,K,N,IBLOCK)+ax(i,j,k,n,IBLOCK)
+               aymon (I,J,K,N,IBLOCK)= aymon (I,J,K,N,IBLOCK)+ay(i,j,k,n,IBLOCK)
+               azmon (I,J,K,N,IBLOCK)= azmon (I,J,K,N,IBLOCK)+az(i,j,k,n,IBLOCK)
+               dxmon (I,J,K,N,IBLOCK)= dxmon (I,J,K,N,IBLOCK)+dx(i,j,k,n,IBLOCK)
+               dymon (I,J,K,N,IBLOCK)= dymon (I,J,K,N,IBLOCK)+dy(i,j,k,n,IBLOCK)
+               dzmon (I,J,K,N,IBLOCK)= dzmon (I,J,K,N,IBLOCK)+dz(i,j,k,n,IBLOCK)
 !
-               ddymon (I,J,K,N)= ddymon (I,J,K,N)+ddy(i,j,k,n)
+               ddymon (I,J,K,N,IBLOCK)= ddymon (I,J,K,N,IBLOCK)+ddy(i,j,k,n,IBLOCK)
 #ifdef ISO
-               axmon_iso (I,J,K,N)= axmon_iso (I,J,K,N)+ax_iso(i,j,k,n)
-               aymon_iso (I,J,K,N)= aymon_iso (I,J,K,N)+ay_iso(i,j,k,n)
-               azmon_iso (I,J,K,N)= azmon_iso (I,J,K,N)+az_iso(i,j,k,n)
-               dxmon_iso (I,J,K,N)= dxmon_iso (I,J,K,N)+dx_iso(i,j,k,n)
-               dymon_iso (I,J,K,N)= dymon_iso (I,J,K,N)+dy_iso(i,j,k,n)
-               dzmon_iso (I,J,K,N)= dzmon_iso (I,J,K,N)+dz_iso(i,j,k,n)
+!              axmon_iso (I,J,K,N,IBLOCK)= axmon_iso (I,J,K,N,IBLOCK)+ax_iso(i,j,k,n,IBLOCK)
+!              aymon_iso (I,J,K,N,IBLOCK)= aymon_iso (I,J,K,N,IBLOCK)+ay_iso(i,j,k,n,IBLOCK)
+!              azmon_iso (I,J,K,N,IBLOCK)= azmon_iso (I,J,K,N,IBLOCK)+az_iso(i,j,k,n,IBLOCK)
+!              dxmon_iso (I,J,K,N,IBLOCK)= dxmon_iso (I,J,K,N,IBLOCK)+dx_iso(i,j,k,n,IBLOCK)
+!              dymon_iso (I,J,K,N,IBLOCK)= dymon_iso (I,J,K,N,IBLOCK)+dy_iso(i,j,k,n,IBLOCK)
+!              dzmon_iso (I,J,K,N,IBLOCK)= dzmon_iso (I,J,K,N,IBLOCK)+dz_iso(i,j,k,n,IBLOCK)
 !
-               aaymon_iso (I,J,K,N)= aaymon_iso (I,J,K,N)+aay_iso(i,j,k,n)
-               ddymon_iso (I,J,K,N)= ddymon_iso (I,J,K,N)+ddy_iso(i,j,k,n)
+!              aaymon_iso (I,J,K,N,IBLOCK)= aaymon_iso (I,J,K,N,IBLOCK)+aay_iso(i,j,k,n,IBLOCK)
+!              ddymon_iso (I,J,K,N,IBLOCK)= ddymon_iso (I,J,K,N,IBLOCK)+ddy_iso(i,j,k,n,IBLOCK)
 #endif
             END DO
          END DO
       END DO
       END DO
+   end do
 !
-!$OMP PARALLEL DO PRIVATE (K,J,I)
-      DO K = 1,KM
-         DO J = 1,JMT
-            DO I = 1,IMT
-               penmon (I,J,K)= penmon (I,J,K)+penetrate(i,j,k)
-            END DO
-         END DO
-      END DO
-!
-!$OMP PARALLEL DO PRIVATE (N,J,I)
-      DO N = 1,NTRA
-         DO J = 1,JMT
-            DO I = 1,IMT
-               netmon (I,J,N)= netmon (I,J,N) + net (I,J,N)
-            END DO
-         END DO
-      END DO
-!
-!lhl1204
-!$OMP PARALLEL DO PRIVATE (J,I)
-         DO J = 1,JMT
-            DO I = 1,IMT
-               mldmon (I,J)= mldmon (I,J) + amld (I,J)/100.
-            END DO
-         END DO
-!$OMP PARALLEL DO PRIVATE (K,J,I)
-      DO K = 1,KM
-         DO J = 1,JMT
-            DO I = 1,IMT
-               akmmon (I,J,K)= akmmon (I,J,K) + akmu(I,J,K)
-               aktmon (I,J,K)= aktmon (I,J,K) + akt(I,J,K,1)
-               aksmon (I,J,K)= aksmon (I,J,K) + akt(I,J,K,2)
-            END DO
-         END DO
-      END DO
-!lhl1204
 !
       RETURN
       END SUBROUTINE ACCUMM

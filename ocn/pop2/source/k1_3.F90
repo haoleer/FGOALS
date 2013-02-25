@@ -12,12 +12,14 @@ use precision_mod
 use param_mod
 use pconst_mod
 use isopyc_mod
+use domain
       IMPLICIT NONE
  
       REAL(r8) :: c1e10,eps,p5,c0,c1,p25,fxd,fxe,fxc,fxa,fxb,chkslp,olmask,xx
 !lhl060506
       REAL(r8) , dimension(IMT,JMT,KM) :: F1,F2
       REAL(r8)  :: SLOPEMOD,NONDIMR
+      integer :: iblock
 
       F1=1.0
       F2=1.0
@@ -45,17 +47,19 @@ use isopyc_mod
 !           estimated afterwards using a linear extrapolation
 !-----------------------------------------------------------------------
  
-!$OMP PARALLEL DO PRIVATE (j,k,m,i,fxd)
+!$OMP PARALLEL DO PRIVATE (iblock,j,k,m,i,fxd)
+   do iblock = 1, nblocks_clinic
       DO j = 2,jmm
          DO k = 2,km -1
             m = kisrpl (k)
             fxd = c1e10* p25* dzr (k)
             DO i = 1,imm
-               e (i,k,j,3) = fxd * (rhoi (i,k -1,j,m) - rhoi (i,k +1,j,m) &
-                             + rhoi (i +1,k -1,j,m) - rhoi (i +1,k +1,j,m)) 
+               e (i,k,j,3,iblock) = fxd * (rhoi (i,k -1,j,m,iblock) - rhoi (i,k +1,j,m,iblock) &
+                             + rhoi (i +1,k -1,j,m,iblock) - rhoi (i +1,k +1,j,m,iblock)) 
             END DO
          END DO
       END DO
+  end do
  
  
 !-----------------------------------------------------------------------
@@ -69,15 +73,17 @@ use isopyc_mod
       fxd = c1e10* dzr (1)
       fxe = dzw (0) + dzw (1)
       m = kisrpl (1)
-!$OMP PARALLEL DO PRIVATE (j,i,fxa,fxb,fxc)
+!$OMP PARALLEL DO PRIVATE (iblock,j,i,fxa,fxb,fxc)
+   do iblock = 1, nblocks_clinic
       DO j = 2,jmm
          DO i = 1,imm
-            fxa = p5* (rhoi (i,2,j,m) + rhoi (i +1,2,j,m))
-            fxb = p5* (rhoi (i,1,j,m) + rhoi (i +1,1,j,m))
+            fxa = p5* (rhoi (i,2,j,m,iblock) + rhoi (i +1,2,j,m,iblock))
+            fxb = p5* (rhoi (i,1,j,m,iblock) + rhoi (i +1,1,j,m,iblock))
             fxc = dzwr (1)* (fxb * fxe- fxa * dzw (0))
-            e (i,1,j,3) = fxd * (fxc - p5* (fxa + fxb))
+            e (i,1,j,3,iblock) = fxd * (fxc - p5* (fxa + fxb))
          END DO
       END DO
+   end do
  
  
 !-----------------------------------------------------------------------
@@ -85,30 +91,25 @@ use isopyc_mod
 !     of d(rho_barx_barz)/dz involving bottom level.
 !-----------------------------------------------------------------------
  
-!$OMP PARALLEL DO PRIVATE (j,i)
-      DO j = 2,jmm
-         DO i = 1,imm
-            e (i,km,j,3) = c0
-         END DO
-      END DO
+       e(:,km,:,3,:) = c0
  
  
-!$OMP PARALLEL DO PRIVATE (j,i,m,k,fxa,fxb,fxc,fxe)
+!$OMP PARALLEL DO PRIVATE (iblock,j,i,m,k,fxa,fxb,fxc,fxe)
+   do iblock = 1, nblocks_clinic
       DO j = 2,jmm
          DO i = 1,imm
-            k = min (ITNU (i,j),ITNU (i +1,j))
+            k = min (ITNU (i,j,iblock),ITNU (i +1,j,iblock))
             IF (k /= 0) THEN
                fxe = dzw (k -1) + dzw (k)
                m = kisrpl (k)
-               fxa = p5* (rhoi (i,k -1,j,m) + rhoi (i +1,k -1,j,m))
-               fxb = p5* (rhoi (i,k,j,m) + rhoi (i +1,k,j,m))
+               fxa = p5* (rhoi (i,k -1,j,m,iblock) + rhoi (i +1,k -1,j,m,iblock))
+               fxb = p5* (rhoi (i,k,j,m,iblock) + rhoi (i +1,k,j,m,iblock))
                fxc = dzwr (k -1)* (fxb * fxe- fxa * dzw (k))
-               e (i,k,j,3) = dzr (k)* c1e10* (p5* (fxa + fxb) - fxc)
+               e (i,k,j,3,iblock) = dzr (k)* c1e10* (p5* (fxa + fxb) - fxc)
             END IF
- 
          END DO
- 
       END DO
+   end do
  
  
 !-----------------------------------------------------------------------
@@ -116,20 +117,21 @@ use isopyc_mod
 !     "e(,,,2)" = d(rho_barx_bary)/dy centered on east face of "T" cells
 !-----------------------------------------------------------------------
  
-!$OMP PARALLEL DO PRIVATE (j,i,k,m)
+!$OMP PARALLEL DO PRIVATE (iblock,j,i,k,m)
+   do iblock = 1, nblocks_clinic
       DO j = 2,jmm
          DO k = 1,km
             m = kisrpl (k)
             DO i = 1,imm
-               e (i,k,j,1) = tmask (i,k,j)* tmask (i +1,k,j)* OTX (j) &
-                             * c1e10* (rhoi (i +1,k,j,m) - rhoi (i,k,j,m))    
-               e (i,k,j,2) = p25* c1e10* dytr (J)* ( &
-               rhoi (i,k,j +1,m) - rhoi (i,k,j -1,m) &
-                             + rhoi (i +1,k,j +1,m) - rhoi (i +1,k,j -1,m))  
+               e (i,k,j,1,iblock) = tmask (i,k,j,iblock)* tmask (i +1,k,j,iblock)* OTX (j) &
+                             * c1e10* (rhoi (i +1,k,j,m,iblock) - rhoi (i,k,j,m,iblock))    
+               e (i,k,j,2,iblock) = p25* c1e10* dytr (J)* ( &
+               rhoi (i,k,j +1,m,iblock) - rhoi (i,k,j -1,m,iblock) &
+                             + rhoi (i +1,k,j +1,m,iblock) - rhoi (i +1,k,j -1,m,iblock))  
             END DO
          END DO
       END DO
- 
+   end do 
  
 !-----------------------------------------------------------------------
 !     if any one of the 4 neighboring corner grid points is a land point
@@ -137,68 +139,62 @@ use isopyc_mod
 !     only in the slope check.
 !-----------------------------------------------------------------------
  
-!$OMP PARALLEL DO PRIVATE (j,i,k,olmask)
+!$OMP PARALLEL DO PRIVATE (iblock,j,i,k,olmask)
+   do iblock = 1, nblocks_clinic
       DO j = 2,jmm
          DO k = 1,km
             DO i = 1,imm
-               olmask = tmask (i,k,j -1)* tmask (i,k,j +1)* tmask (i +1,&
-                       k,j -1) * tmask (i +1,k,j +1)    
-               if (olmask < c1) e (i,k,j,2) = c0
+               olmask = tmask (i,k,j -1,iblock)* tmask (i,k,j +1,iblock)* tmask (i +1,&
+                       k,j -1,iblock) * tmask (i +1,k,j +1,iblock)    
+               if (olmask < c1) e (i,k,j,2,iblock) = c0
             END DO
          END DO
       END DO
- 
-!-----------------------------------------------------------------------
-!     impose zonal boundary conditions at "i"=1 and "imt"
-!-----------------------------------------------------------------------
-!$OMP PARALLEL DO PRIVATE (j)
-      DO j = 2,jmm
-         CALL setbcx (e (1,1,j,1), imt, km)
-         CALL setbcx (e (1,1,j,2), imt, km)
-         CALL setbcx (e (1,1,j,3), imt, km)
-      END DO
- 
+   end do 
  
 !lhl060506
 #ifdef LDD97
-!$OMP PARALLEL DO PRIVATE (j,k,i,chkslp,SLOPEMOD,NONDIMR)
+!$OMP PARALLEL DO PRIVATE (iblock,j,k,i,chkslp,SLOPEMOD,NONDIMR)
+   do iblock = 1, nblocks_clinic
       DO j = 2,jmm
          DO k = 1,km
             DO i = 1,imt
-               chkslp = - sqrt (e (i,k,j,1)**2+ e (i,k,j,2)**2)* slmxr
-               if (e (i,k,j,3) > chkslp) e (i,k,j,3) = chkslp
+               chkslp = - sqrt (e (i,k,j,1,iblock)**2+ e (i,k,j,2,iblock)**2)* slmxr
+               if (e (i,k,j,3,iblock) > chkslp) e (i,k,j,3,iblock) = chkslp
 !
-               SLOPEMOD= sqrt(e(i,k,j,1)**2+e(i,k,j,2)**2)/abs(e(i,k,j,3)+eps)
+               SLOPEMOD= sqrt(e(i,k,j,1,iblock)**2+e(i,k,j,2,iblock)**2)/abs(e(i,k,j,3,iblock)+eps)
 !
-               F1(i,j,k)=0.5D0*( 1.0D0 + tanh((0.004D0-SLOPEMOD)/0.001D0))
+               F1(i,j,k,iblock)=0.5D0*( 1.0D0 + tanh((0.004D0-SLOPEMOD)/0.001D0))
                NONDIMR=-ZKT(k)/(RRD1(j)*(SLOPEMOD+eps))
                IF ( NONDIMR>=1.0 ) THEN
-               F2(i,j,k)=1.0D0
+               F2(i,j,k,iblock)=1.0D0
                ELSE
-               F2(i,j,k) = 0.5D0*( 1.0D0 + SIN(PI*(NONDIMR-0.5D0)))
+               F2(i,j,k,iblock) = 0.5D0*( 1.0D0 + SIN(PI*(NONDIMR-0.5D0)))
                ENDIF
-               K1 (i,k,j,3) = ( - e (i,k,j,1)* e (i,k,j,3)* &
+               K1 (i,k,j,3,iblock) = ( - e (i,k,j,1,iblock)* e (i,k,j,3)* &
 !yyq 080408                       F1(i,j,k)*F2(i,j,k)) &
-                                  F1(i,j,k)*F2(i,j,k)*F3(j)) &
-                              / (e (i,k,j,3)**2+ eps)
+                                  F1(i,j,k,iblock)*F2(i,j,k,iblock)*F3(j)) &
+                              / (e (i,k,j,3,iblock)**2+ eps)
             END DO
          END DO
       END DO
+   end do
 
 #else
 
-!$OMP PARALLEL DO PRIVATE (j,k,i,chkslp)
+!$OMP PARALLEL DO PRIVATE (iblock,j,k,i,chkslp)
+   do iblock = 1, nblocks_clinic
       DO j = 2,jmm
          DO k = 1,km
             DO i = 1,imt
-               chkslp = - sqrt (e (i,k,j,1)**2+ e (i,k,j,2)**2)* slmxr
-               if (e (i,k,j,3) > chkslp) e (i,k,j,3) = chkslp
-               K1 (i,k,j,3) = ( - e (i,k,j,1)* e (i,k,j,3)* fzisop (k)) &
-                              / (e (i,k,j,3)**2+ eps)  
+               chkslp = - sqrt (e (i,k,j,1,iblock)**2+ e (i,k,j,2,iblock)**2)* slmxr
+               if (e (i,k,j,3,iblock) > chkslp) e (i,k,j,3,iblock) = chkslp
+               K1 (i,k,j,3,iblock) = ( - e (i,k,j,1,iblock)* e (i,k,j,3,iblock)* fzisop (k)) &
+                              / (e (i,k,j,3,iblock)**2+ eps)  
             END DO
          END DO
       END DO
-
+   end do
 #endif
 !lhl060506
 

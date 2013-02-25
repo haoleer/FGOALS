@@ -925,13 +925,13 @@ end subroutine gather_global_dbl
    case (field_loc_center)   ! cell center location
       xoffset = 1
       yoffset = 1
-   case (field_loc_NEcorner)   ! cell corner (velocity) location
+   case (field_loc_SWcorner)   ! cell corner (velocity) location
       xoffset = 0
       yoffset = 0
-   case (field_loc_Eface)   ! cell center location
+   case (field_loc_Wface)   ! cell center location
       xoffset = 0
       yoffset = 1
-   case (field_loc_Nface)   ! cell corner (velocity) location
+   case (field_loc_Sface)   ! cell corner (velocity) location
       xoffset = 1
       yoffset = 0
    case (field_loc_noupdate) ! ghost cells never used - use cell center
@@ -991,7 +991,7 @@ end subroutine gather_global_dbl
          !*** we only need to check for closed boundaries and
          !*** padding (global index = 0)
 
-         else if (this_block%jblock /= nblocks_y) then
+         else if (this_block%jblock /= 1 ) then
 
             do j=1,ny_block
                if (this_block%j_glob(j) /= 0) then
@@ -1021,8 +1021,7 @@ end subroutine gather_global_dbl
 
                else if (this_block%j_glob(j) < 0) then  ! tripole
 
-                  jsrc = jmt_global + yoffset + &
-                         (this_block%j_glob(j) + jmt_global)
+                  jsrc = yoffset - this_block%j_glob(j)
                   do i=1,nx_block
                      if (this_block%i_glob(i) /= 0) then
                         isrc = imt_global + xoffset - this_block%i_glob(i)
@@ -1072,7 +1071,7 @@ end subroutine gather_global_dbl
          !*** we only need to check for closed boundaries and
          !*** padding (global index = 0)
 
-         else if (this_block%jblock /= nblocks_y) then
+         else if (this_block%jblock /=  1 ) then
 
             do j=1,ny_block
                if (this_block%j_glob(j) /= 0) then
@@ -1102,8 +1101,7 @@ end subroutine gather_global_dbl
 
                else if (this_block%j_glob(j) < 0) then  ! tripole
 
-                  jsrc = jmt_global + yoffset + &
-                         (this_block%j_glob(j) + jmt_global)
+                  jsrc = yoffset - this_block%j_glob(j)
                   do i=1,nx_block
                      if (this_block%i_glob(i) /= 0) then
                         isrc = imt_global + xoffset - this_block%i_glob(i)
@@ -1240,13 +1238,13 @@ end subroutine gather_global_dbl
    case (field_loc_center)   ! cell center location
       xoffset = 1
       yoffset = 1
-   case (field_loc_NEcorner)   ! cell corner (velocity) location
+   case (field_loc_SWcorner)   ! cell corner (velocity) location
       xoffset = 0
       yoffset = 0
-   case (field_loc_Eface)   ! cell center location
+   case (field_loc_Wface)   ! cell center location
       xoffset = 0
       yoffset = 1
-   case (field_loc_Nface)   ! cell corner (velocity) location
+   case (field_loc_Sface)   ! cell corner (velocity) location
       xoffset = 1
       yoffset = 0
    case (field_loc_noupdate) ! ghost cells never used - use cell center
@@ -1306,7 +1304,7 @@ end subroutine gather_global_dbl
          !*** we only need to check for closed boundaries and
          !*** padding (global index = 0)
 
-         else if (this_block%jblock /= nblocks_y) then
+         else if (this_block%jblock /=  1 ) then
 
             do j=1,ny_block
                if (this_block%j_glob(j) /= 0) then
@@ -1336,8 +1334,7 @@ end subroutine gather_global_dbl
 
                else if (this_block%j_glob(j) < 0) then  ! tripole
 
-                  jsrc = jmt_global + yoffset + &
-                         (this_block%j_glob(j) + jmt_global)
+                  jsrc = yoffset - this_block%j_glob(j)
                   do i=1,nx_block
                      if (this_block%i_glob(i) /= 0) then
                         isrc = imt_global + xoffset - this_block%i_glob(i)
@@ -1387,7 +1384,7 @@ end subroutine gather_global_dbl
          !*** we only need to check for closed boundaries and
          !*** padding (global index = 0)
 
-         else if (this_block%jblock /= nblocks_y) then
+         else if (this_block%jblock /=  1 ) then
 
             do j=1,ny_block
                if (this_block%j_glob(j) /= 0) then
@@ -1417,8 +1414,7 @@ end subroutine gather_global_dbl
 
                else if (this_block%j_glob(j) < 0) then  ! tripole
 
-                  jsrc = jmt_global + yoffset + &
-                         (this_block%j_glob(j) + jmt_global)
+                  jsrc =  yoffset -  this_block%j_glob(j) 
                   do i=1,nx_block
                      if (this_block%i_glob(i) /= 0) then
                         isrc = imt_global + xoffset - this_block%i_glob(i)
@@ -1555,13 +1551,13 @@ end subroutine gather_global_dbl
    case (field_loc_center)   ! cell center location
       xoffset = 1
       yoffset = 1
-   case (field_loc_NEcorner)   ! cell corner (velocity) location
+   case (Field_loc_SWcorner)   ! cell corner (velocity) location
       xoffset = 0
       yoffset = 0
-   case (field_loc_Eface)   ! cell center location
+   case (field_loc_Wface)   ! cell center location
       xoffset = 0
       yoffset = 1
-   case (field_loc_Nface)   ! cell corner (velocity) location
+   case (field_loc_Sface)   ! cell corner (velocity) location
       xoffset = 1
       yoffset = 0
    case (field_loc_noupdate) ! ghost cells never used - use cell center
@@ -1871,13 +1867,13 @@ end subroutine gather_global_dbl
    case (field_loc_center)   ! cell center location
       xoffset = 1
       yoffset = 1
-   case (field_loc_NEcorner)   ! cell corner (velocity) location
+   case (Field_loc_SWcorner)   ! cell corner (velocity) location
       xoffset = 0
       yoffset = 0
-   case (field_loc_Eface)   ! cell center location
+   case (field_loc_Wface)   ! cell center location
       xoffset = 0
       yoffset = 1
-   case (field_loc_Nface)   ! cell corner (velocity) location
+   case (field_loc_Sface)   ! cell corner (velocity) location
       xoffset = 1
       yoffset = 0
    case (field_loc_noupdate) ! ghost cells never used - use cell center
@@ -1937,7 +1933,7 @@ end subroutine gather_global_dbl
          !*** we only need to check for closed boundaries and
          !*** padding (global index = 0)
 
-         else if (this_block%jblock /= nblocks_y) then
+         else if (this_block%jblock /= 1 ) then
 
             do j=1,ny_block
                if (this_block%j_glob(j) /= 0) then
@@ -1967,8 +1963,7 @@ end subroutine gather_global_dbl
 
                else if (this_block%j_glob(j) < 0) then  ! tripole
 
-                  jsrc = jmt_global + yoffset + &
-                         (this_block%j_glob(j) + jmt_global)
+                  jsrc =  yoffset - this_block%j_glob(j)
                   do i=1,nx_block
                      if (this_block%i_glob(i) /= 0) then
                         isrc = imt_global + xoffset - this_block%i_glob(i)
@@ -2018,7 +2013,7 @@ end subroutine gather_global_dbl
          !*** we only need to check for closed boundaries and
          !*** padding (global index = 0)
 
-         else if (this_block%jblock /= nblocks_y) then
+         else if (this_block%jblock /= 1 ) then
 
             do j=1,ny_block
                if (this_block%j_glob(j) /= 0) then
@@ -2048,8 +2043,7 @@ end subroutine gather_global_dbl
 
                else if (this_block%j_glob(j) < 0) then  ! tripole
 
-                  jsrc = jmt_global + yoffset + &
-                         (this_block%j_glob(j) + jmt_global)
+                  jsrc =  yoffset - this_block%j_glob(j) 
                   do i=1,nx_block
                      if (this_block%i_glob(i) /= 0) then
                         isrc = imt_global + xoffset - this_block%i_glob(i)

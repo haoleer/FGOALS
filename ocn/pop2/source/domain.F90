@@ -20,7 +20,6 @@
    use precision_mod
    use param_mod
    use msg_mod
-   use POP_KindsMod
    use POP_BlocksMod
    use POP_DistributionMod
    use POP_HaloMod
@@ -89,7 +88,7 @@
 !
 !-----------------------------------------------------------------------
 
-    integer (POP_i4) ::          &
+    integer (i4) ::          &
        clinicDistributionMethod, &! method for distributing blocks
        tropicDistributionMethod   ! method for distributing blocks
 
@@ -316,7 +315,7 @@
    integer (int_kind), dimension(imt_global,jmt_global), intent(in) :: &
       KMTG             ! global KMT (topography) field
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       errorCode
 
 !EOP

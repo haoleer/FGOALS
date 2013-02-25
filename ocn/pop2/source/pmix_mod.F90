@@ -20,12 +20,12 @@ use param_mod
       real(r8):: wndmix, fricmx, diff_cbt_back, diff_cbt_limit,&
                      visc_cbu_back, visc_cbu_limit
 !lhl1204 real(r8),dimension(:,:,:),allocatable:: ric,rit
-      real(r8),dimension(:,:,:),allocatable:: ric,rict
-      real(r8),dimension(:,:,:),allocatable:: rit,riu
+      real(r8),dimension(:,:,:,:),allocatable:: ric,rict
+      real(r8),dimension(:,:,:,:),allocatable:: rit,riu
 !      real(r8),dimension(imt,jmt,kmm1):: ricdt,ricdu
-      real(r8),dimension(imt,jmt,kmm1):: ricdt
+      real(r8),dimension(imt,jmt,kmm1,max_blocks_clinic):: ricdt
 !      real(r8),dimension(imt,jmt,kmm1):: ridu,ridt,s2u,s2t
-      real(r8),dimension(imt,jmt,kmm1):: ridt,s2u,s2t
+      real(r8),dimension(imt,jmt,kmm1,max_blocks_clinic):: ridt,s2u,s2t
 !lhl1204
 !
 !
@@ -60,7 +60,7 @@ use param_mod
 #endif
 
 #if (defined SOLARCHLORO)
-      real(r8),dimension(imt,jmt,km):: pen_chl   !  be different from pen(kmm1)
+      real(r8),dimension(imt,jmt,km,max_blocks_clinic):: pen_chl   !  be different from pen(kmm1)
 #endif
 
 end module pmix_mod

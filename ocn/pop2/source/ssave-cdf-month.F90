@@ -19,9 +19,10 @@ use dyn_mod
 use tracer_mod
 use cdf_mod
 use diag_mod
-#ifdef SPMD
 use msg_mod
-#endif
+use domain
+use distribution
+use gather_scatter
 
       IMPLICIT none
 #include <netcdf.inc>
@@ -34,7 +35,7 @@ use msg_mod
       CHARACTER ( LEN =   10 ) :: tt
       CHARACTER ( LEN =   5 ) :: zz
       INTEGER(r4)             :: vv(8)
-      INTEGER :: nwmf
+      INTEGER :: nwmf, iblock
  
 !---------------------------------------------------------------------
 !     output monthly results
@@ -65,25 +66,7 @@ use msg_mod
        !write(*,*) 'hist_output,io_hist',hist_output,io_hist
        if(mytid==0) write(*,*) 'ok inssavemon'
 
-#ifdef SPMD
-      if (hist_output) then
-!      call msf(vsmon_io)
-!      call barosf(usmon_io)
-!      call diag_tracer(1)
-!      call diag_tracer(2)
-!      call diag_heat_transport(1)
-!      call diag_heat_transport(2)
-#else
-      IF (hist_output) THEN
-!      call msf(vsmon)
-!      call barosf(usmon)
-!      call diag_tracer(1)
-!      call diag_tracer(2)
-!      call diag_heat_transport(1)
-!      call diag_heat_transport(2)
-#endif 
 
-#if (defined NETCDF) || (defined ALL)
 !--------------------------------------------------------------
 !     cdf output
 !--------------------------------------------------------------
@@ -138,18 +121,6 @@ use msg_mod
          z0_dims (2) = lat_dim
          z0_dims (1) = lon_dim
          iret = nf_def_var (ncid, 'z0', NF_REAL, z0_rank, z0_dims, z0_id)
-         CALL check_err (iret)
- 
-         hi_dims (3) = time_dim
-         hi_dims (2) = lat_dim
-         hi_dims (1) = lon_dim
-         iret = nf_def_var (ncid, 'hi', NF_REAL, hi_rank, hi_dims, hi_id)
-         CALL check_err (iret)
- 
-         hd_dims (3) = time_dim
-         hd_dims (2) = lat_dim
-         hd_dims (1) = lon_dim
-         iret = nf_def_var (ncid, 'hd', NF_REAL, hd_rank, hd_dims, hd_id)
          CALL check_err (iret)
  
          ic1_dims (3) = time_dim
@@ -322,20 +293,6 @@ use msg_mod
          iret = nf_put_att_text (ncid, z0_id, 'units', 5, 'meter')
          CALL check_err (iret)
          iret = nf_put_att_real (ncid, z0_id, '_FillValue', NF_REAL, 1, spval)
-         CALL check_err (iret)
- 
-         iret = nf_put_att_text (ncid, hi_id, 'long_name', 16, 'thickness of ice')
-         CALL check_err (iret)
-         iret = nf_put_att_text (ncid, hi_id, 'units', 5, 'meter')
-         CALL check_err (iret)
-         iret = nf_put_att_real (ncid, hi_id, '_FillValue', NF_REAL, 1, spval)
-         CALL check_err (iret)
- 
-         iret = nf_put_att_text (ncid, hd_id, 'long_name', 28, 'thickness of ice in one grid')
-         CALL check_err (iret)
-         iret = nf_put_att_text (ncid, hd_id, 'units', 5, 'meter')
-         CALL check_err (iret)
-         iret = nf_put_att_real (ncid, hd_id, '_FillValue', NF_REAL, 1, spval)
          CALL check_err (iret)
  
          iret = nf_put_att_text (ncid, ic1_id, 'long_name', 56, 'total of number of levels involved in convection per day')
@@ -547,786 +504,216 @@ use msg_mod
          count3 (2)= lat_len
          count3 (3)= time_len
  
-         allocate(buffer_r4(imt_global,jmt_global))
-#ifdef SPMD
-        call local_to_global_4d(z0mon,buffer_r4,1,1,1)
-        if(mytid==0) then         
-         iret = nf_put_vara_real (ncid,z0_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
-        endif !mytid==0
-#else
-!$OMP PARALLEL DO PRIVATE (J,I)
-         DO j = jst_global+1,jmt_global
-            DO i = 1,imt_global
-               IF (vit (i,j,1) > 0.5) THEN
-                  buffer_r4 (i,j,1)= z0mon (i,j) / (nmonth (mon0))
-               ELSE
-                  buffer_r4 (i,j,1)= spval
-               ENDIF
-            END DO
-         END DO
-         DO j = 1,jst_global
-            DO i = 1,imt_global
-                  buffer_r4 (i,j,1)= spval
-            END DO
-         END DO
-         iret = nf_put_vara_real (ncid,z0_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
-#endif
-
-#ifdef SPMD
-         call local_to_global_4d(himon,buffer_r4,1,1,1)
-
+         allocate(buffer_r4_global(imt_global,jmt_global), buffer_r4_local(imt,jmt,max_blocks_clinic))
+!
+         buffer_r4_local = z0mon
+         call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic) 
+!
          if(mytid==0) then         
-         iret = nf_put_vara_real (ncid,hi_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
+            iret = nf_put_vara_real (ncid,z0_id,start3, count3, buffer_r4_global)
+            CALL check_err (iret)
          endif !mytid==0
-#else
-!$OMP PARALLEL DO PRIVATE (J,I)
-         DO j = jst_global+1,jmt_global
-            DO i = 1,imt_global
-               IF (vit (i,j,1) > 0.5) THEN
-                  buffer_r4 (i,j,1)= himon (i,j) / (nmonth (mon0))
-               ELSE
-                  buffer_r4 (i,j,1)= spval
-               ENDIF
-            END DO
-         END DO
-
-         DO j = 1,jst_global
-            DO i = 1,imt_global
-            buffer_r4 (i,j,1)=spval            
-            END DO
-         END DO
-         iret = nf_put_vara_real (ncid,hi_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
-#endif
- 
-#ifdef SPMD
-         call local_to_global_4d(hdmon,buffer_r4,1,1,1)
+!
+         buffer_r4_local = icmon(:,:,1,:)
+         call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic) 
+!
          if(mytid==0) then
-         iret = nf_put_vara_real (ncid,hd_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
-         endif !mytid==0
-#else
-!$OMP PARALLEL DO PRIVATE (J,I)
-         DO j = 1,jmt_global
-            DO i = 1,imt_global
-               IF (vit (i,j,1) > 0.5) THEN
-                  buffer_r4 (i,j,1)= hdmon (i,j)/ (nmonth (mon0))
-               ELSE
-                  buffer_r4 (i,j,1)= spval
-               END IF
-            END DO
-         END DO
-
-         DO j = 1,jst_global
-            DO i = 1,imt_global
-                  buffer_r4 (i,j,1)= spval
-            END DO
-         END DO
- 
-         iret = nf_put_vara_real (ncid,hd_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
-#endif
-
-#ifdef SPMD
-         call local_to_global_4d(icmon(:,:,1),buffer_r4,1,1,1)
-
-         if(mytid==0) then
-         iret = nf_put_vara_real (ncid,ic1_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
+            iret = nf_put_vara_real (ncid,ic1_id,start3, count3, buffer_r4_global)
+            CALL check_err (iret)
          endif !mytid==0
 
-#else
-!$OMP PARALLEL DO PRIVATE (J,I)
-         DO j = jst_global+11,jmt_global
-            DO i = 1,imt_global
-               IF (vit (i,j,1) > 0.5) THEN
-                  buffer_r4 (i,j,1)= icmon (i,j,1)/ (nmonth (mon0))
-               ELSE
-                  buffer_r4 (i,j,1)= spval
-               END IF
-            END DO
-         END DO
-         DO j = 1,jst_global
-            DO i = 1,imt_global
-                  buffer_r4 (i,j,1)= spval
-            END DO
-         END DO
-
-         iret = nf_put_vara_real (ncid,ic1_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
-#endif
-
-#ifdef SPMD
-         call local_to_global_4d(icmon(:,:,2),buffer_r4,1,1,1)
+!
+         buffer_r4_local = icmon(:,:,2,:)
+         call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic) 
+!
          if(mytid==0) then
-         iret = nf_put_vara_real (ncid,ic2_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
+            iret = nf_put_vara_real (ncid,ic2_id,start3, count3, buffer_r4_global)
+            CALL check_err (iret)
          endif !mytid==0
-#else
-!$OMP PARALLEL DO PRIVATE (J,I)
-         DO j = jst_global+1,jmt_global
-            DO i = 1,imt_global
-               IF (vit (i,j,1) > 0.5) THEN
-                  buffer_r4 (i,j,1)= icmon (i,j,2)/ (nmonth (mon0))
-               ELSE
-                  buffer_r4 (i,j,1)= spval
-               END IF
-            END DO
-         END DO
-         DO j = 1,jst_global
-            DO i = 1,imt_global
-                  buffer_r4 (i,j,1)= spval
-            END DO
-         END DO
-         iret = nf_put_vara_real (ncid,ic2_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
-#endif
- 
-#ifdef SPMD
-         call local_to_global_4d(netmon(:,:,1),buffer_r4,1,1,1)
+!
+         buffer_r4_local = netmon(:,:,1,:)
+         call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic) 
+!
          if(mytid==0) then
-         iret = nf_put_vara_real (ncid,net1_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
+            iret = nf_put_vara_real (ncid,net1_id,start3, count3, buffer_r4_global)
+            CALL check_err (iret)
          endif !mytid==0
-#else
-!$OMP PARALLEL DO PRIVATE (J,I)
-         DO j = jst_global+1,jmt_global
-            DO i = 1,imt_global
-               IF (vit (i,j,1) > 0.5) THEN
-                  buffer_r4 (i,j,1)= netmon (i,j,1)/ (nmonth (mon0))
-               ELSE
-                  buffer_r4 (i,j,1)= spval
-               END IF
-            END DO
-         END DO
-         DO j = 1,jst_global
-            DO i = 1,imt_global
-                  buffer_r4 (i,j,1)= spval
-            END DO
-         END DO
- 
-         iret = nf_put_vara_real (ncid,net1_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
-#endif
 
-#ifdef SPMD
-         call local_to_global_4d(netmon(:,:,2),buffer_r4,1,1,1)
+         buffer_r4_local = netmon(:,:,2,:)
+         call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic) 
          if(mytid==0) then
-         iret = nf_put_vara_real (ncid,net2_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
-          endif !mytid==0
-#else
-!$OMP PARALLEL DO PRIVATE (J,I)
-         DO j = jst_global+1,jmt_global
-            DO i = 1,imt_global
-               IF (vit (i,j,1) > 0.5) THEN
-                  buffer_r4 (i,j,1)= netmon (i,j,2)/ (nmonth (mon0))
-               ELSE
-                  buffer_r4 (i,j,1)= spval
-               END IF
-            END DO
-         END DO
-         DO j = 1,jst_global
-            DO i = 1,imt_global
-                  buffer_r4 (i,j,1)= spval
-            END DO
-         END DO
-         iret = nf_put_vara_real (ncid,net2_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
-#endif
-
-#ifdef SPMD
-         call local_to_global_4d(mldmon,buffer_r4,1,1,1)
-         if(mytid==0) then
-         iret = nf_put_vara_real (ncid,mld_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
+            iret = nf_put_vara_real (ncid,net2_id,start3, count3, buffer_r4_global)
+            CALL check_err (iret)
          endif !mytid==0
-#else
-!$OMP PARALLEL DO PRIVATE (J,I)
-         DO j = jst_global+1,jmt_global
-            DO i = 1,imt_global
-               IF (vit (i,j,1) > 0.5) THEN
-                  buffer_r4 (i,j,1)= mldmon (i,j)/ (nmonth (mon0))
-               ELSE
-                  buffer_r4 (i,j,1)= spval
-               END IF
-            END DO
-         END DO
-         DO j = 1,jst_global
-            DO i = 1,imt_global
-                  buffer_r4 (i,j,1)= spval
-            END DO
-         END DO
-         iret = nf_put_vara_real (ncid,mld_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
-#endif
-!-----------------------------------------linpf 2012Jul27--------------
+!
+         buffer_r4_local = mldmon
+         call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic) 
+         if(mytid==0) then
+            iret = nf_put_vara_real (ncid,mld_id,start3, count3, buffer_r4_global)
+            CALL check_err (iret)
+         endif !mytid==0
 !3D output
-         allocate(buffer3_r4(imt_global,jmt_global,km))
          
          start4 (1)= 1
          start4 (2)= 1
-         start4 (3)= 1
          start4 (4)= 1
          count4 (1)= lon_len
          count4 (2)= lat_len
-         count4 (3)= klv
          count4 (4)= time_len
 
-#ifdef SPMD
-         call local_to_global_4d(akmmon,buffer3_r4,klv,1,0)
-         if(mytid==0) then
-         iret = nf_put_vara_real (ncid,akm_id,start4, count4, buffer3_r4)
-         CALL check_err (iret)
-         endif !mytid==0
-#else
-!$OMP PARALLEL DO PRIVATE (K,J,I)
-         DO k = 1,klv
-         DO j = jst_global+1,jmt_global
-            DO i = 1,imt_global
-               IF (viv (i,j,k) > 0.5) THEN
-                  buffer3_r4 (i,j,k,1)= akmmon (i,j,k)/ (nmonth (mon0))
-               ELSE
-                  buffer3_r4 (i,j,k,1)= spval
-               END IF
-            END DO
-         END DO
-         END DO
-         DO k = 1,klv
-         DO j = 1,jst_global
-            DO i = 1,imt_global
-                  buffer3_r4 (i,j,1)= spval
-            END DO
-         END DO
-         END DO
-         iret = nf_put_vara_real (ncid,akm_id,start4, count4, buffer3_r4)
-         CALL check_err (iret)
-#endif
+         do k = 1, klv
+            start4 (3)= k
+            count4 (3)= 1
+!
+            buffer_r4_local = akmmon(:,:,k,:)
+            call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic) 
+            if(mytid==0) then
+               iret = nf_put_vara_real (ncid,akm_id,start4, count4, buffer_r4_global)
+               CALL check_err (iret)
+            endif !mytid==0
+!
+         end do
+!
+         do k = 1, klv
+            start4 (3)= k
+            count4 (3)= 1
+!
+            buffer_r4_local = aktmon(:,:,k,:)
+            call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
+            if(mytid==0) then
+               iret = nf_put_vara_real (ncid,akt_id,start4, count4, buffer_r4_global)
+               CALL check_err (iret)
+            endif !mytid==0
+!
+         end do
 
-#ifdef SPMD
-         call local_to_global_4d(aktmon,buffer3_r4,klv,1,1)
-         if(mytid==0) then
-         iret = nf_put_vara_real (ncid,akt_id,start4, count4, buffer3_r4)
-         CALL check_err (iret)
-         endif !mytid==0
-#else    
-!$OMP PARALLEL DO PRIVATE (K,J,I)
-         DO k = 1,klv
-         DO j = 1,jmt_global
-            DO i = 1,imt_global
-               IF (vit (i,j,k) > 0.5) THEN
-                  buffer3_r4 (i,j,k,1)= aktmon (i,j,k)/ (nmonth (mon0))
-               ELSE
-                  buffer3_r4 (i,j,k,1)= spval
-               END IF
-            END DO
-         END DO
-         END DO
-         DO k = 1,klv
-         DO j = 1,jst_global
-            DO i = 1,imt_global
-                  buffer3_r4 (i,j,k,1)= spval
-            END DO
-         END DO
-         END DO
-         iret = nf_put_vara_real (ncid,akt_id,start4, count4, buffer3_r4)
-         CALL check_err (iret)
-#endif 
-!AKS
-#ifdef SPMD
-         call local_to_global_4d(aksmon,buffer3_r4,klv,1,1)
-         if(mytid==0) then
-         iret = nf_put_vara_real (ncid,aks_id,start4, count4, buffer3_r4)
-         CALL check_err (iret)
-         endif !mytid==0
-#else    
-!$OMP PARALLEL DO PRIVATE (K,J,I)
-         DO k = 1,klv
-         DO j = jst_global+1,jmt_global
-            DO i = 1,imt_global
-               IF (vit (i,j,k) > 0.5) THEN
-                  buffer3_r4 (i,j,k,1)= aksmon (i,j,k)/ (nmonth (mon0))
-               ELSE
-                  buffer3_r4 (i,j,k,1)= spval
-               END IF
-            END DO
-         END DO
-         END DO
-         DO k = 1,klv
-         DO j = 1,jst_global
-            DO i = 1,imt_global
-                  buffer3_r4 (i,j,k)= spval
-            END DO
-         END DO
-         END DO
-         iret = nf_put_vara_real (ncid,aks_id,start4, count4, buffer3_r4)
-         CALL check_err (iret)
-#endif 
+         do k = 1, klv
+            start4 (3)= k
+            count4 (3)= 1
+!
+            buffer_r4_local = aksmon(:,:,k,:)
+            call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
+            if(mytid==0) then
+               iret = nf_put_vara_real (ncid,aks_id,start4, count4, buffer_r4_global)
+               CALL check_err (iret)
+            endif !mytid==0
+!
+         end do
 
-#ifdef SPMD
-         call local_to_global_4d(tsmon,buffer3_r4,klv,1,1)
-         if(mytid==0) then
-         iret = nf_put_vara_real (ncid,ts_id, start4, count4, buffer3_r4)
-         CALL check_err (iret)
-         endif !mytid==0
-#else
-!$OMP PARALLEL DO PRIVATE (K,J,I)
-         DO k = 1,klv
-            DO j = jst_global+1,jmt_global
-               DO i = 1,imt_global
-                  IF (vit (i,j,k) > 0.5) THEN
-                     buffer3_r4 (i,j,k,1)= tsmon (i,j,k)/ (nmonth (mon0))
-                  ELSE
-                     buffer3_r4 (i,j,k,1)= spval
-                  END IF
-               END DO
-            END DO
-         END DO
-         DO k = 1,klv
-         DO j = 1,jst_global
-            DO i = 1,imt_global
-                  buffer3_r4 (i,j,k,1)= spval
-            END DO
-         END DO
-         END DO
- 
-         iret = nf_put_vara_real (ncid,ts_id, start4, count4, buffer3_r4)
-         CALL check_err (iret)
-#endif
+         do k = 1, klv
+            start4 (3)= k
+            count4 (3)= 1
+!
+            buffer_r4_local = tsmon(:,:,k,:)
+            call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
+            if(mytid==0) then
+               iret = nf_put_vara_real (ncid,ts_id,start4, count4, buffer_r4_global)
+               CALL check_err (iret)
+            endif !mytid==0
+!
+         end do
 
-!salinity 
-#ifdef SPMD
-         call local_to_global_4d(ssmon,buffer3_r4,klv,1,1)
-         if(mytid==0) then
-         iret = nf_put_vara_real (ncid,ss_id, start4, count4, buffer3_r4)
-         CALL check_err (iret)
-         endif !mytid==0
-#else
-!$OMP PARALLEL DO PRIVATE (K,J,I)
-         DO k = 1,klv
-            DO j = jst_global+1,jmt_global
-               DO i = 1,imt_global
-                  IF (vit (i,j,k) > 0.5) THEN
-                     buffer3_r4 (i,j,k,1)= ssmon (i,j,k)*1000./ (nmonth (mon0)) +35.
-                  ELSE
-                     buffer3_r4 (i,j,k,1)= spval
-                  END IF
-               END DO
-            END DO
-         END DO
-         DO k = 1,klv
-         DO j = 1,jst_global
-            DO i = 1,imt_global
-                  buffer3_r4 (i,j,k,1)= spval
-            END DO
-         END DO
-         END DO
- 
-         iret = nf_put_vara_real (ncid,ss_id, start4, count4, buffer3_r4)
-         CALL check_err (iret)
-#endif
-!vertical current
- 
-#ifdef SPMD
-         call local_to_global_4d(wsmon,buffer3_r4,klv,1,1)
-         if(mytid==0) then
-         iret = nf_put_vara_real (ncid,ws_id, start4, count4, buffer3_r4)
-         CALL check_err (iret)
-         endif !mytid==0
-#else
-!$OMP PARALLEL DO PRIVATE (K,J,I)
-         DO k = 1,klv
-            DO j = jst_global+1,jmt_global
-               DO i = 1,imt_global
-                  IF (vit (i,j,k) > 0.5) THEN
-                     buffer3_r4 (i,j,k,1)= wsmon (i,j,k)/ (nmonth (mon0))
-                  ELSE
-                     buffer3_r4 (i,j,k,1)= spval
-                  END IF
-               END DO
-            END DO
-         END DO
-         DO k = 1,klv
-         DO j = 1,jst_global
-            DO i = 1,imt_global
-                  buffer3_r4 (i,j,k,1)= spval
-            END DO
-         END DO
-         END DO
- 
-         iret = nf_put_vara_real (ncid,ws_id, start4, count4, buffer3_r4)
-         CALL check_err (iret)
-#endif
-!zonal curret 
-#ifdef SPMD
-         call local_to_global_4d(usmon,buffer3_r4,klv,1,0)
-         if(mytid==0) then
-         iret = nf_put_vara_real (ncid,us_id, start4, count4, buffer3_r4)
-         CALL check_err (iret)
-         endif !mytid==0
-#else
-!$OMP PARALLEL DO PRIVATE (K,J,I)
-         DO k = 1,klv
-            DO j = jst_global+1,jmt_global
-               DO i = 1,imt_global
-                  IF (viv (i,j,k) > 0.5) THEN
-                     buffer3_r4 (i,j,k,1)= usmon (i,j,k)/ (nmonth (mon0))
-                  ELSE
-                     buffer3_r4 (i,j,k,1)= spval
-                  END IF
-               END DO
-            END DO
-         END DO
-         DO k = 1,klv
-         DO j = 1,jst_global
-            DO i = 1,imt_global
-                  buffer3_r4 (i,j,k,1)= spval
-            END DO
-         END DO
-         END DO
- 
-         iret = nf_put_vara_real (ncid,us_id, start4, count4, buffer3_r4)
-         CALL check_err (iret)
-#endif
+         do k = 1, klv
+            start4 (3)= k
+            count4 (3)= 1
+!
+            buffer_r4_local = ssmon(:,:,k,:)
+            call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
+            if(mytid==0) then
+               iret = nf_put_vara_real (ncid,ss_id,start4, count4, buffer_r4_global)
+               CALL check_err (iret)
+            endif !mytid==0
+!
+         end do
 
-!meridional curret 
-#ifdef SPMD
-         call local_to_global_4d(vsmon,buffer3_r4,klv,1,0)
-         if(mytid==0) then
-         iret = nf_put_vara_real (ncid,vs_id, start4, count4, buffer3_r4)
-         CALL check_err (iret)
-         endif !mytid==0
-#else
-!$OMP PARALLEL DO PRIVATE (K,J,I)
-         DO k = 1,klv
-            DO j = jst_global+1,jmt_global
-               DO i = 1,imt_global
-                  IF (viv (i,j,k) > 0.5) THEN
-                     buffer3_r4 (i,j,k,1)= - vsmon (i,j,k)/ (nmonth (mon0))
-                  ELSE
-                     buffer3_r4 (i,j,k,1)= spval
-                  END IF
-               END DO
-            END DO
-         END DO
-         DO k = 1,klv
-         DO j = 1,jst_global
-            DO i = 1,imt_global
-                  buffer3_r4 (i,j,k,1)= spval
-            END DO
-         END DO
-         END DO
- 
-         iret = nf_put_vara_real (ncid,vs_id, start4, count4, buffer3_r4)
-         CALL check_err (iret)
-#endif
+         do k = 1, klv
+            start4 (3)= k
+            count4 (3)= 1
+!
+            buffer_r4_local = wsmon(:,:,k,:)
+            call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
+            if(mytid==0) then
+               iret = nf_put_vara_real (ncid,ws_id,start4, count4, buffer_r4_global)
+               CALL check_err (iret)
+            endif !mytid==0
+!
+         end do
+
+         do k = 1, klv
+            start4 (3)= k
+            count4 (3)= 1
+!
+            buffer_r4_local = usmon(:,:,k,:)
+            call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
+            if(mytid==0) then
+               iret = nf_put_vara_real (ncid,us_id,start4, count4, buffer_r4_global)
+               CALL check_err (iret)
+            endif !mytid==0
+!
+         end do
+
+         do k = 1, klv
+            start4 (3)= k
+            count4 (3)= 1
+!
+            buffer_r4_local = vsmon(:,:,k,:)
+            call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
+            if(mytid==0) then
+               iret = nf_put_vara_real (ncid,vs_id,start4, count4, buffer_r4_global)
+               CALL check_err (iret)
+            endif !mytid==0
+!
+         end do
+
 !Taux 
-#ifdef SPMD
-         call local_to_global_4d(sumon,buffer_r4,1,1,0)
+
+         buffer_r4_local = sumon
+         call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
          if(mytid==0) then
-         iret = nf_put_vara_real (ncid,su_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
+            iret = nf_put_vara_real (ncid,su_id,start4, count4, buffer_r4_global)
+            CALL check_err (iret)
          endif !mytid==0
-#else
-!$OMP PARALLEL DO PRIVATE (J,I)
-         DO j = jst_global+1,jmt_global
-            DO i = 1,imt_global
-               IF (viv (i,j,1) > 0.5) THEN
-                  buffer_r4 (i,j,1)= sumon (i,j)/ (nmonth (mon0))
-               ELSE
-                  buffer_r4 (i,j,1)= spval
-               END IF
-            END DO
-         END DO
-         DO j = 1,jst_global
-            DO i = 1,imt_global
-                  buffer_r4 (i,j,1)= spval
-            END DO
-         END DO
-
-         iret = nf_put_vara_real (ncid,su_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
-#endif
-!Tauy 
-#ifdef SPMD
-         call local_to_global_4d(svmon,buffer_r4,1,1,0)
-         if(mytid==0) then
-         iret = nf_put_vara_real (ncid,sv_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
-         endif !mytid==0
-#else
-!$OMP PARALLEL DO PRIVATE (J,I)
-         DO j = jst_global+1,jmt_global
-            DO i = 1,imt_global
-               IF (viv (i,j,1) > 0.5) THEN
-                  buffer_r4 (i,j,1)= svmon (i,j)/ (nmonth (mon0))
-               ELSE
-                  buffer_r4 (i,j,1)= spval
-               END IF
-            END DO
-         END DO
-         DO j = 1,jst_global
-            DO i = 1,imt_global
-                  buffer_r4 (i,j,1)= spval
-            END DO
-         END DO
-
-         iret = nf_put_vara_real (ncid,sv_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
-#endif
-!for latent heat flux
-#ifdef SPMD
-         call local_to_global_4d(lthfmon,buffer_r4,1,1,1)
-         if(mytid==0) then
-         iret = nf_put_vara_real (ncid,lthf_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
-         endif !mytid==0
-#else
-!$OMP PARALLEL DO PRIVATE (J,I)
-         DO j = jst_global+1,jmt_global
-            DO i = 1,imt_global
-               IF (vit (i,j,1) > 0.5) THEN
-                  buffer_r4 (i,j,1)= lthfmon (i,j)/ (nmonth (mon0))
-               ELSE
-                  buffer_r4 (i,j,1)= spval
-               END IF
-            END DO
-         END DO
-         DO j = 1,jst_global
-            DO i = 1,imt_global
-                  buffer_r4 (i,j,1)= spval
-            END DO
-         END DO
-
-         iret = nf_put_vara_real (ncid,lthf_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
-#endif
-!for sensible heat flux
-#ifdef SPMD
-         call local_to_global_4d(sshfmon,buffer_r4,1,1,1)
-         if(mytid==0) then
-         iret = nf_put_vara_real (ncid,sshf_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
-         endif !mytid==0
-#else
-!$OMP PARALLEL DO PRIVATE (J,I)
-         DO j = jst_global+1,jmt_global
-            DO i = 1,imt_global
-               IF (vit (i,j,1) > 0.5) THEN
-                  buffer_r4 (i,j,1)= sshfmon (i,j)/ (nmonth (mon0))
-               ELSE
-                  buffer_r4 (i,j,1)= spval
-               END IF
-            END DO
-         END DO
-         DO j = 1,jst_global
-            DO i = 1,imt_global
-                  buffer_r4 (i,j,1)= spval
-            END DO
-         END DO
-
-         iret = nf_put_vara_real (ncid,sshf_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
-#endif
-!for long wave radiation
-#ifdef SPMD
-         call local_to_global_4d(lwvmon,buffer_r4,1,1,1)
-         if(mytid==0) then
-         iret = nf_put_vara_real (ncid,lwv_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
-         endif !mytid==0
-#else
-!$OMP PARALLEL DO PRIVATE (J,I)
-         DO j = jst_global+1,jmt_global
-            DO i = 1,imt_global
-               IF (vit (i,j,1) > 0.5) THEN
-                  buffer_r4 (i,j,1)= lwvmon (i,j)/ (nmonth (mon0))
-               ELSE
-                  buffer_r4 (i,j,1)= spval
-               END IF
-            END DO
-         END DO
-         DO j = 1,jst_global
-            DO i = 1,imt_global
-                  buffer_r4 (i,j,1)= spval
-            END DO
-         END DO
-
-         iret = nf_put_vara_real (ncid,lwv_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
-#endif
-!for shortwave radiation
-#ifdef SPMD
-         call local_to_global_4d(swvmon,buffer_r4,1,1,1)
-         if(mytid==0) then
-         iret = nf_put_vara_real (ncid,swv_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
-         endif !mytid==0
-#else
-!$OMP PARALLEL DO PRIVATE (J,I)
-         DO j = jst_global+1,jmt_global
-            DO i = 1,imt_global
-               IF (vit (i,j,1) > 0.5) THEN
-                  buffer_r4 (i,j,1)= swvmon (i,j)/ (nmonth (mon0))
-               ELSE
-                  buffer_r4 (i,j,1)= spval
-               END IF
-            END DO
-         END DO
-         DO j = 1,jst_global
-            DO i = 1,imt_global
-                  buffer_r4 (i,j,1)= spval
-            END DO
-         END DO
-
-         iret = nf_put_vara_real (ncid,swv_id,start3, count3, buffer_r4)
-         CALL check_err (iret)
-#endif
-!linpf 20120728
-         if(mytid==0) write(*,*)'before diag_msf'
-!linpf 20120728
-       if(mytid==0) then
-
-       if (diag_msf) then
-          do k=1,km+1
-          do j=1,jmt_global
-             if (psi(j,k,1)<10000.) then
-                t2z_cdf(j,k,1)=psi(j,k,1)/(nmonth (mon0))
-             else
-                t2z_cdf(j,k,1)=spval
-             end if
-          end do
-          end do
-!!
-          start3 (1)= 1
-          start3 (2)= 1
-          start3 (3)= 1
-          count3 (1)= lat_len
-          count3 (2)= km+1
-          count3 (3)= time_len
-          iret = nf_put_vara_real (ncid,psi_id, start3, count3, t2z_cdf)
-          CALL check_err (iret)
-       end if
 !
-       if (diag_bsf) then
-!!
-          do j=1,jmt_global
-          do i=1,imt
-#ifdef SPMD
-!             if (viv_global(i,j,1)>0.5) then !linpf 2012Jul27
-             if (viv(i,j,1)>0.5) then
-#else
-             if (viv(i,j,1)>0.5) then
-#endif
-                t2_cdf(i,j,1)=bsf(i,j)/(nmonth (mon0))
-             else
-                t2_cdf(i,j,1)=spval
-             end if
-          end do
-          end do
-!!
-          start3 (1)= 1
-          start3 (2)= 1
-          start3 (3)= 1
-          count3 (1)= lon_len
-          count3 (2)= lat_len
-          count3 (3)= 1
-          iret = nf_put_vara_real (ncid,bsf_id, start3, count3, t2_cdf)
-          CALL check_err (iret)
-       end if !diag_bsf
-!!
-       if (diag_mth) then
-!!         
-          do i=1,2
-          do j=1,jmt_global
-                t1_cdf(i,j,1)=mth(j,i,1)
-          end do
-          end do
-          do i=3,4
-          do j=1,jmt_global
-                t1_cdf(i,j,1)=mth(j,i-3+1,2)
-          end do
-          end do
-
-          do i=5,6
-          do j=1,jmt_global
-                t1_cdf(i,j,1)=mth_adv(j,i-5+1,1)
-          end do
-          end do
-          do i=7,8
-          do j=1,jmt_global
-                t1_cdf(i,j,1)=mth_adv(j,i-7+1,2)
-          end do
-          end do
-!!
-          do i=9,10
-          do j=1,jmt_global
-                t1_cdf(i,j,1)=mth_dif(j,i-9+1,1)
-          end do
-          end do
-          do i=11,12
-          do j=1,jmt_global
-                t1_cdf(i,j,1)=mth_dif(j,i-11+1,2)
-          end do
-          end do
+         buffer_r4_local = svmon
+         call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
+         if(mytid==0) then
+            iret = nf_put_vara_real (ncid,sv_id,start4, count4, buffer_r4_global)
+            CALL check_err (iret)
+         endif !mytid==0
 !
-          do i=13,14
-          do j=1,jmt_global
-                t1_cdf(i,j,1)=mth_adv_iso(j,i-13+1,1)
-          end do
-          end do
-           do i=15,16
-          do j=1,jmt_global
-                t1_cdf(i,j,1)=mth_adv_iso(j,i-15+1,2)
-          end do
-          end do
+         buffer_r4_local = lthfmon
+         call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
+         if(mytid==0) then
+            iret = nf_put_vara_real (ncid,lthf_id,start4, count4, buffer_r4_global)
+            CALL check_err (iret)
+         endif !mytid==0
 !
-          start3 (1)= 1
-          start3 (2)= 1
-          start3 (3)= 1
-          count3 (1)= lon_len
-          count3 (2)= lat_len
-          count3 (3)= 1
-          iret = nf_put_vara_real (ncid,mth_id, start3, count3, t1_cdf)
-          CALL check_err (iret)
-
-        end if !diag_mth
-       endif !mytid==0
- 
-#if (defined SMAG_OUT)
-!$OMP PARALLEL DO PRIVATE (K,J,I)
-         DO k = 1,klv
-            DO j = 1,jmt_global
-               DO i = 1,imt
-#ifdef SPMD
-                  IF (vit_global (i,j,k) > 0.5) THEN
-                     t3_cdf (i,j,k,1)= am3mon_io (i,j,k)/ (nmonth (mon0))
-#else
-                  IF (vit (i,j,k) > 0.5) THEN
-                     t3_cdf (i,j,k,1)= am3mon (i,j,k)/ (nmonth (mon0))
-#endif
-                  ELSE
-                     t3_cdf (i,j,k,1)= spval
-                  END IF
-               END DO
-            END DO
-         END DO
- 
-         iret = nf_put_vara_real (ncid,am_id, start4, count4, t3_cdf)
-         CALL check_err (iret)
-#endif
-#endif
-
+         buffer_r4_local = sshfmon
+         call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
+         if(mytid==0) then
+            iret = nf_put_vara_real (ncid,sshf_id,start4, count4, buffer_r4_global)
+            CALL check_err (iret)
+         endif !mytid==0
+!
+         buffer_r4_local = lwvmon
+         call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
+         if(mytid==0) then
+            iret = nf_put_vara_real (ncid,lwv_id,start4, count4, buffer_r4_global)
+            CALL check_err (iret)
+         endif !mytid==0
+!
+         buffer_r4_local = swvmon
+         call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
+         if(mytid==0) then
+            iret = nf_put_vara_real (ncid,swv_id,start4, count4, buffer_r4_global)
+            CALL check_err (iret)
+         endif !mytid==0
+!
      if(mytid==0) then 
          iret = nf_CLOSE (ncid)
          CALL check_err (iret)
      endif
 
-     END IF
- 
  
          CALL mm00 (klv)
 !lhl20120728      IF (mod ( (month -1),12) == 0)THEN
@@ -1335,96 +722,7 @@ use msg_mod
       END IF
 !
 
-!      if (rest_output) then
-!#ifdef SPMD
-!      if(mytid==0)then
-!         fname(1:8)='fort.22.'
-!         fname(9:12)=ftail
-!         fname(13:13)='-'
-!         if ( mon0 < 12) then
-!             write(fname(14:15),'(i2.2)')mon0+1
-!         else
-!             write(fname(14:15),'(i2.2)')mon0-11
-!             write(fname(9:12),'(i4.4)')nwmf+1
-!         end if
-!         fname(16:24)='-01-00000'
-!         OPEN (90,file = fname,form ='unformatted',status ='unknown')
-!         write (90) h0_io,u_io,v_io,at_io,hi_io,itice_io,alead_io,month
-!      endif
-!#else
-!         fname(1:8)='fort.22.'
-!         fname(9:12)=ftail
-!         fname(13:13)='-'
-!         if ( mon0 < 12) then
-!             write(fname(14:15),'(i2.2)')mon0+1
-!         else
-!             write(fname(14:15),'(i2.2)')mon0-11
-!             write(fname(9:12),'(i4.4)')nwmf+1
-!         end if
-!         fname(16:24)='-01-00000'
-!         OPEN (90,file = fname,form ='unformatted',status ='unknown')
-!         WRITE (90) h0,u,v,at,hi,itice,alead,month
-!#endif
-!!
-!         if (mytid==0) then
-!#ifdef COUP
-!             write(90)t_cpl_io,s_cpl_io,u_cpl_io,v_cpl_io,dhdx_io,dhdy_io,q_io
-!#endif
-!             close (90)
-!         end if
 ! 
-!#ifdef SPMD
-!      if(mytid==0)then
-!         open(22,file='fort.22',form='unformatted')
-!         rewind 22
-!         write (22) h0_io,u_io,v_io,at_io,hi_io,itice_io,alead_io,month
-!      endif
-!#else
-!      REWIND 22
-!      WRITE (22) h0,u,v,at,hi,itice,alead,month
-!#endif
-!!
-!      if (mytid==0) then
-!#ifdef COUP
-!         write(22)t_cpl_io,s_cpl_io,u_cpl_io,v_cpl_io,dhdx_io,dhdy_io,q_io
-!#endif
-!         close(22)
-!      end if
-
-!      end if
-! 
-!---------------------------------------------------------------------
-!     reset some arrays
-!---------------------------------------------------------------------
-! 
-!      CALL vinteg (u,ub)
-!      CALL vinteg (v,vb)
-!! 
-!!$OMP PARALLEL DO PRIVATE (k,j,i)
-!      DO k = 1,km
-!         DO j = 1,jmt ! Dec. 5, 2002, Yongqiang Yu
-!            DO i = 1,imt
-!               up (i,j,k) = u (i,j,k)
-!               vp (i,j,k) = v (i,j,k)
-!               utf (i,j,k) = u (i,j,k)
-!               vtf (i,j,k) = v (i,j,k)
-!               atb (i,j,k,1) = at (i,j,k,1)
-!               atb (i,j,k,2) = at (i,j,k,2)
-!            END DO
-!         END DO
-!      END DO
-! 
-!!$OMP PARALLEL DO PRIVATE (j,i)
-!      DO j = 1,jmt ! Dec. 5, 2002, Yongqiang Yu
-!         DO i = 1,imt
-!            h0p (i,j)= h0 (i,j)
-!            ubp (i,j)= ub (i,j)
-!            vbp (i,j)= vb (i,j)
-!            h0f (i,j)= h0 (i,j)
-!            h0bf (i,j)= h0 (i,j)
-!         END DO
-!      END DO
-! 
-      deallocate (buffer_r4,buffer3_r4)
+      deallocate (buffer_r4_local,buffer_r4_global)
       RETURN
       END 

@@ -17,14 +17,9 @@ use param_mod
 use pconst_mod
 use diag_mod
 use pmix_mod
-#ifdef SPMD
 use msg_mod, only: tag_1d,tag_2d,tag_3d,tag_4d,nproc,status,mpi_comm_ocn
-#endif
-#ifdef COUP
 use shr_sys_mod
-!use shr_msg_mod by linpf
-use shr_msg_mod !,only:shr_sys_flush,shr_msg_stdio
-#endif
+use shr_msg_mod 
 
 
       IMPLICIT NONE
@@ -38,7 +33,8 @@ use shr_msg_mod !,only:shr_sys_flush,shr_msg_stdio
 
       namelist /namctl/ AFB1,AFC1,AFT1,IDTB,IDTC,IDTS,AMV,AHV,NUMBER, &
                         NSTART,IO_HIST,IO_REST,klv,DLAM,AM_TRO,AM_EXT,&
-                        diag_msf,diag_bsf,diag_budget,diag_mth,rest_freq,hist_freq,out_dir
+                        diag_msf,diag_bsf,diag_budget,diag_mth,rest_freq, &
+                        hist_freq,out_dir,adv_tracer,adv_momentum
 !-------------------------------------------------------
 !     Set up the default value for namelist.
 !-------------------------------------------------------
@@ -109,86 +105,27 @@ use shr_msg_mod !,only:shr_sys_flush,shr_msg_stdio
       AHV = 0.3D-4
 
 !
-#ifdef SPMD
 !-------------------------------------------------------
 !     Read namelist from the external file.
 !-------------------------------------------------------
-      if (mytid ==0 ) then
-      write(111,*) "OK----2    0.0"
-      close(111)
-      end if
       if (mytid==0) then
 	      open(11,file='ocn.parm',form='formatted',status='OLD')
 	      rewind 11
 	      read(11,namctl)
 	      close(11)
-              write (112,namctl)
-              close(112)
-      end if
-      if (mytid ==0 ) then
-      write(111,*) "OK----2    0.1", mpi_comm_ocn
-      close(111)
       end if
 !     call mpi_barrier(mpi_comm_ocn,ierr)
-      if (mytid ==0 ) then
-      write(111,*) "OK----2    0.2"
-      close(111)
-      end if
       call mpi_bcast(afb1,1,MPI_PR,0,mpi_comm_ocn,ierr)
-      if (mytid ==0 ) then
-      write(111,*) "OK----2    0.3"
-      close(111)
-      end if
       call mpi_bcast(afc1,1,MPI_PR,0,mpi_comm_ocn,ierr)
-      if (mytid ==0 ) then
-      write(111,*) "OK----2    0.4"
-      close(111)
-      end if
       call mpi_bcast(aft1,1,MPI_PR,0,mpi_comm_ocn,ierr)
-      if (mytid ==0 ) then
-      write(111,*) "OK----2    0.5"
-      close(111)
-      end if
       call mpi_bcast(amv,1,MPI_PR,0,mpi_comm_ocn,ierr)
-      if (mytid ==0 ) then
-      write(111,*) "OK----2    0.6"
-      close(111)
-      end if
       call mpi_bcast(ahv,1,MPI_PR,0,mpi_comm_ocn,ierr)
-      if (mytid ==0 ) then
-      write(111,*) "OK----2    0.7"
-      close(111)
-      end if
       call mpi_bcast(idtb,1,mpi_integer,0,mpi_comm_ocn,ierr)
-      if (mytid ==0 ) then
-      write(111,*) "OK----2    0.8"
-      close(111)
-      end if
       call mpi_bcast(idtc,1,mpi_integer,0,mpi_comm_ocn,ierr)
-      if (mytid ==0 ) then
-      write(111,*) "OK----2    0.9"
-      close(111)
-      end if
       call mpi_bcast(idts,1,mpi_integer,0,mpi_comm_ocn,ierr)
-      if (mytid ==0 ) then
-      write(111,*) "OK----2    0.10"
-      close(111)
-      end if
       call mpi_bcast(number,1,mpi_integer,0,mpi_comm_ocn,ierr)
-      if (mytid ==0 ) then
-      write(111,*) "OK----2    0.11"
-      close(111)
-      end if
       call mpi_bcast(nstart,1,mpi_integer,0,mpi_comm_ocn,ierr)
-      if (mytid ==0 ) then
-      write(111,*) "OK----2    0.12"
-      close(111)
-      end if
       call mpi_bcast(io_hist,1,mpi_integer,0,mpi_comm_ocn,ierr)
-      if (mytid ==0 ) then
-      write(111,*) "OK----2    0.13"
-      close(111)
-      end if
       call mpi_bcast(io_rest,1,mpi_integer,0,mpi_comm_ocn,ierr)
       call mpi_bcast(klv,1,mpi_integer,0,mpi_comm_ocn,ierr)
       call mpi_bcast(dlam,1,MPI_PR,0,mpi_comm_ocn,ierr)
@@ -197,15 +134,6 @@ use shr_msg_mod !,only:shr_sys_flush,shr_msg_stdio
       call mpi_bcast(hist_freq,1,mpi_integer,0,mpi_comm_ocn,ierr)
       call mpi_bcast(rest_freq,1,mpi_integer,0,mpi_comm_ocn,ierr)
 !      call mpi_barrier(mpi_comm_ocn,ierr)
-      if (mytid ==0 ) then
-      write(111,*) "OK----2    0.14"
-      close(111)
-      end if
-#else
-      open(11,file='ocn.parm',form='formatted')
-      read(11,namctl)
-#endif
-
 
       AHICE = AHV
 
@@ -308,17 +236,10 @@ use shr_msg_mod !,only:shr_sys_flush,shr_msg_stdio
       read(33,*)
       read(33,*)to
       read(33,*)
-      write(113,*) to
-      close(113)
-      read(33,*)so
-      write(114,*) so
-      close(114)
 !lhl1204   add a arry to read reference potential density
 !
       read(33,*)
       read(33,*)po
-      write(115,*) po
-      close(115)
 !      read(33,'(8(f7.4,1x))')po
 !lhl1204
       do i=1,km
@@ -327,14 +248,12 @@ use shr_msg_mod !,only:shr_sys_flush,shr_msg_stdio
       end do
       close(33)
       endif
-#ifdef SPMD
 !     call mpi_barrier(mpi_comm_ocn,ierr)
       call mpi_bcast(to,km,MPI_PR,0,mpi_comm_ocn,ierr)
       call mpi_bcast(so,km,MPI_PR,0,mpi_comm_ocn,ierr)
       call mpi_bcast(po,km,MPI_PR,0,mpi_comm_ocn,ierr)
       call mpi_bcast(c,km*9,MPI_PR,0,mpi_comm_ocn,ierr)
 !     call mpi_barrier(mpi_comm_ocn,ierr)
-#endif
 !YU
 !-------------------------------------------------------
 !     the units of density departures is [g/cm**3] in
@@ -360,33 +279,6 @@ use shr_msg_mod !,only:shr_sys_flush,shr_msg_stdio
       write(6,*)"AM_EXT,AM_TRO",AM_EXT,AM_TRO
       endif
 !YU
-!lhl090729
-#ifdef FRC_CORE
-      if (mytid.eq.0) then
-      iret=nf_open("t_10.db.clim.daymean.15JUNE2009.nc",nf_nowrite,ncid)
-      call check_err (iret)
-      iret=nf_get_var_double(ncid,3,s_lon)
-      call check_err (iret)
-      iret=nf_get_var_double(ncid,2,s_lat)
-      call check_err (iret)
-      iret=nf_close(ncid)
-      call check_err (iret)
-      do j=1,s_jmt
-      tmpy(j)=s_lat(s_jmt-j+1)
-      enddo
-      do j=1,s_jmt
-      s_lat(j)=tmpy(j)
-      enddo
-      endif
-
-#ifdef SPMD
-      call mpi_barrier(mpi_comm_ocn,ierr)
-      call mpi_bcast(s_lon,s_imt,mpi_double_precision,0,mpi_comm_ocn,ierr)
-      call mpi_bcast(s_lat,s_jmt,mpi_double_precision,0,mpi_comm_ocn,ierr)
-      call mpi_barrier(mpi_comm_ocn,ierr)
-#endif
-#endif
-!lhl090729
       RETURN
       END SUBROUTINE CONST
 

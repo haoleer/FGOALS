@@ -10,114 +10,51 @@ use output_mod
  
       INTEGER :: KLV
  
-!$OMP PARALLEL DO PRIVATE (J,I)
-      DO J = 1,JMT
-         DO I = 1,IMT
-            Z0MON (I,J)= 0.0
-            HIMON (I,J)= 0.0
-            HDMON (I,J)= 0.0
-            ICMON (I,J,1)= 0.0
-            ICMON (I,J,2)= 0.0
-!linpf091126
-            sumon (I,J)= 0.0   !U windstress
-            svmon (I,J)= 0.0   !V windstress
-            lthfmon (I,J)= 0.0 !latent flux
-            sshfmon (I,J)= 0.0 !sensible flux
-            lwvmon (I,J)= 0.0  !long wave flux
-            swvmon (I,J)= 0.0  !shortwave flux
-!linpf091126
-         END DO
- 
-      END DO
- 
- 
-!$OMP PARALLEL DO PRIVATE (K,J,I)
-      DO K = 1,KLV
-         DO J = 1,JMT
-            DO I = 1,IMT
-               TSMON (I,J,K)= 0.0
-               SSMON (I,J,K)= 0.0
-               USMON (I,J,K)= 0.0
-               VSMON (I,J,K)= 0.0
-               WSMON (I,J,K)= 0.0
+            Z0MON = 0.0
+            HIMON = 0.0
+            HDMON = 0.0
+            ICMON = 0.0
+            ICMON = 0.0
+            sumon = 0.0   !U windstress
+            svmon = 0.0   !V windstress
+            lthfmon = 0.0 !latent flux
+            sshfmon = 0.0 !sensible flux
+            lwvmon = 0.0  !long wave flux
+            swvmon = 0.0  !shortwave flux
+!
+               TSMON = 0.0
+               SSMON = 0.0
+               USMON = 0.0
+               VSMON = 0.0
+               WSMON = 0.0
 #if (defined SMAG_OUT)
-               AM3MON (I,J,K)= 0.0
+               AM3MON = 0.0
 #endif
-            END DO
- 
-         END DO
- 
-      END DO
- 
-!$OMP PARALLEL DO PRIVATE (N,K,J,I)
-      DO N = 1,NTRA
-      DO K = 1,KLV
-         DO J = 1,JMT
-            DO I = 1,IMT
-               trendmon (I,J,K,N)= 0.0
-               axmon (I,J,K,N)= 0.0
-               aymon (I,J,K,N)= 0.0
-               azmon (I,J,K,N)= 0.0
-               dxmon (I,J,K,N)= 0.0
-               dymon (I,J,K,N)= 0.0
-               dzmon (I,J,K,N)= 0.0
+               trendmon = 0.0
+               axmon = 0.0
+               aymon = 0.0
+               azmon = 0.0
+               dxmon = 0.0
+               dymon = 0.0
+               dzmon = 0.0
 !
-               ddymon (I,J,K,N)= 0.0
+               ddymon = 0.0
 #ifdef ISO
-               axmon_iso (I,J,K,N)= 0.0
-               aymon_iso (I,J,K,N)= 0.0
-               azmon_iso (I,J,K,N)= 0.0
-               dxmon_iso (I,J,K,N)= 0.0
-               dymon_iso (I,J,K,N)= 0.0
-               dzmon_iso (I,J,K,N)= 0.0
-!
-               aaymon_iso (I,J,K,N)= 0.0
-               ddymon_iso (I,J,K,N)= 0.0
+!              axmon_iso = 0.0
+!              aymon_iso = 0.0
+!              azmon_iso = 0.0
+!              dxmon_iso = 0.0
+!              dymon_iso = 0.0
+!              dzmon_iso = 0.0
+!              aaymon_iso = 0.0
+!              ddymon_iso = 0.0
 #endif
-            END DO
-         END DO
-      END DO
-      END DO
- 
-!$OMP PARALLEL DO PRIVATE (N,J,I)
-      DO N = 1,NTRA
-         DO J = 1,JMT
-            DO I = 1,IMT
-               netmon (I,J,N)= 0.0
-            END DO
-         END DO
-      END DO
- 
- 
-!$OMP PARALLEL DO PRIVATE (K,J,I)
-      DO K = 1,KLV
-         DO J = 1,JMT
-            DO I = 1,IMT
-               penmon (I,J,K)= 0.0
-            END DO
-         END DO
-      END DO
- 
-!lhl1204
-!$OMP PARALLEL DO PRIVATE (J,I)
-         DO J = 1,JMT
-            DO I = 1,IMT
-               mldmon (I,J)= 0.0
-            END DO
-         END DO
-!$OMP PARALLEL DO PRIVATE (K,J,I)
-      DO K = 1,KM
-         DO J = 1,JMT
-            DO I = 1,IMT
-               akmmon (I,J,K)= 0.0
-               aktmon (I,J,K)= 0.0
-               aksmon (I,J,K)= 0.0
-            END DO
-         END DO
-      END DO
-
-!lhl1204
- 
+               netmon = 0.0
+               penmon = 0.0
+               mldmon = 0.0
+               akmmon = 0.0
+               aktmon = 0.0
+               aksmon = 0.0
  
       RETURN
       END SUBROUTINE MM00

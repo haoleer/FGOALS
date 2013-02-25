@@ -4,7 +4,6 @@
    use precision_mod
    use param_mod
    use msg_mod
-   use POP_KindsMod
 
    implicit none
    private
@@ -39,18 +38,13 @@
 !  same as module
 
 
-   integer (POP_i4), intent(out) :: &
-      errorCode              ! Error code to set to fail
+   integer (i4), intent(out) :: errorCode              ! Error code to set to fail
 
 ! !INPUT PARAMETERS:
 
    character (*), intent(in) :: &
       errorMsg               ! message to add to error log for printing
 
-!-----------------------------------------------------------------------
-                               
-   errorCode = -1
-   
 !-----------------------------------------------------------------------
 !
 !  Add error message to error log
@@ -59,6 +53,7 @@
        write(6,*) "LICOM error:", errorMsg
        close(6)
 
+       errorCode = -1
 !-----------------------------------------------------------------------
 !EOC
 

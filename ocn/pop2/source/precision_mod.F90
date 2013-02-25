@@ -1,9 +1,7 @@
 module precision_mod
 #include <def-undef.h>
 !
-#ifdef SPMD
 #include <mpif.h>
-#endif
 !-------------------------------------------------------------------------------
 #ifdef D_PRECISION
    integer, parameter, public ::               &
@@ -18,11 +16,9 @@ module precision_mod
       r8             = selected_real_kind(12) ,&
       r16            = selected_real_kind(24)
 
-#ifdef SPMD
 integer*4, parameter :: MPI_PR = MPI_DOUBLE_PRECISION
 integer*4, parameter :: MPI_DBL = MPI_DOUBLE_PRECISION
 integer*4, parameter :: MPI_PR1 = MPI_REAL
-#endif
 
 #else
    integer, parameter, public ::               &
@@ -37,10 +33,8 @@ integer*4, parameter :: MPI_PR1 = MPI_REAL
       r8             = selected_real_kind(12) ,&
       r16            = selected_real_kind(24)
 
-#ifdef SPMD
 integer*4, parameter :: MPI_PR = MPI_REAL
 integer*4, parameter :: MPI_PR1 = MPI_REAL
-#endif
 
 #endif
 end module precision_mod

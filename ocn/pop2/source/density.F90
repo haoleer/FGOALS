@@ -34,24 +34,27 @@ use param_mod
 use pconst_mod
 use tracer_mod
 use work_mod, only: wka
+use domain
       IMPLICIT NONE
  
  
+      INTEGER     :: IBLOCK
       REAL(r8)    :: TQ,SQ
  
-!$OMP PARALLEL DO PRIVATE (K,J,I,TQ,SQ) 
+!$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I,TQ,SQ) 
+   DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM
 !YU   DO J=1,JMT
 !lhl      DO J=JST,JMT
          DO J = JST,JET
             DO I = 1,IMT
-               IF (VIT (I,J,K) > 0.0) THEN
-                  TQ = AT (I,J,K,1) - TO (K)
-                  SQ = AT (I,J,K,2) - SO (K)
+               IF (VIT (I,J,K,IBLOCK) > 0.0) THEN
+                  TQ = AT (I,J,K,1,IBLOCK) - TO (K)
+                  SQ = AT (I,J,K,2,IBLOCK) - SO (K)
 !lhl0608                  TQ = ATB(I,J,K,1) - TO (K)
 !lhl0608                  SQ = ATB(I,J,K,2) - SO (K)
 !lhl1204
-                  PDENSITY(I,J,K)=1.0d+3+PO(K)+(C(K,1)+(C(K,4)+C(K,7)*SQ)*SQ&
+                  PDENSITY(I,J,K,IBLOCK)=1.0d+3+PO(K)+(C(K,1)+(C(K,4)+C(K,7)*SQ)*SQ&
                                    +(C(K,3)+C(K,8)*SQ+C(K,6)*TQ)*TQ)*TQ&
                                    +(C(K,2)+(C(K,5)+C(K,9)*SQ)*SQ)*SQ
 !                  WKA(I,J,K)=      (C(K,1)+(C(K,4)+C(K,7)*SQ)*SQ+(C(K,3)+C(K,8)*SQ+&
@@ -60,12 +63,13 @@ use work_mod, only: wka
                ELSE
 !lhl1204
 !                  WKA (I,J,K) = 0.0
-                  PDENSITY (I,J,K) = 0.0
+                  PDENSITY (I,J,K,IBLOCK) = 0.0
 !lhl1204
                END IF
             END DO
          END DO
       END DO
+   END DO
       RETURN
       END SUBROUTINE DENSITY
  

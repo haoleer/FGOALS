@@ -19,12 +19,12 @@ use precision_mod
 use param_mod
 use pconst_mod
 use isopyc_mod
-#ifdef SPMD
 use msg_mod
-#endif
+use domain
  
       IMPLICIT NONE
       REAL(r8)    :: zdzk,t1,t2,dptmid,xx
+      integer :: iblock
  
 #ifdef SPMD
       if (mytid==0)then
@@ -99,13 +99,15 @@ use msg_mod
       END DO
  
  
-!$OMP PARALLEL DO PRIVATE (j,k,i)
+!$OMP PARALLEL DO PRIVATE (j,k,i,iblock)
+      do iblock = 1, nblocks_clinic
       DO j = 1,jmt
          DO k = 1,km
             DO i = 1,imt
-               tmask (i,k,j)= vit (i,j,k)
+               tmask (i,k,j,iblock)= vit (i,j,k,iblock)
             END DO
          END DO
+      END DO
       END DO
  
  

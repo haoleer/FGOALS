@@ -13,7 +13,7 @@
 
 ! !USES:
 
-   use POP_KindsMod
+   use precision_mod
    use POP_CommMod
    use LICOM_Error_mod
    use POP_BlocksMod
@@ -131,7 +131,7 @@
 
 ! !INPUT PARAMETERS:
 
-   real (POP_r8), dimension(:,:,:), intent(in) :: &
+   real (r8), dimension(:,:,:), intent(in) :: &
       array                ! array to be summed
 
    type (POP_distrb), intent(in) :: &
@@ -140,18 +140,18 @@
    character (*), intent(in) :: &
       fieldLoc             ! grid stagger location for this field
 
-   real (POP_r8), dimension(:,:,:), intent(in), optional :: &
+   real (r8), dimension(:,:,:), intent(in), optional :: &
       mMask                ! optional multiplicative mask
 
-   logical (POP_logical), dimension(:,:,:), intent(in), optional :: &
+   logical (log_kind), dimension(:,:,:), intent(in), optional :: &
       lMask                ! optional logical mask
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error flag
 
-   real (POP_r8) :: &
+   real (r8) :: &
       globalSum            ! resulting global sum
 
 !EOP
@@ -163,17 +163,17 @@
 !-----------------------------------------------------------------------
 
 #ifdef REPRODUCIBLE
-   real (POP_r16) :: &
+   real (r16) :: &
       blockSum,     &! sum of local block domain
       localSum,     &! sum of all local block domains
       globalSumTmp   ! higher precision global sum
 #else
-   real (POP_r8) :: &
+   real (r8) :: &
       blockSum,     &! sum of local block domain
       localSum       ! sum of all local block domains
 #endif
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i,j,iblock,      &! local counters
       ib,ie,jb,je,     &! beg,end of physical domain
       ierr,            &! mpi error flag
@@ -189,11 +189,11 @@
 
    errorCode = 0
 #ifdef REPRODUCIBLE
-   localSum  = 0.0_POP_r16
+   localSum  = 0.0_r16
 #else
-   localSum  = 0.0_POP_r8
+   localSum  = 0.0_r8
 #endif
-   globalSum = 0.0_POP_r8
+   globalSum = 0.0_r8
 
    call POP_DistributionGet(dist, errorCode,            &
                             numLocalBlocks = numBlocks, &
@@ -230,9 +230,9 @@
       je = thisBlock%je
 
 #ifdef REPRODUCIBLE
-      blockSum = 0.0_POP_r16
+      blockSum = 0.0_r16
 #else
-      blockSum = 0.0_POP_r8
+      blockSum = 0.0_r8
 #endif
 
       if (present(mMask)) then
@@ -264,8 +264,8 @@
       !*** must eliminate redundant points from global sum
 
       if (thisBlock%tripole) then
-         if (fieldLoc == POP_gridHorzLocNface .or. &
-             fieldLoc == POP_gridHorzLocNEcorner) then
+         if (fieldLoc == POP_gridHorzLocsface .or. &
+             fieldLoc == POP_gridHorzLocSWcorner) then
 
             j = je
 
@@ -345,7 +345,7 @@
 
 ! !INPUT PARAMETERS:
 
-   real (POP_r4), dimension(:,:,:), intent(in) :: &
+   real (r4), dimension(:,:,:), intent(in) :: &
       array                ! array to be summed
 
    type (POP_distrb), intent(in) :: &
@@ -354,18 +354,18 @@
    character (*), intent(in) :: &
       fieldLoc             ! grid stagger location for this field
 
-   real (POP_r4), dimension(:,:,:), intent(in), optional :: &
+   real (r4), dimension(:,:,:), intent(in), optional :: &
       mMask                ! optional multiplicative mask
 
-   logical (POP_logical), dimension(:,:,:), intent(in), optional :: &
+   logical (log_kind), dimension(:,:,:), intent(in), optional :: &
       lMask                ! optional logical mask
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error flag
 
-   real (POP_r4) :: &
+   real (r4) :: &
       globalSum            ! resulting global sum
 
 !EOP
@@ -377,17 +377,17 @@
 !-----------------------------------------------------------------------
 
 #ifdef REPRODUCIBLE
-   real (POP_r8) :: &
+   real (r8) :: &
       blockSum,     &! sum of local block domain
       localSum,     &! sum of all local block domains
       globalSumTmp   ! higher precision global sum
 #else
-   real (POP_r4) :: &
+   real (r4) :: &
       blockSum,     &! sum of local block domain
       localSum       ! sum of all local block domains
 #endif
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i,j,iblock,      &! local counters
       ib,ie,jb,je,     &! beg,end of physical domain
       ierr,            &! mpi error flag
@@ -403,11 +403,11 @@
 
    errorCode = 0
 #ifdef REPRODUCIBLE
-   localSum  = 0.0_POP_r8
+   localSum  = 0.0_r8
 #else
-   localSum  = 0.0_POP_r4
+   localSum  = 0.0_r4
 #endif
-   globalSum = 0.0_POP_r4
+   globalSum = 0.0_r4
 
    call POP_DistributionGet(dist, errorCode,            &
                             numLocalBlocks = numBlocks, &
@@ -445,9 +445,9 @@
 
 
 #ifdef REPRODUCIBLE
-      blockSum = 0.0_POP_r8
+      blockSum = 0.0_r8
 #else
-      blockSum = 0.0_POP_r4
+      blockSum = 0.0_r4
 #endif
 
       if (present(mMask)) then
@@ -479,8 +479,8 @@
       !*** must eliminate redundant points from global sum
 
       if (thisBlock%tripole) then
-         if (fieldLoc == POP_gridHorzLocNface .or. &
-             fieldLoc == POP_gridHorzLocNEcorner) then
+         if (fieldLoc == POP_gridHorzLocsface .or. &
+             fieldLoc == POP_gridHorzLocSWcorner) then
 
             j = je
 
@@ -560,7 +560,7 @@
 
 ! !INPUT PARAMETERS:
 
-   integer (POP_i4), dimension(:,:,:), intent(in) :: &
+   integer (i4), dimension(:,:,:), intent(in) :: &
       array                ! array to be summed
 
    type (POP_distrb), intent(in) :: &
@@ -569,18 +569,18 @@
    character (*), intent(in) :: &
       fieldLoc             ! grid stagger location for this field
 
-   integer (POP_i4), dimension(:,:,:), intent(in), optional :: &
+   integer (i4), dimension(:,:,:), intent(in), optional :: &
       mMask                ! optional multiplicative mask
 
-   logical (POP_logical), dimension(:,:,:), intent(in), optional :: &
+   logical (log_kind), dimension(:,:,:), intent(in), optional :: &
       lMask                ! optional logical mask
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error flag
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       globalSum            ! resulting global sum
 
 !EOP
@@ -591,11 +591,11 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       blockSum,     &! sum of local block domain
       localSum       ! sum of all local block domains
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i,j,iblock,      &! local counters
       ib,ie,jb,je,     &! beg,end of physical domain
       ierr,            &! mpi error flag
@@ -610,8 +610,8 @@
 !-----------------------------------------------------------------------
 
    errorCode = 0
-   localSum  = 0_POP_i4
-   globalSum = 0_POP_i4
+   localSum  = 0_i4
+   globalSum = 0_i4
 
    call POP_DistributionGet(dist, errorCode,            &
                             numLocalBlocks = numBlocks, &
@@ -648,7 +648,7 @@
       je = thisBlock%je
 
 
-      blockSum = 0_POP_i4
+      blockSum = 0_i4
 
       if (present(mMask)) then
          do j=jb,je
@@ -679,8 +679,8 @@
       !*** must eliminate redundant points from global sum
 
       if (thisBlock%tripole) then
-         if (fieldLoc == POP_gridHorzLocNface .or. &
-             fieldLoc == POP_gridHorzLocNEcorner) then
+         if (fieldLoc == POP_gridHorzLocsface .or. &
+             fieldLoc == POP_gridHorzLocSWcorner) then
 
             j = je
 
@@ -755,7 +755,7 @@
 
 ! !INPUT PARAMETERS:
 
-   real (POP_r8), dimension(:,:,:,:), intent(in) :: &
+   real (r8), dimension(:,:,:,:), intent(in) :: &
       array                ! array to be summed
 
    type (POP_distrb), intent(in) :: &
@@ -764,18 +764,18 @@
    character (*), intent(in) :: &
       fieldLoc             ! grid stagger location for this field
 
-   real (POP_r8), dimension(:,:,:), intent(in), optional :: &
+   real (r8), dimension(:,:,:), intent(in), optional :: &
       mMask                ! optional multiplicative mask
 
-   logical (POP_logical), dimension(:,:,:), intent(in), optional :: &
+   logical (log_kind), dimension(:,:,:), intent(in), optional :: &
       lMask                ! optional logical mask
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error flag
 
-   real (POP_r8), dimension(size(array,dim=3)) :: &
+   real (r8), dimension(size(array,dim=3)) :: &
       globalSum            ! resulting global sum
 
 !EOP
@@ -787,17 +787,17 @@
 !-----------------------------------------------------------------------
 
 #ifdef REPRODUCIBLE
-   real (POP_r16), dimension(size(array,dim=3)) :: &
+   real (r16), dimension(size(array,dim=3)) :: &
       blockSum,     &! sum of local block domain
       localSum,     &! sum of all local block domains
       globalSumTmp   ! higher precision global sum
 #else
-   real (POP_r8), dimension(size(array,dim=3)) :: &
+   real (r8), dimension(size(array,dim=3)) :: &
       blockSum,     &! sum of local block domain
       localSum       ! sum of all local block domains
 #endif
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i,j,n,iblock,    &! local counters
       ib,ie,jb,je,     &! beg,end of physical domain
       ierr,            &! mpi error flag
@@ -814,11 +814,11 @@
 
    errorCode = 0
 #ifdef REPRODUCIBLE
-   localSum  = 0.0_POP_r16
+   localSum  = 0.0_r16
 #else
-   localSum  = 0.0_POP_r8
+   localSum  = 0.0_r8
 #endif
-   globalSum = 0.0_POP_r8
+   globalSum = 0.0_r8
 
    numFields = size(array,dim=3)
 
@@ -857,9 +857,9 @@
       je = thisBlock%je
 
 #ifdef REPRODUCIBLE
-      blockSum = 0.0_POP_r16
+      blockSum = 0.0_r16
 #else
-      blockSum = 0.0_POP_r8
+      blockSum = 0.0_r8
 #endif
 
       if (present(mMask)) then
@@ -897,8 +897,8 @@
       !*** must eliminate redundant points from global sum
 
       if (thisBlock%tripole) then
-         if (fieldLoc == POP_gridHorzLocNface .or. &
-             fieldLoc == POP_gridHorzLocNEcorner) then
+         if (fieldLoc == POP_gridHorzLocsface .or. &
+             fieldLoc == POP_gridHorzLocSWcorner) then
 
             j = je
 
@@ -984,7 +984,7 @@
 
 ! !INPUT PARAMETERS:
 
-   real (POP_r8), intent(in) :: &
+   real (r8), intent(in) :: &
       scalar               ! scalar to be summed
 
    type (POP_distrb), intent(in) :: &
@@ -992,10 +992,10 @@
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error flag
 
-   real (POP_r8) :: &
+   real (r8) :: &
       globalSum            ! resulting global sum
 
 !EOP
@@ -1006,14 +1006,14 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       ierr,            &! mpi error flag
       numBlocks,       &! number of local blocks
       numProcs,        &! number of processor participating
       communicator      ! communicator for this distribution
 
 #ifdef REPRODUCIBLE
-   real (POP_r16) :: &
+   real (r16) :: &
       scalarTmp, globalSumTmp  ! higher precision for reproducibility
 #endif
 !-----------------------------------------------------------------------
@@ -1081,7 +1081,7 @@
 
 ! !INPUT PARAMETERS:
 
-   real (POP_r4), intent(in) :: &
+   real (r4), intent(in) :: &
       scalar               ! scalar to be summed
 
    type (POP_distrb), intent(in) :: &
@@ -1089,10 +1089,10 @@
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error flag
 
-   real (POP_r4) :: &
+   real (r4) :: &
       globalSum            ! resulting global sum
 
 !EOP
@@ -1103,13 +1103,13 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       ierr,            &! mpi error flag
       numProcs,        &! number of processor participating
       communicator      ! communicator for this distribution
 
 #ifdef REPRODUCIBLE
-   real (POP_r8) :: &
+   real (r8) :: &
       scalarTmp, globalSumTmp  ! higher precision for reproducibility
 #endif
 !-----------------------------------------------------------------------
@@ -1176,7 +1176,7 @@
 
 ! !INPUT PARAMETERS:
 
-   integer (POP_i4), intent(in) :: &
+   integer (i4), intent(in) :: &
       scalar               ! scalar to be summed
 
    type (POP_distrb), intent(in) :: &
@@ -1184,10 +1184,10 @@
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error flag
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       globalSum            ! resulting global sum
 
 !EOP
@@ -1198,7 +1198,7 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       ierr,            &! mpi error flag
       numProcs,        &! number of processor participating
       communicator      ! communicator for this distribution
@@ -1260,7 +1260,7 @@
 
 ! !INPUT PARAMETERS:
 
-   real (POP_r8), dimension(:,:,:), intent(in) :: &
+   real (r8), dimension(:,:,:), intent(in) :: &
       array1, array2       ! arrays whose product is to be summed
 
    type (POP_distrb), intent(in) :: &
@@ -1269,18 +1269,18 @@
    character (*), intent(in) :: &
       fieldLoc             ! grid stagger location for this field
 
-   real (POP_r8), dimension(:,:,:), intent(in), optional :: &
+   real (r8), dimension(:,:,:), intent(in), optional :: &
       mMask                ! optional multiplicative mask
 
-   logical (POP_logical), dimension(:,:,:), intent(in), optional :: &
+   logical (log_kind), dimension(:,:,:), intent(in), optional :: &
       lMask                ! optional logical mask
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error flag
 
-   real (POP_r8) :: &
+   real (r8) :: &
       globalSum            ! resulting global sum
 
 !EOP
@@ -1292,17 +1292,17 @@
 !-----------------------------------------------------------------------
 
 #ifdef REPRODUCIBLE
-   real (POP_r16) :: &
+   real (r16) :: &
       blockSum,      &! sum of local block domain
       localSum,      &! sum of all local block domains
       globalSumTmp    ! higher precision for reproducibility
 #else
-   real (POP_r8) :: &
+   real (r8) :: &
       blockSum,     &! sum of local block domain
       localSum       ! sum of all local block domains
 #endif
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i,j,iblock,      &! local counters
       ib,ie,jb,je,     &! beg,end of physical domain
       ierr,            &! mpi error flag
@@ -1318,11 +1318,11 @@
 
    errorCode = 0
 #ifdef REPRODUCIBLE
-   localSum  = 0.0_POP_r16
+   localSum  = 0.0_r16
 #else
-   localSum  = 0.0_POP_r8
+   localSum  = 0.0_r8
 #endif
-   globalSum = 0.0_POP_r8
+   globalSum = 0.0_r8
 
    call POP_DistributionGet(dist, errorCode,            &
                             numLocalBlocks = numBlocks, &
@@ -1359,9 +1359,9 @@
       je = thisBlock%je
 
 #ifdef REPRODUCIBLE
-      blockSum = 0.0_POP_r16
+      blockSum = 0.0_r16
 #else
-      blockSum = 0.0_POP_r8
+      blockSum = 0.0_r8
 #endif
 
       if (present(mMask)) then
@@ -1394,8 +1394,8 @@
       !*** must eliminate redundant points from global sum
 
       if (thisBlock%tripole) then
-         if (fieldLoc == POP_gridHorzLocNface .or. &
-             fieldLoc == POP_gridHorzLocNEcorner) then
+         if (fieldLoc == POP_gridHorzLocsface .or. &
+             fieldLoc == POP_gridHorzLocSWcorner) then
 
             j = je
 
@@ -1480,7 +1480,7 @@
 
 ! !INPUT PARAMETERS:
 
-   real (POP_r4), dimension(:,:,:), intent(in) :: &
+   real (r4), dimension(:,:,:), intent(in) :: &
       array1, array2       ! arrays whose product is to be summed
 
    type (POP_distrb), intent(in) :: &
@@ -1489,18 +1489,18 @@
    character (*), intent(in) :: &
       fieldLoc             ! grid stagger location for this field
 
-   real (POP_r4), dimension(:,:,:), intent(in), optional :: &
+   real (r4), dimension(:,:,:), intent(in), optional :: &
       mMask                ! optional multiplicative mask
 
-   logical (POP_logical), dimension(:,:,:), intent(in), optional :: &
+   logical (log_kind), dimension(:,:,:), intent(in), optional :: &
       lMask                ! optional logical mask
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error flag
 
-   real (POP_r4) :: &
+   real (r4) :: &
       globalSum            ! resulting global sum
 
 !EOP
@@ -1512,17 +1512,17 @@
 !-----------------------------------------------------------------------
 
 #ifdef REPRODUCIBLE
-   real (POP_r8) :: &
+   real (r8) :: &
       blockSum,     &! sum of local block domain
       localSum,     &! sum of all local block domains
       globalSumTmp   ! higher precision for reproducibility
 #else
-   real (POP_r4) :: &
+   real (r4) :: &
       blockSum,     &! sum of local block domain
       localSum       ! sum of all local block domains
 #endif
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i,j,iblock,      &! local counters
       ib,ie,jb,je,     &! beg,end of physical domain
       ierr,            &! mpi error flag
@@ -1538,11 +1538,11 @@
 
    errorCode = 0
 #ifdef REPRODUCIBLE
-   localSum  = 0.0_POP_r8
+   localSum  = 0.0_r8
 #else
-   localSum  = 0.0_POP_r4
+   localSum  = 0.0_r4
 #endif
-   globalSum = 0.0_POP_r4
+   globalSum = 0.0_r4
 
    call POP_DistributionGet(dist, errorCode,            &
                             numLocalBlocks = numBlocks, &
@@ -1579,9 +1579,9 @@
       je = thisBlock%je
 
 #ifdef REPRODUCIBLE
-      blockSum = 0.0_POP_r8
+      blockSum = 0.0_r8
 #else
-      blockSum = 0.0_POP_r4
+      blockSum = 0.0_r4
 #endif
 
       if (present(mMask)) then
@@ -1614,8 +1614,8 @@
       !*** must eliminate redundant points from global sum
 
       if (thisBlock%tripole) then
-         if (fieldLoc == POP_gridHorzLocNface .or. &
-             fieldLoc == POP_gridHorzLocNEcorner) then
+         if (fieldLoc == POP_gridHorzLocsface .or. &
+             fieldLoc == POP_gridHorzLocSWcorner) then
 
             j = je
 
@@ -1699,7 +1699,7 @@
 
 ! !INPUT PARAMETERS:
 
-   integer (POP_i4), dimension(:,:,:), intent(in) :: &
+   integer (i4), dimension(:,:,:), intent(in) :: &
       array1, array2       ! arrays whose product is to be summed
 
    type (POP_distrb), intent(in) :: &
@@ -1708,18 +1708,18 @@
    character (*), intent(in) :: &
       fieldLoc             ! grid stagger location for this field
 
-   integer (POP_i4), dimension(:,:,:), intent(in), optional :: &
+   integer (i4), dimension(:,:,:), intent(in), optional :: &
       mMask                ! optional multiplicative mask
 
-   logical (POP_logical), dimension(:,:,:), intent(in), optional :: &
+   logical (log_kind), dimension(:,:,:), intent(in), optional :: &
       lMask                ! optional logical mask
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error flag
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       globalSum            ! resulting global sum
 
 !EOP
@@ -1730,11 +1730,11 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       blockSum,     &! sum of local block domain
       localSum       ! sum of all local block domains
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i,j,iblock,      &! local counters
       ib,ie,jb,je,     &! beg,end of physical domain
       ierr,            &! mpi error flag
@@ -1749,8 +1749,8 @@
 !-----------------------------------------------------------------------
 
    errorCode = 0
-   localSum  = 0_POP_i4
-   globalSum = 0_POP_i4
+   localSum  = 0_i4
+   globalSum = 0_i4
 
    call POP_DistributionGet(dist, errorCode,     &
                             numLocalBlocks = numBlocks, &
@@ -1787,7 +1787,7 @@
       je = thisBlock%je
 
 
-      blockSum = 0_POP_i4
+      blockSum = 0_i4
 
       if (present(mMask)) then
          do j=jb,je
@@ -1819,8 +1819,8 @@
       !*** must eliminate redundant points from global sum
 
       if (thisBlock%tripole) then
-         if (fieldLoc == POP_gridHorzLocNface .or. &
-             fieldLoc == POP_gridHorzLocNEcorner) then
+         if (fieldLoc == POP_gridHorzLocsface .or. &
+             fieldLoc == POP_gridHorzLocSWcorner) then
 
             j = je
 
@@ -1895,7 +1895,7 @@
 
 !INPUT PARAMETERS:
 
-   real (POP_r8), dimension(:,:,:), intent(in) :: &
+   real (r8), dimension(:,:,:), intent(in) :: &
       mask                 ! array for which non-zero elements
                            !   are to be counted
 
@@ -1907,10 +1907,10 @@
 
 !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error code 
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       globalCount          ! resulting global count
 
 !EOP
@@ -1921,7 +1921,7 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) ::   &
+   integer (i4) ::   &
       ib, ie, jb, je,    &! start,end of physical domain
       ierr,              &! mpi error flag
       blockCount,        &! count of local block
@@ -1979,7 +1979,7 @@
 
       do j=jb,je
       do i=ib,ie
-         if (mask(i,j,iblock) /= 0.0_POP_r8) then
+         if (mask(i,j,iblock) /= 0.0_r8) then
             blockCount = blockCount + 1
          endif
       end do
@@ -1990,14 +1990,14 @@
       !*** must eliminate redundant points from global sum
 
       if (thisBlock%tripole) then
-         if (fieldLoc == POP_gridHorzLocNface .or. &
-             fieldLoc == POP_gridHorzLocNEcorner) then
+         if (fieldLoc == POP_gridHorzLocsface .or. &
+             fieldLoc == POP_gridHorzLocSWcorner) then
 
             j = je
 
             do i=ib,ie
                if (thisBlock%iGlobal(i) > thisBlock%nxGlobal/2) then
-                  if (mask(i,j,iblock) /= 0.0_POP_r8) &
+                  if (mask(i,j,iblock) /= 0.0_r8) &
                      blockCount = blockCount - 1
                endif
             end do
@@ -2047,7 +2047,7 @@
 
 !INPUT PARAMETERS:
 
-   real (POP_r4), dimension(:,:,:), intent(in) :: &
+   real (r4), dimension(:,:,:), intent(in) :: &
       mask                 ! array for which non-zero elements
                            !   are to be counted
 
@@ -2059,10 +2059,10 @@
 
 !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error code 
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       globalCount          ! resulting global count
 
 !EOP
@@ -2073,7 +2073,7 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) ::   &
+   integer (i4) ::   &
       ib, ie, jb, je,    &! start,end of physical domain
       ierr,              &! mpi error flag
       blockCount,        &! count of local block
@@ -2131,7 +2131,7 @@
 
       do j=jb,je
       do i=ib,ie
-         if (mask(i,j,iblock) /= 0.0_POP_r4) then
+         if (mask(i,j,iblock) /= 0.0_r4) then
             blockCount = blockCount + 1
          endif
       end do
@@ -2142,14 +2142,14 @@
       !*** must eliminate redundant points from global sum
 
       if (thisBlock%tripole) then
-         if (fieldLoc == POP_gridHorzLocNface .or. &
-             fieldLoc == POP_gridHorzLocNEcorner) then
+         if (fieldLoc == POP_gridHorzLocsface .or. &
+             fieldLoc == POP_gridHorzLocSWcorner) then
 
             j = je
 
             do i=ib,ie
                if (thisBlock%iGlobal(i) > thisBlock%nxGlobal/2) then
-                  if (mask(i,j,iblock) /= 0.0_POP_r4) &
+                  if (mask(i,j,iblock) /= 0.0_r4) &
                      blockCount = blockCount - 1
                endif
             end do
@@ -2199,7 +2199,7 @@
 
 !INPUT PARAMETERS:
 
-   integer (POP_i4), dimension(:,:,:), intent(in) :: &
+   integer (i4), dimension(:,:,:), intent(in) :: &
       mask                 ! array for which non-zero elements
                            !   are to be counted
 
@@ -2211,10 +2211,10 @@
 
 !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error code 
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       globalCount          ! resulting global count
 
 !EOP
@@ -2225,7 +2225,7 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) ::   &
+   integer (i4) ::   &
       ib, ie, jb, je,    &! start,end of physical domain
       ierr,              &! mpi error flag
       blockCount,        &! count of local block
@@ -2283,7 +2283,7 @@
 
       do j=jb,je
       do i=ib,ie
-         if (mask(i,j,iblock) /= 0_POP_i4) then
+         if (mask(i,j,iblock) /= 0_i4) then
             blockCount = blockCount + 1
          endif
       end do
@@ -2294,14 +2294,14 @@
       !*** must eliminate redundant points from global sum
 
       if (thisBlock%tripole) then
-         if (fieldLoc == POP_gridHorzLocNface .or. &
-             fieldLoc == POP_gridHorzLocNEcorner) then
+         if (fieldLoc == POP_gridHorzLocsface .or. &
+             fieldLoc == POP_gridHorzLocSWcorner) then
 
             j = je
 
             do i=ib,ie
                if (thisBlock%iGlobal(i) > thisBlock%nxGlobal/2) then
-                  if (mask(i,j,iblock) /= 0_POP_i4) &
+                  if (mask(i,j,iblock) /= 0_i4) &
                      blockCount = blockCount - 1
                endif
             end do
@@ -2351,7 +2351,7 @@
 
 !INPUT PARAMETERS:
 
-   logical (POP_logical), dimension(:,:,:), intent(in) :: &
+   logical (log_kind), dimension(:,:,:), intent(in) :: &
       mask                 ! array for which non-zero elements
                            !   are to be counted
 
@@ -2363,10 +2363,10 @@
 
 !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error code 
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       globalCount          ! resulting global count
 
 !EOP
@@ -2377,7 +2377,7 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) ::   &
+   integer (i4) ::   &
       ib, ie, jb, je,    &! start,end of physical domain
       ierr,              &! mpi error flag
       blockCount,        &! count of local block
@@ -2446,8 +2446,8 @@
       !*** must eliminate redundant points from global sum
 
       if (thisBlock%tripole) then
-         if (fieldLoc == POP_gridHorzLocNface .or. &
-             fieldLoc == POP_gridHorzLocNEcorner) then
+         if (fieldLoc == POP_gridHorzLocsface .or. &
+             fieldLoc == POP_gridHorzLocSWcorner) then
 
             j = je
 
@@ -2503,21 +2503,21 @@
 
 ! !INPUT PARAMETERS:
 
-   real (POP_r8), dimension(:,:,:), intent(in) :: &
+   real (r8), dimension(:,:,:), intent(in) :: &
       array                ! array for which max value needed
 
    type (POP_distrb), intent(in) :: &
       dist                 ! block distribution for array X
 
-   logical (POP_logical), dimension(:,:,:), intent(in), optional :: &
+   logical (log_kind), dimension(:,:,:), intent(in), optional :: &
       lMask                ! optional logical mask
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error flag
 
-   real (POP_r8) :: &
+   real (r8) :: &
       globalMaxval         ! resulting maximum valu of array
 
 !EOP
@@ -2528,11 +2528,11 @@
 !
 !-----------------------------------------------------------------------
 
-   real (POP_r8) ::    &
+   real (r8) ::    &
       blockMaxval,     &! sum of local block domain
       localMaxval       ! sum of all local block domains
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i,j,iblock,      &! local counters
       ib,ie,jb,je,     &! beg,end of physical domain
       ierr,            &! mpi error flag
@@ -2547,8 +2547,8 @@
 !-----------------------------------------------------------------------
 
    errorCode = 0
-   localMaxval  = -HUGE(0.0_POP_r8)
-   globalMaxval = -HUGE(0.0_POP_r8)
+   localMaxval  = -HUGE(0.0_r8)
+   globalMaxval = -HUGE(0.0_r8)
 
    call POP_DistributionGet(dist, errorCode,            &
                             numLocalBlocks = numBlocks, &
@@ -2584,7 +2584,7 @@
       jb = thisBlock%jb
       je = thisBlock%je
 
-      blockMaxval = -HUGE(0.0_POP_r8)
+      blockMaxval = -HUGE(0.0_r8)
 
       if (present(lMask)) then
          do j=jb,je
@@ -2643,21 +2643,21 @@
 
 ! !INPUT PARAMETERS:
 
-   real (POP_r4), dimension(:,:,:), intent(in) :: &
+   real (r4), dimension(:,:,:), intent(in) :: &
       array                ! array for which max value needed
 
    type (POP_distrb), intent(in) :: &
       dist                 ! block distribution for array X
 
-   logical (POP_logical), dimension(:,:,:), intent(in), optional :: &
+   logical (log_kind), dimension(:,:,:), intent(in), optional :: &
       lMask                ! optional logical mask
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error flag
 
-   real (POP_r4) :: &
+   real (r4) :: &
       globalMaxval         ! resulting maximum valu of array
 
 !EOP
@@ -2668,11 +2668,11 @@
 !
 !-----------------------------------------------------------------------
 
-   real (POP_r4) ::    &
+   real (r4) ::    &
       blockMaxval,     &! sum of local block domain
       localMaxval       ! sum of all local block domains
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i,j,iblock,      &! local counters
       ib,ie,jb,je,     &! beg,end of physical domain
       ierr,            &! mpi error flag
@@ -2687,8 +2687,8 @@
 !-----------------------------------------------------------------------
 
    errorCode = 0
-   localMaxval  = -HUGE(0.0_POP_r4)
-   globalMaxval = -HUGE(0.0_POP_r4)
+   localMaxval  = -HUGE(0.0_r4)
+   globalMaxval = -HUGE(0.0_r4)
 
    call POP_DistributionGet(dist, errorCode,            &
                             numLocalBlocks = numBlocks, &
@@ -2724,7 +2724,7 @@
       jb = thisBlock%jb
       je = thisBlock%je
 
-      blockMaxval = -HUGE(0.0_POP_r4)
+      blockMaxval = -HUGE(0.0_r4)
 
       if (present(lMask)) then
          do j=jb,je
@@ -2783,21 +2783,21 @@
 
 ! !INPUT PARAMETERS:
 
-   integer (POP_i4), dimension(:,:,:), intent(in) :: &
+   integer (i4), dimension(:,:,:), intent(in) :: &
       array                ! array for which max value needed
 
    type (POP_distrb), intent(in) :: &
       dist                 ! block distribution for array X
 
-   logical (POP_logical), dimension(:,:,:), intent(in), optional :: &
+   logical (log_kind), dimension(:,:,:), intent(in), optional :: &
       lMask                ! optional logical mask
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error flag
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       globalMaxval         ! resulting maximum valu of array
 
 !EOP
@@ -2808,11 +2808,11 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       blockMaxval,     &! sum of local block domain
       localMaxval       ! sum of all local block domains
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i,j,iblock,      &! local counters
       ib,ie,jb,je,     &! beg,end of physical domain
       ierr,            &! mpi error flag
@@ -2827,8 +2827,8 @@
 !-----------------------------------------------------------------------
 
    errorCode = 0
-   localMaxval  = -HUGE(0_POP_i4)
-   globalMaxval = -HUGE(0_POP_i4)
+   localMaxval  = -HUGE(0_i4)
+   globalMaxval = -HUGE(0_i4)
 
    call POP_DistributionGet(dist, errorCode,            &
                             numLocalBlocks = numBlocks, &
@@ -2864,7 +2864,7 @@
       jb = thisBlock%jb
       je = thisBlock%je
 
-      blockMaxval = -HUGE(0_POP_i4)
+      blockMaxval = -HUGE(0_i4)
 
       if (present(lMask)) then
          do j=jb,je
@@ -2923,21 +2923,21 @@
 
 ! !INPUT PARAMETERS:
 
-   real (POP_r8), dimension(:,:,:), intent(in) :: &
+   real (r8), dimension(:,:,:), intent(in) :: &
       array                ! array for which min value needed
 
    type (POP_distrb), intent(in) :: &
       dist                 ! block distribution for array X
 
-   logical (POP_logical), dimension(:,:,:), intent(in), optional :: &
+   logical (log_kind), dimension(:,:,:), intent(in), optional :: &
       lMask                ! optional logical mask
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error flag
 
-   real (POP_r8) :: &
+   real (r8) :: &
       globalMinval         ! resulting minimum valu of array
 
 !EOP
@@ -2948,11 +2948,11 @@
 !
 !-----------------------------------------------------------------------
 
-   real (POP_r8) ::    &
+   real (r8) ::    &
       blockMinval,     &! sum of local block domain
       localMinval       ! sum of local block domain
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i,j,iblock,      &! local counters
       ib,ie,jb,je,     &! beg,end of physical domain
       ierr,            &! mpi error flag
@@ -2967,8 +2967,8 @@
 !-----------------------------------------------------------------------
 
    errorCode = 0
-   localMinval  = HUGE(0.0_POP_r8)
-   globalMinval = HUGE(0.0_POP_r8)
+   localMinval  = HUGE(0.0_r8)
+   globalMinval = HUGE(0.0_r8)
 
    call POP_DistributionGet(dist, errorCode,            &
                             numLocalBlocks = numBlocks, &
@@ -3004,7 +3004,7 @@
       jb = thisBlock%jb
       je = thisBlock%je
 
-      blockMinval = HUGE(0.0_POP_r8)
+      blockMinval = HUGE(0.0_r8)
 
       if (present(lMask)) then
          do j=jb,je
@@ -3063,21 +3063,21 @@
 
 ! !INPUT PARAMETERS:
 
-   real (POP_r4), dimension(:,:,:), intent(in) :: &
+   real (r4), dimension(:,:,:), intent(in) :: &
       array                ! array for which min value needed
 
    type (POP_distrb), intent(in) :: &
       dist                 ! block distribution for array X
 
-   logical (POP_logical), dimension(:,:,:), intent(in), optional :: &
+   logical (log_kind), dimension(:,:,:), intent(in), optional :: &
       lMask                ! optional logical mask
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error flag
 
-   real (POP_r4) :: &
+   real (r4) :: &
       globalMinval         ! resulting minimum valu of array
 
 !EOP
@@ -3088,11 +3088,11 @@
 !
 !-----------------------------------------------------------------------
 
-   real (POP_r4) ::    &
+   real (r4) ::    &
       blockMinval,     &! sum of local block domain
       localMinval       ! sum of local block domain
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i,j,iblock,      &! local counters
       ib,ie,jb,je,     &! beg,end of physical domain
       ierr,            &! mpi error flag
@@ -3107,8 +3107,8 @@
 !-----------------------------------------------------------------------
 
    errorCode = 0
-   localMinval  = HUGE(0.0_POP_r4)
-   globalMinval = HUGE(0.0_POP_r4)
+   localMinval  = HUGE(0.0_r4)
+   globalMinval = HUGE(0.0_r4)
 
    call POP_DistributionGet(dist, errorCode,            &
                             numLocalBlocks = numBlocks, &
@@ -3144,7 +3144,7 @@
       jb = thisBlock%jb
       je = thisBlock%je
 
-      blockMinval = HUGE(0.0_POP_r4)
+      blockMinval = HUGE(0.0_r4)
 
       if (present(lMask)) then
          do j=jb,je
@@ -3203,21 +3203,21 @@
 
 ! !INPUT PARAMETERS:
 
-   integer (POP_i4), dimension(:,:,:), intent(in) :: &
+   integer (i4), dimension(:,:,:), intent(in) :: &
       array                ! array for which min value needed
 
    type (POP_distrb), intent(in) :: &
       dist                 ! block distribution for array X
 
-   logical (POP_logical), dimension(:,:,:), intent(in), optional :: &
+   logical (log_kind), dimension(:,:,:), intent(in), optional :: &
       lMask                ! optional logical mask
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error flag
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       globalMinval         ! resulting minimum valu of array
 
 !EOP
@@ -3228,11 +3228,11 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       blockMinval,     &! sum of local block domain
       localMinval       ! sum of all local block domains
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i,j,iblock,      &! local counters
       ib,ie,jb,je,     &! beg,end of physical domain
       ierr,            &! mpi error flag
@@ -3247,8 +3247,8 @@
 !-----------------------------------------------------------------------
 
    errorCode = 0
-   localMinval  = HUGE(0_POP_i4)
-   globalMinval = HUGE(0_POP_i4)
+   localMinval  = HUGE(0_i4)
+   globalMinval = HUGE(0_i4)
 
    call POP_DistributionGet(dist, errorCode,            &
                             numLocalBlocks = numBlocks, &
@@ -3284,7 +3284,7 @@
       jb = thisBlock%jb
       je = thisBlock%je
 
-      blockMinval = HUGE(0_POP_i4)
+      blockMinval = HUGE(0_i4)
 
       if (present(lMask)) then
          do j=jb,je
@@ -3343,7 +3343,7 @@
 
 ! !INPUT PARAMETERS:
 
-   real (POP_r8), intent(in) :: &
+   real (r8), intent(in) :: &
       scalar               ! scalar for which max value needed
 
    type (POP_distrb), intent(in) :: &
@@ -3351,10 +3351,10 @@
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error flag
 
-   real (POP_r8) :: &
+   real (r8) :: &
       globalMaxval         ! resulting maximum value of scalar
 
 !EOP
@@ -3365,7 +3365,7 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       ierr,            &! mpi error flag
       numProcs,        &! number of processor participating
       communicator      ! communicator for this distribution
@@ -3425,7 +3425,7 @@
 
 ! !INPUT PARAMETERS:
 
-   real (POP_r4), intent(in) :: &
+   real (r4), intent(in) :: &
       scalar               ! scalar for which max value needed
 
    type (POP_distrb), intent(in) :: &
@@ -3433,10 +3433,10 @@
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error flag
 
-   real (POP_r4) :: &
+   real (r4) :: &
       globalMaxval         ! resulting maximum value of scalar
 
 !EOP
@@ -3447,7 +3447,7 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       ierr,            &! mpi error flag
       numProcs,        &! number of processor participating
       communicator      ! communicator for this distribution
@@ -3507,7 +3507,7 @@
 
 ! !INPUT PARAMETERS:
 
-   integer (POP_i4), intent(in) :: &
+   integer (i4), intent(in) :: &
       scalar               ! scalar for which max value needed
 
    type (POP_distrb), intent(in) :: &
@@ -3515,10 +3515,10 @@
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error flag
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       globalMaxval         ! resulting maximum value of scalar
 
 !EOP
@@ -3529,7 +3529,7 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       ierr,            &! mpi error flag
       numProcs,        &! number of processor participating
       communicator      ! communicator for this distribution
@@ -3589,7 +3589,7 @@
 
 ! !INPUT PARAMETERS:
 
-   real (POP_r8), intent(in) :: &
+   real (r8), intent(in) :: &
       scalar               ! scalar for which min value needed
 
    type (POP_distrb), intent(in) :: &
@@ -3597,10 +3597,10 @@
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error flag
 
-   real (POP_r8) :: &
+   real (r8) :: &
       globalMinval         ! resulting minimum value of scalar
 
 !EOP
@@ -3611,7 +3611,7 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       ierr,            &! mpi error flag
       numProcs,        &! number of processor participating
       communicator      ! communicator for this distribution
@@ -3671,7 +3671,7 @@
 
 ! !INPUT PARAMETERS:
 
-   real (POP_r4), intent(in) :: &
+   real (r4), intent(in) :: &
       scalar               ! scalar for which min value needed
 
    type (POP_distrb), intent(in) :: &
@@ -3679,10 +3679,10 @@
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error flag
 
-   real (POP_r4) :: &
+   real (r4) :: &
       globalMinval         ! resulting minimum value of scalar
 
 !EOP
@@ -3693,7 +3693,7 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       ierr,            &! mpi error flag
       numProcs,        &! number of processor participating
       communicator      ! communicator for this distribution
@@ -3753,7 +3753,7 @@
 
 ! !INPUT PARAMETERS:
 
-   integer (POP_i4), intent(in) :: &
+   integer (i4), intent(in) :: &
       scalar               ! scalar for which min value needed
 
    type (POP_distrb), intent(in) :: &
@@ -3761,10 +3761,10 @@
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error flag
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       globalMinval         ! resulting minimum value of scalar
 
 !EOP
@@ -3775,7 +3775,7 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       ierr,            &! mpi error flag
       numProcs,        &! number of processor participating
       communicator      ! communicator for this distribution
@@ -3836,21 +3836,21 @@
 
 ! !INPUT PARAMETERS:
 
-   real (POP_r8), dimension(:,:,:), intent(in) :: &
+   real (r8), dimension(:,:,:), intent(in) :: &
       array                ! array for which maxloc required
 
    type (POP_distrb), intent(in) :: &
       dist                 ! block distribution for array
 
-   logical (POP_logical), dimension(:,:,:), intent(in), optional :: &
+   logical (log_kind), dimension(:,:,:), intent(in), optional :: &
       lMask                ! optional logical mask
 
 ! !OUTPUT PARAMETERS:
 
-   real (POP_r8), intent(out) :: &
+   real (r8), intent(out) :: &
        maxValue            ! maximum value of the field
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
        errorCode,         &! returned errorCode
        iLoc, jLoc          ! global i,j location of maximum
 
@@ -3862,7 +3862,7 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i,j,iblock,      &! local counters
       ib,ie,jb,je,     &! beg,end of physical domain
       ierr,            &! mpi error flag
@@ -3874,18 +3874,18 @@
    type (POP_Block) :: &
       thisBlock         ! block information for local block
 
-   real (POP_r8) ::    &
+   real (r8) ::    &
       localMaxval       ! max value from all local blocks
 
-   integer (POP_i4), dimension(2) :: &
+   integer (i4), dimension(2) :: &
       localMaxAddr,    &! global address of local maxval
       globalMaxAddr     ! global address of global maxval
 
 !-----------------------------------------------------------------------
 
    errorCode = 0
-   localMaxval = -HUGE(0.0_POP_r8)
-   maxValue = -HUGE(0.0_POP_r8)
+   localMaxval = -HUGE(0.0_r8)
+   maxValue = -HUGE(0.0_r8)
    iLoc     = 0
    jLoc     = 0
    localMaxAddr(:) = 0
@@ -3999,21 +3999,21 @@
 
 ! !INPUT PARAMETERS:
 
-   real (POP_r4), dimension(:,:,:), intent(in) :: &
+   real (r4), dimension(:,:,:), intent(in) :: &
       array                ! array for which maxloc required
 
    type (POP_distrb), intent(in) :: &
       dist                 ! block distribution for array
 
-   logical (POP_logical), dimension(:,:,:), intent(in), optional :: &
+   logical (log_kind), dimension(:,:,:), intent(in), optional :: &
       lMask                ! optional logical mask
 
 ! !OUTPUT PARAMETERS:
 
-   real (POP_r4), intent(out) :: &
+   real (r4), intent(out) :: &
        maxValue            ! maximum value of the field
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
        errorCode,         &! returned errorCode
        iLoc, jLoc          ! global i,j location of maximum
 
@@ -4025,7 +4025,7 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i,j,iblock,      &! local counters
       ib,ie,jb,je,     &! beg,end of physical domain
       ierr,            &! mpi error flag
@@ -4037,18 +4037,18 @@
    type (POP_Block) :: &
       thisBlock         ! block information for local block
 
-   real (POP_r4) ::    &
+   real (r4) ::    &
       localMaxval       ! max value from all local blocks
 
-   integer (POP_i4), dimension(2) :: &
+   integer (i4), dimension(2) :: &
       localMaxAddr,    &! global address of local maxval
       globalMaxAddr     ! global address of global maxval
 
 !-----------------------------------------------------------------------
 
    errorCode = 0
-   localMaxval = -HUGE(0.0_POP_r4)
-   maxValue    = -HUGE(0.0_POP_r4)
+   localMaxval = -HUGE(0.0_r4)
+   maxValue    = -HUGE(0.0_r4)
    iLoc     = 0
    jLoc     = 0
    localMaxAddr(:) = 0
@@ -4162,21 +4162,21 @@
 
 ! !INPUT PARAMETERS:
 
-   integer (POP_i4), dimension(:,:,:), intent(in) :: &
+   integer (i4), dimension(:,:,:), intent(in) :: &
       array                ! array for which maxloc required
 
    type (POP_distrb), intent(in) :: &
       dist                 ! block distribution for array
 
-   logical (POP_logical), dimension(:,:,:), intent(in), optional :: &
+   logical (log_kind), dimension(:,:,:), intent(in), optional :: &
       lMask                ! optional logical mask
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
        maxValue            ! maximum value of the field
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
        errorCode,         &! returned errorCode
        iLoc, jLoc          ! global i,j location of maximum
 
@@ -4188,7 +4188,7 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i,j,iblock,      &! local counters
       ib,ie,jb,je,     &! beg,end of physical domain
       ierr,            &! mpi error flag
@@ -4200,18 +4200,18 @@
    type (POP_Block) :: &
       thisBlock         ! block information for local block
 
-   integer (POP_i4) ::    &
+   integer (i4) ::    &
       localMaxval       ! max value from all local blocks
 
-   integer (POP_i4), dimension(2) :: &
+   integer (i4), dimension(2) :: &
       localMaxAddr,    &! global address of local maxval
       globalMaxAddr     ! global address of global maxval
 
 !-----------------------------------------------------------------------
 
    errorCode = 0
-   localMaxval = -HUGE(0_POP_i4)
-   maxValue    = -HUGE(0_POP_i4)
+   localMaxval = -HUGE(0_i4)
+   maxValue    = -HUGE(0_i4)
    iLoc     = 0
    jLoc     = 0
    localMaxAddr(:) = 0
@@ -4325,21 +4325,21 @@
 
 ! !INPUT PARAMETERS:
 
-   real (POP_r8), dimension(:,:,:), intent(in) :: &
+   real (r8), dimension(:,:,:), intent(in) :: &
       array                ! array for which minloc required
 
    type (POP_distrb), intent(in) :: &
       dist                 ! block distribution for array
 
-   logical (POP_logical), dimension(:,:,:), intent(in), optional :: &
+   logical (log_kind), dimension(:,:,:), intent(in), optional :: &
       lMask                ! optional logical mask
 
 ! !OUTPUT PARAMETERS:
 
-   real (POP_r8), intent(out) :: &
+   real (r8), intent(out) :: &
        minValue            ! minimum value of the field
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
        errorCode,         &! returned errorCode
        iLoc, jLoc          ! global i,j location of minimum
 
@@ -4351,7 +4351,7 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i,j,iblock,      &! local counters
       ib,ie,jb,je,     &! beg,end of physical domain
       ierr,            &! mpi error flag
@@ -4363,18 +4363,18 @@
    type (POP_Block) :: &
       thisBlock         ! block information for local block
 
-   real (POP_r8) ::    &
+   real (r8) ::    &
       localMinval       ! max value from all local blocks
 
-   integer (POP_i4), dimension(2) :: &
+   integer (i4), dimension(2) :: &
       localMinAddr,    &! global address of local maxval
       globalMinAddr     ! global address of global maxval
 
 !-----------------------------------------------------------------------
 
    errorCode = 0
-   localMinval = HUGE(0.0_POP_r8)
-   minValue    = HUGE(0.0_POP_r8)
+   localMinval = HUGE(0.0_r8)
+   minValue    = HUGE(0.0_r8)
    iLoc     = 0
    jLoc     = 0
    localMinAddr(:) = 0
@@ -4488,21 +4488,21 @@
 
 ! !INPUT PARAMETERS:
 
-   real (POP_r4), dimension(:,:,:), intent(in) :: &
+   real (r4), dimension(:,:,:), intent(in) :: &
       array                ! array for which minloc required
 
    type (POP_distrb), intent(in) :: &
       dist                 ! block distribution for array
 
-   logical (POP_logical), dimension(:,:,:), intent(in), optional :: &
+   logical (log_kind), dimension(:,:,:), intent(in), optional :: &
       lMask                ! optional logical mask
 
 ! !OUTPUT PARAMETERS:
 
-   real (POP_r4), intent(out) :: &
+   real (r4), intent(out) :: &
        minValue            ! minimum value of the field
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
        errorCode,         &! returned errorCode
        iLoc, jLoc          ! global i,j location of minimum
 
@@ -4514,7 +4514,7 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i,j,iblock,      &! local counters
       ib,ie,jb,je,     &! beg,end of physical domain
       ierr,            &! mpi error flag
@@ -4526,18 +4526,18 @@
    type (POP_Block) :: &
       thisBlock         ! block information for local block
 
-   real (POP_r4) ::    &
+   real (r4) ::    &
       localMinval       ! max value from all local blocks
 
-   integer (POP_i4), dimension(2) :: &
+   integer (i4), dimension(2) :: &
       localMinAddr,    &! global address of local maxval
       globalMinAddr     ! global address of global maxval
 
 !-----------------------------------------------------------------------
 
    errorCode = 0
-   localMinval = HUGE(0.0_POP_r4)
-   minValue    = HUGE(0.0_POP_r4)
+   localMinval = HUGE(0.0_r4)
+   minValue    = HUGE(0.0_r4)
    iLoc     = 0
    jLoc     = 0
    localMinAddr(:) = 0
@@ -4651,21 +4651,21 @@
 
 ! !INPUT PARAMETERS:
 
-   integer (POP_i4), dimension(:,:,:), intent(in) :: &
+   integer (i4), dimension(:,:,:), intent(in) :: &
       array                ! array for which minloc required
 
    type (POP_distrb), intent(in) :: &
       dist                 ! block distribution for array
 
-   logical (POP_logical), dimension(:,:,:), intent(in), optional :: &
+   logical (log_kind), dimension(:,:,:), intent(in), optional :: &
       lMask                ! optional logical mask
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
        minValue            ! minimum value of the field
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
        errorCode,         &! returned errorCode
        iLoc, jLoc          ! global i,j location of minimum
 
@@ -4677,7 +4677,7 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i,j,iblock,      &! local counters
       ib,ie,jb,je,     &! beg,end of physical domain
       ierr,            &! mpi error flag
@@ -4689,18 +4689,18 @@
    type (POP_Block) :: &
       thisBlock         ! block information for local block
 
-   integer (POP_i4) ::    &
+   integer (i4) ::    &
       localMinval       ! max value from all local blocks
 
-   integer (POP_i4), dimension(2) :: &
+   integer (i4), dimension(2) :: &
       localMinAddr,    &! global address of local maxval
       globalMinAddr     ! global address of global maxval
 
 !-----------------------------------------------------------------------
 
    errorCode = 0
-   localMinval = HUGE(0_POP_i4)
-   minValue    = HUGE(0_POP_i4)
+   localMinval = HUGE(0_i4)
+   minValue    = HUGE(0_i4)
    iLoc     = 0
    jLoc     = 0
    localMinAddr(:) = 0

@@ -36,10 +36,11 @@ use param_mod
 use pconst_mod
 use tracer_mod
 use isopyc_mod
+use domain
       IMPLICIT NONE
  
       REAL(r8):: tq,sq,tref0,sref0
-      INTEGER :: kq
+      INTEGER :: kq, iblock
       REAL(r8):: DENS
       EXTERNAL DENS
  
@@ -54,37 +55,30 @@ use isopyc_mod
 !     Redi/Cox and Gent/McWilliams options
 !-----------------------------------------------------------------------
  
-      allocate(e(imt,kmp1,jmt,3),rhoi(imt,0:km,jmt,nrpl))
-      allocate(K1(imt,0:km,jmt,3:3),K2(imt,0:km,jmt,3:3),K3(imt,0:km,jmt,1:3))
+      allocate(e(imt,kmp1,jmt,3,iblock),rhoi(imt,0:km,jmt,nrpl,iblock))
+      allocate(K1(imt,0:km,jmt,3:3,iblock),K2(imt,0:km,jmt,3:3,iblock),K3(imt,0:km,jmt,1:3,iblock))
 
 
-!$OMP PARALLEL DO PRIVATE (j,k,i,m)
-      DO m = 1,nrpl
-         DO j = 1,jmt
-!           DO k = 0,km
-               DO i = 1,imt
-                  rhoi (i,0,j,m) = 0.0D0
-               END DO
-!           END DO
-         END DO
-      END DO
+    rhoi(:,0,:,:,:) = 0.0D0
 
 
+!$OMP PARALLEL DO PRIVATE (iblock,j,k,i,tq,sq,kq)
+  do iblock = 1, nblocks_clinic
       DO m = 1,nrpl
          tref0 = to (krplin (m))
          sref0 = so (krplin (m))
-!$OMP PARALLEL DO PRIVATE (j,k,i,tq,sq,kq)
        DO k = 1,km
           DO j = 1,jmt
                DO i = 1,imt
-                  tq = atb (i,j,k,1) - tref0
-                  sq = atb (i,j,k,2) - sref0
+                  tq = atb (i,j,k,1,iblock) - tref0
+                  sq = atb (i,j,k,2,iblock) - sref0
                   kq = krplin (m)
-                  rhoi (i,k,j,m) = dens (tq, sq, kq)
+                  rhoi (i,k,j,m,iblock) = dens (tq, sq, kq,iblock)
                END DO
             END DO
          END DO
       END DO
+  end do
 
  
 !-----------------------------------------------------------------------
@@ -110,7 +104,8 @@ use isopyc_mod
 !-----------------------------------------------------------------------
  
       deallocate(e,rhoi)
-      allocate(adv_vetiso(imt,km,jmt),adv_vntiso(imt,km,jmt),adv_vbtiso(imt,0:km,jmt))
+      allocate(adv_vetiso(imt,km,jmt,max_blocks_clinic),adv_vntiso(imt,km,jmt,max_blocks_clinic), & 
+               adv_vbtiso(imt,0:km,jmt,max_blocks_clinic))
 
       CALL isoadv
  

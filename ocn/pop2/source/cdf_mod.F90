@@ -54,9 +54,8 @@ use param_mod
       real(r8) t0_cdf 
       real(r4),dimension(imt_global,jmt_global,1):: t2_cdf 
       real(r4),dimension(imt_global,jmt_global,1)::  t2z_cdf,t1_cdf 
-      real(r4),dimension(imt_global,jmt_global,km,1)::  t3_cdf !linpf 2012Jul27
-      real(r4),allocatable,dimension(:,:):: buffer_r4 !linpf 2012Jul27
-      real(r4),allocatable,dimension(:,:,:):: buffer3_r4 !linpf 2012Jul27
+      real(r4),allocatable,dimension(:,:,:):: buffer_r4_local !linpf 2012Jul27
+      real(r4),allocatable,dimension(:,:):: buffer_r4_global !linpf 2012Jul27
 !     variables
 !    start and count
       integer:: start1(1),count1(1)

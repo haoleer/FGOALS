@@ -43,7 +43,9 @@ module constant_mod
       p001   = 0.001_r8    ,&
       eps    = 1.0e-10_r8  ,&
       eps2   = 1.0e-20_r8  ,&
-      bignum = 1.0e+30_r8
+      bignum = 1.0e+30_r8  ,&
+      pi2 = c2*pi
+
 
    real (r4), parameter, public ::         &
       undefined_nf_r4  = NF90_FILL_FLOAT,  &
@@ -64,9 +66,9 @@ module constant_mod
       field_loc_unknown  =  0, &
       field_loc_noupdate = -1, &
       field_loc_center   =  1, &
-      field_loc_NEcorner =  2, &
-      field_loc_Nface    =  3, &
-      field_loc_Eface    =  4
+      field_loc_SWcorner =  2, &
+      field_loc_Sface    =  3, &
+      field_loc_Wface    =  4
 
    !*** field type attribute - necessary for handling
    !*** changes of direction across tripole boundary
@@ -77,6 +79,9 @@ module constant_mod
       field_type_scalar   =  1, &
       field_type_vector   =  2, &
       field_type_angle    =  3
+!
+  character (5), parameter, public :: &
+      blank_fmt = "(' ')"
 
 end module constant_mod
 

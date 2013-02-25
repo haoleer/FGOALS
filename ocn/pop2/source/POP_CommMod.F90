@@ -21,7 +21,7 @@
 !
 ! !USES:
 
-   use POP_KindsMod
+   use precison_mod
    use msg_mod, only : mpi_comm_ocn
 
    implicit none
@@ -38,7 +38,7 @@
 
 ! !PUBLIC DATA MEMBERS:
 
-   integer (POP_i4), public :: &
+   integer (i4), public :: &
       POP_communicator,         &! MPI communicator for ocn comms
       POP_mpiR16,               &! MPI type for r16
       POP_mpiR8,                &! MPI type for r8
@@ -46,7 +46,7 @@
       POP_myTask,               &! MPI task number for this task
       POP_masterTask             ! MPI task number for master task
 
-   integer (POP_i4), parameter, public :: &
+   integer (i4), parameter, public :: &
       POP_mpitagHalo           = 1,       &! MPI tags for various
       POP_mpitagRedist         = 1000      ! communication patterns
 
@@ -70,12 +70,12 @@
 
 ! !INPUT PARAMETERS:
 
-   integer (POP_i4), intent(in) :: &
+   integer (i4), intent(in) :: &
       numProcs          ! num of procs in new distribution
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       newCommunicator   ! new communicator for this distribution
 
 !EOP
@@ -86,14 +86,14 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
      MPI_GROUP_OCN,         &! group of processors assigned to ocn
      MPI_GROUP_NEW           ! group of processors assigned to new dist
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
      ierr                    ! error flag for MPI comms
 
-   integer (POP_i4), dimension(3) :: &
+   integer (i4), dimension(3) :: &
      range                   ! range of tasks assigned to new dist
                              !  (assumed 0,num_procs-1)
 

@@ -1,7 +1,4 @@
 !=======================================================================
-! CVS $Id: control_mod.F90,v 1.2 2001/05/18 20:19:42 mvertens Exp $
-! CVS $Source: /fs/cgd/csm/models/CVS.REPOS/ocn/docn5/control_mod.F90,v $
-! CVS $Name: ccsm2_0_beta58 $
 !=======================================================================
 
   module control_mod
@@ -24,16 +21,6 @@
   character(len=256):: domain_file  ! domain data file
   integer           :: domain_nx    ! nx for domain fabrication option
   integer           :: domain_ny    ! nx for domain fabrication option
-  character(len=256):: data_file    ! sst data file
-  character(len=16) :: data_form    ! either "annual" or "multiyear"
-  character(len=16) :: data_sstname ! name of sst field on input data file
-  character(len=16) :: data_lonname ! name of longitude coordinate on input data file
-  character(len=16) :: data_latname ! name of latitude  coordinate on input data file
-  character(len=64) :: mss_dir      ! MSS file directory
-  character(len=16) :: mss_pass     ! MSS file password
-  character(len=16) :: mss_opts     ! MSS file mswrite options
-  integer           :: mss_rtpd     ! MSS file MS retention period
-  integer           :: mss_rmlf     ! T => remove local file after mswrite
   integer           :: info_dbug    ! dbug level: 0=lowest, 3=highest
   integer           :: info_time    ! T => print extra timing info
   real(SHR_KIND_R8)          :: info_sleep   ! simulate time to advance an active model 

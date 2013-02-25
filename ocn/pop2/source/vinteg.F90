@@ -5,27 +5,33 @@
 use precision_mod 
 use param_mod
 use pconst_mod
+use domain
  
       IMPLICIT NONE
-      REAL(r8):: WK3 (IMT,JMT,KM),WK2 (IMT,JMT)
+      REAL(r8):: WK3 (IMT,JMT,KM,max_blocks_clinic),WK2 (IMT,JMT,max_blocks_clinic)
+      integer :: iblock
  
-!$OMP PARALLEL DO PRIVATE (J,I)
+!$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
+   DO IBLOCK = 1, NBLOCKS_CLINIC
       DO J = JST,JET
          DO I = 1,IMT
-            WK2 (I,J)= 0.0D0
+            WK2 (I,J,IBLOCK)= 0.0D0
          END DO
       END DO
+   END DO
  
  
+!$OMP PARALLEL DO PRIVATE (IBLOCK)
+   DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM
-!$OMP PARALLEL DO PRIVATE (J,I)
         DO J = JST,JET
          DO I = 1,IMT
-               WK2 (I,J)= WK2 (I,J) + DZP (K)* OHBU(I,J)* WK3 (I,J,K)  &
-                                  * VIV (I,J,K)
+               WK2 (I,J,IBLOCK)= WK2 (I,J,IBLOCK) + DZP (K)* OHBU(I,J,IBLOCK)*  &
+                                 WK3(I,J,K,IBLOCK) *VIV (I,J,K,IBLOCK)
             END DO
          END DO
       END DO
+   END DO
  
  
       RETURN

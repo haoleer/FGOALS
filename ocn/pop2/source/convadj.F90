@@ -29,7 +29,9 @@ use param_mod
 use pconst_mod
 use tracer_mod
 use output_mod, only: ICMON
+use domain
       IMPLICIT NONE
+      integer     :: IBLOCK
       REAL(r8)    :: RHOUP (KM),RHOLO (KM),TRASUM (2)
       REAL(r8)    :: TUP,SUP,TLO,SLO,DZTSUM,TRAMIX
       INTEGER :: KCON,LCTOT,LCVEN,L1,L,LCON,LCONA,LCONB,LMIX,n2
@@ -42,13 +44,14 @@ use output_mod, only: ICMON
       END DO
  
  
-!$OMP PARALLEL DO PRIVATE (J,I,KCON,LCTOT,LCVEN,LCON,RHOUP,RHOLO, &
+!$OMP PARALLEL DO PRIVATE (iblock,J,I,KCON,LCTOT,LCVEN,LCON,RHOUP,RHOLO, &
 !$OMP              L,L1,TUP,SUP,TLO,SLO,K,LCONA,LCONB, &
 !$OMP              DZTSUM,N,TRASUM,TRAMIX,LMIX)
+    do iblock = 1, nblocks_clinic
       JJJ : DO J = JST,JMT
          III : DO I = 2,IMM
  
-            KCON = ITNU (I,J)
+            KCON = ITNU (I,J,iblock)
             LCTOT = 0
             LCVEN = 0
             IF (KCON == 0) CYCLE III
@@ -59,10 +62,10 @@ use output_mod, only: ICMON
  
             DO L = 1,KM -1
                L1 = L +1
-               TUP = AT (I,J,L1,1) - TO (L1)
-               SUP = AT (I,J,L1,2) - SO (L1)
-               TLO = AT (I,J, L,1) - TO (L1)
-               SLO = AT (I,J, L,2) - SO (L1)
+               TUP = AT (I,J,L1,1,iblock) - TO (L1)
+               SUP = AT (I,J,L1,2,iblock) - SO (L1)
+               TLO = AT (I,J, L,1,iblock) - TO (L1)
+               SLO = AT (I,J, L,2,iblock) - SO (L1)
                RHOUP (L1) = DENS (TUP, SUP, L1)
                RHOLO (L) = DENS (TLO,SLO,L1)
             END DO
@@ -84,11 +87,11 @@ use output_mod, only: ICMON
  
             DZTSUM = DZP (LCONA) + DZP (LCONB)
             DO N = 1,2
-               TRASUM (N) = AT (I,J,LCONA,N)* DZP (LCONA) + &
-                            AT (I,J,LCONB,N)* DZP (LCONB) 
+               TRASUM (N) = AT (I,J,LCONA,N,iblock)* DZP (LCONA) + &
+                            AT (I,J,LCONB,N,iblock)* DZP (LCONB) 
                TRAMIX = TRASUM (N) / DZTSUM
-               AT (I,J,LCONA,N) = TRAMIX
-               AT (I,J,LCONB,N) = TRAMIX
+               AT (I,J,LCONA,N,iblock) = TRAMIX
+               AT (I,J,LCONB,N,iblock) = TRAMIX
             END DO
  
 !         3. TEST LAYER BELOW LCONB
@@ -98,16 +101,16 @@ use output_mod, only: ICMON
 
             IF (LCONB /= KCON)  THEN
             L1 = LCONB + 1
-            RHOLO (LCONB) = DENS (AT (I,J,LCONB,1) - TO (L1), &
-                            AT (I,J,LCONB,2) - SO (L1), L1) 
+            RHOLO (LCONB) = DENS (AT (I,J,LCONB,1,iblock) - TO (L1), &
+                            AT (I,J,LCONB,2,iblock) - SO (L1), L1) 
             IF (RHOLO (LCONB) > RHOUP (L1)) THEN
                LCONB = LCONB +1
                DZTSUM = DZTSUM + DZP (LCONB)
                DO N = 1,2
-                  TRASUM (N) = TRASUM (N) + AT (I,J,LCONB,N)* DZP (LCONB)
+                  TRASUM (N) = TRASUM (N) + AT (I,J,LCONB,N,iblock)* DZP (LCONB)
                   TRAMIX = TRASUM (N) / DZTSUM
                   DO LMIX = LCONA,LCONB
-                     AT (I,J,LMIX,N) = TRAMIX
+                     AT (I,J,LMIX,N,iblock) = TRAMIX
                   END DO
                END DO
                CYCLE CONV_2
@@ -119,18 +122,18 @@ use output_mod, only: ICMON
 
             IF (LCONA > 1) THEN
                L1 = LCONA -1
-               RHOLO (L1) = DENS (AT (I,J,L1,1) - TO (LCONA), AT (I,J,  &
-                           L1,2) - SO (LCONA) ,LCONA)
-               RHOUP (LCONA) = DENS (AT (I,J,LCONA,1) - TO (LCONA), AT (&
-                              I,J,LCONA,2) - SO (LCONA),LCONA)
+               RHOLO (L1) = DENS (AT (I,J,L1,1,iblock) - TO (LCONA), AT (I,J,  &
+                           L1,2,iblock) - SO (LCONA) ,LCONA)
+               RHOUP (LCONA) = DENS (AT (I,J,LCONA,1,iblock) - TO (LCONA), AT (&
+                              I,J,LCONA,2,iblock) - SO (LCONA),LCONA)
                IF (RHOLO (LCONA -1) > RHOUP (LCONA)) THEN
                   LCONA = LCONA -1
                   DZTSUM = DZTSUM + DZP (LCONA)
                   DO N = 1,2
-                     TRASUM (N) = TRASUM (N) + AT (I,J,LCONA,N)* DZP (LCONA)
+                     TRASUM (N) = TRASUM (N) + AT (I,J,LCONA,N,iblock)* DZP (LCONA)
                      TRAMIX = TRASUM (N) / DZTSUM
                      DO LMIX = LCONA,LCONB
-                        AT (I,J,LMIX,N) = TRAMIX
+                        AT (I,J,LMIX,N,iblock) = TRAMIX
                      END DO
                   END DO
                   CYCLE CONV_2
@@ -151,8 +154,8 @@ use output_mod, only: ICMON
 !            I.E. FIND FURTHER UNSTABLE AREAS FURTHER DOWN THE COLUMN
  
             IF (LCONB == KCON) THEN
-            ICMON (I,J,1)= ICMON (I,J,1) + LCTOT
-            ICMON (I,J,2)= ICMON (I,J,2) + LCVEN
+            ICMON (I,J,1,iblock)= ICMON (I,J,1,iblock) + LCTOT
+            ICMON (I,J,2,iblock)= ICMON (I,J,2,iblock) + LCVEN
             CYCLE III
             ENDIF
             LCON = LCONB
@@ -161,8 +164,8 @@ use output_mod, only: ICMON
 
             LCON = LCON + 1
             IF (LCON == KCON) THEN 
-            ICMON (I,J,1)= ICMON (I,J,1) + LCTOT
-            ICMON (I,J,2)= ICMON (I,J,2) + LCVEN
+            ICMON (I,J,1,iblock)= ICMON (I,J,1,iblock) + LCTOT
+            ICMON (I,J,2,iblock)= ICMON (I,J,2,iblock) + LCVEN
             CYCLE III
             ENDIF
             IF (RHOLO (LCON) <= RHOUP (LCON +1)) CYCLE CONV_3
@@ -180,51 +183,21 @@ use output_mod, only: ICMON
  
          END DO III
       END DO JJJ
+   end do
      
-      if (nx_proc.ne.1) then
-      do n =1,2
-      call exchange_2d_real(icmon(1,1,n),1,0)
-      end do
-      n2=mod(mytid,nx_proc)
-      do j=1,jmt
-        if (n2==0) then
-         icmon(1,j,1)=0.0
-         icmon(1,j,2)=0.0
-        end if
-        if (n2==nx_proc-1)then
-         icmon(imt,j,1)=0.0 
-         icmon(imt,j,2)=0.0 
-        end if
-      end do
-      end if
-! 
-!JXZ------------------------------------------------------------------
-!     SET CYCLIC CONDITIONS ON EASTERN AND WESTERN BOUNDARY
-!JXZ------------------------------------------------------------------
- 
-      DO N = 1,2
-!$OMP PARALLEL DO PRIVATE (K,J)
-         DO K = 1,KM
-            DO J = JST,JMT
-               AT (1,J,K,N) = AT (IMM,J,K,N)
-               AT (IMT,J,K,N) = AT (2,J,K,N)
-            END DO
-         END DO
-      call exch_boundary(at(1,1,1,n),km)
-      END DO
       
 #ifdef TSPAS
 !$OMP PARALLEL DO PRIVATE (K,J,I)
+     DO IBLOCK = 1, NBLOCKS_CILINC
          DO K = 1,KM
             DO J = JST,JMT
             DO I = 1  ,IMT
-                ATB(I,J,K,1)  =  AT(I,J,K,1)
-                ATB(I,J,K,2)  =  AT(I,J,K,2)
+                ATB(I,J,K,1,IBLOCK)  =  AT(I,J,K,1,IBLOCK)
+                ATB(I,J,K,2,IBLOCK)  =  AT(I,J,K,2,IBLOCK)
             END DO
             END DO
-         call exch_boundary(ATB(1,1,1,1),km)
-         call exch_boundary(ATB(1,1,1,2),km)
          END DO
+      END DO
 #endif
       RETURN
       END SUBROUTINE CONVADJ

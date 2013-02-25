@@ -14,6 +14,9 @@ use work_mod
 !LPF 20120815
 use buf_mod, only:t_cpl,s_cpl,u_cpl,v_cpl,dhdx,dhdy,q      
 !LPF 20120815
+use domain
+use gather_scatter
+use distribution
 
       character (len=18) :: fname
       integer :: klevel
@@ -55,12 +58,12 @@ use buf_mod, only:t_cpl,s_cpl,u_cpl,v_cpl,dhdx,dhdy,q
          open(22,file=trim(out_dir)//fname,form='unformatted')
 !         write(6,*) "in SSAVEcdf, month=",mon0,"day=",number_day
        end if
-#ifdef SPMD
 !
           allocate(buffer(imt_global,jmt_global))
 !         write(*,*) 'allocate sucess'
 
-         call local_to_global_4d_double(h0,buffer,1,1)
+         call gather_global(buffer, h0, master_task,distrb_clinic)
+!
          if (mytid==0) then
          WRITE (22)buffer
 !         open(92,file='z0_99.dat',form='unformatted')
@@ -70,7 +73,7 @@ use buf_mod, only:t_cpl,s_cpl,u_cpl,v_cpl,dhdx,dhdy,q
 !           write(*,*)'finish h0'
 
          do klevel=1,km
-         call local_to_global_4d_double(u(1,1,klevel),buffer,1,1)
+         call gather_global(buffer, u(:,:,klevel,:), master_task,distrb_clinic)
          if (mytid==0) then
          WRITE (22)buffer
          end if
@@ -78,7 +81,7 @@ use buf_mod, only:t_cpl,s_cpl,u_cpl,v_cpl,dhdx,dhdy,q
 !         write(*,*)'finish U'
          
          do klevel=1,km
-         call local_to_global_4d_double(v(1,1,klevel),buffer,1,1)
+         call gather_global(buffer, v(:,:,klevel,:), master_task,distrb_clinic)
          if (mytid==0) then
          WRITE (22)buffer
          end if
@@ -86,7 +89,7 @@ use buf_mod, only:t_cpl,s_cpl,u_cpl,v_cpl,dhdx,dhdy,q
 !         write(*,*)'finish V'
 !
          do klevel=1,km
-         call local_to_global_4d_double(at(1,1,klevel,1),buffer,1,1)
+         call gather_global(buffer, at(:,:,klevel,1,:), master_task,distrb_clinic)
          if (mytid==0) then
          WRITE (22)buffer
          end if
@@ -94,7 +97,7 @@ use buf_mod, only:t_cpl,s_cpl,u_cpl,v_cpl,dhdx,dhdy,q
 !         write(*,*)'finish at1'
 !
          do klevel=1,km
-         call local_to_global_4d_double(at(1,1,klevel,2),buffer,1,1)
+         call gather_global(buffer, at(:,:,klevel,2,:), master_task,distrb_clinic)
          if (mytid==0) then
          WRITE (22)buffer
          end if
@@ -102,47 +105,47 @@ use buf_mod, only:t_cpl,s_cpl,u_cpl,v_cpl,dhdx,dhdy,q
 !         write(*,*)'finish at2'
 !lhl20110728
          do klevel=1,km
-         call local_to_global_4d_double(ws(1,1,klevel),buffer,1,1)
+         call gather_global(buffer, ws(:,:,klevel,:), master_task,distrb_clinic)
          if (mytid==0) then
          WRITE (22)buffer
          end if
          end do
 !         write(*,*)'finish at2'
          
-         call local_to_global_4d_double(su,buffer,1,1)
+         call gather_global(buffer, su, master_task,distrb_clinic)
          if (mytid==0) then
          WRITE (22)buffer
          end if
 !         write(*,*)'finish su'
 
-         call local_to_global_4d_double(sv,buffer,1,1)
+         call gather_global(buffer, sv, master_task,distrb_clinic)
          if (mytid==0) then
          WRITE (22)buffer
          end if
 
 !         write(*,*)'finish sv'
 
-         call local_to_global_4d_double(swv,buffer,1,1)
+         call gather_global(buffer, swv, master_task,distrb_clinic)
          if (mytid==0) then
          WRITE (22)buffer
          end if
 !         write(*,*)'finish swv'
-         call local_to_global_4d_double(lwv,buffer,1,1)
+         call gather_global(buffer, lwv, master_task,distrb_clinic)
          if (mytid==0) then
          WRITE (22)buffer
          end if
 !         write(*,*)'finish lwv'
-         call local_to_global_4d_double(sshf,buffer,1,1)
+         call gather_global(buffer, sshf, master_task,distrb_clinic)
          if (mytid==0) then
          WRITE (22)buffer
          end if
 !         write(*,*)'finish sshf'
-         call local_to_global_4d_double(lthf,buffer,1,1)
+         call gather_global(buffer, lthf, master_task,distrb_clinic)
          if (mytid==0) then
          WRITE (22)buffer
          end if
 !         write(*,*)'finish lthf'
-         call local_to_global_4d_double(fresh,buffer,1,1)
+         call gather_global(buffer, fresh, master_task,distrb_clinic)
          if (mytid==0) then
          WRITE (22)buffer
          end if
@@ -155,119 +158,80 @@ use buf_mod, only:t_cpl,s_cpl,u_cpl,v_cpl,dhdx,dhdy,q
          if(mytid==0) write(*,*)'finish number'
 !lhl20120731
 #ifdef COUP
-         call local_to_global_4d_double(t_cpl,buffer,1,1)
+         call gather_global(buffer, t_cpl, master_task,distrb_clinic)
          if (mytid==0) then
          WRITE (22)buffer
          end if
 !         write(*,*)'finish t_cpl'
-         call local_to_global_4d_double(s_cpl,buffer,1,1)
+         call gather_global(buffer, s_cpl, master_task,distrb_clinic)
          if (mytid==0) then
          WRITE (22)buffer
          end if
 !         write(*,*)'finish s_cpl'
-         call local_to_global_4d_double(u_cpl,buffer,1,1)
+         call gather_global(buffer, u_cpl, master_task,distrb_clinic)
          if (mytid==0) then
          WRITE (22)buffer
          end if
 !         write(*,*)'finish u_cpl'
-         call local_to_global_4d_double(v_cpl,buffer,1,1)
+         call gather_global(buffer, v_cpl, master_task,distrb_clinic)
          if (mytid==0) then
          WRITE (22)buffer
          end if
 !         write(*,*)'finish v_cpl'
-         call local_to_global_4d_double(dhdx,buffer,1,1)
+         call gather_global(buffer, dhdx, master_task,distrb_clinic)
          if (mytid==0) then
          WRITE (22)buffer
          end if
 !         write(*,*)'finish dhdx'
-         call local_to_global_4d_double(dhdy,buffer,1,1)
+         call gather_global(buffer, dhdy, master_task,distrb_clinic)
          if (mytid==0) then
          WRITE (22)buffer
          end if
 !         write(*,*)'finish dhdy'
-         call local_to_global_4d_double(q,buffer,1,1)
+         call gather_global(buffer, q, master_task,distrb_clinic)
          if (mytid==0) then
          WRITE (22)buffer
          end if
 !         write(*,*)'finish q'
 #endif
 
-      if (mytid==0) then
-         close(22)
-      end if
       if(mytid==0) write(*,*)'ok  fort.22'
-!lhl20120731
-!
-         deallocate( buffer)
-#else
-        write(22) h0
-!
-        do k =1, km
-           write(22) ((u(i,j,k),i=1,imt_global),j=1,jmt_global)
-        end do
-!
-        do k =1, km
-           write(22) ((v(i,j,k),i=1,imt_global),j=1,jmt_global)
-        end do
-!
-        do k =1, km
-           write(22) ((at(i,j,k,1),i=1,imt_global),j=1,jmt_global)
-        end do
-!
-        do k =1, km
-           write(22) ((at(i,j,k,2),i=1,imt_global),j=1,jmt_global)
-        end do
-!lhl20110728
-        do k =1, km
-           write(22) ((ws(i,j,k),i=1,imt_global),j=1,jmt_global)
-        end do
-!lhl20110728
-!
-        write(22) number_month, number_day
-!lhl20120731
-#ifdef COUP
-        write(22) t_cpl
-        write(22) s_cpl
-        write(22) u_cpl
-        write(22) v_cpl
-        write(22) dhdx
-        write(22) dhdy
-        write(22) q
-#endif
-!lhl20120731
         close(22)
-!
-#endif
       end if
 !
+     deallocate( buffer)
 
-!$OMP PARALLEL DO PRIVATE (k,j,i)
+!$OMP PARALLEL DO PRIVATE (iblock,k,j,i)
+   do iblock = 1, nblocks_clinic
       DO k = 1,km
          DO j = 1,jmt ! Dec. 5, 2002, Yongqiang Yu
             DO i = 1,imt
-               up (i,j,k) = u (i,j,k)
-               vp (i,j,k) = v (i,j,k)
-               utf (i,j,k) = u (i,j,k)
-               vtf (i,j,k) = v (i,j,k)
-               atb (i,j,k,1) = at (i,j,k,1)
-               atb (i,j,k,2) = at (i,j,k,2)
+               up (i,j,k,iblock) = u (i,j,k,iblock)
+               vp (i,j,k,iblock) = v (i,j,k,iblock)
+               utf (i,j,k,iblock) = u (i,j,k,iblock)
+               vtf (i,j,k,iblock) = v (i,j,k,iblock)
+               atb (i,j,k,1,iblock) = at (i,j,k,1,iblock)
+               atb (i,j,k,2,iblock) = at (i,j,k,2,iblock)
             END DO
          END DO
       END DO
+   END DO
 
          CALL VINTEG (U,UB)
          CALL VINTEG (V,VB)
 
-!$OMP PARALLEL DO PRIVATE (j,i)
+!$OMP PARALLEL DO PRIVATE (iblock,j,i)
+    do iblock = 1, nblocks_clinic
       DO j = 1,jmt ! Dec. 5, 2002, Yongqiang Yu
          DO i = 1,imt
-            h0p (i,j)= h0 (i,j)
-            ubp (i,j)= ub (i,j)
-            vbp (i,j)= vb (i,j)
-            h0f (i,j)= h0 (i,j)
-            h0bf (i,j)= h0 (i,j)
+            h0p (i,j,iblock)= h0 (i,j,iblock)
+            ubp (i,j,iblock)= ub (i,j,iblock)
+            vbp (i,j,iblock)= vb (i,j,iblock)
+            h0f (i,j,iblock)= h0 (i,j,iblock)
+            h0bf (i,j,iblock)= h0 (i,j,iblock)
          END DO
       END DO
+   end do
 !
      ISB = 0
      ISC = 0

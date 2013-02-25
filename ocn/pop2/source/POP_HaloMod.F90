@@ -22,9 +22,8 @@
 
 ! !USES:
 
-   use POP_KindsMod
+   use precision_mod
    use LICOM_Error_mod
-!  use POP_IOUnitsMod
    use POP_CommMod
    use POP_BlocksMod
    use POP_ReductionsMod
@@ -41,23 +40,23 @@
 ! !PUBLIC TYPES:
 
    type, public :: POP_halo
-      integer (POP_i4) ::  &
+      integer (i4) ::  &
          communicator,     &! communicator to use for update messages
          numMsgSend,       &! number of messages to send halo update
          numMsgRecv,       &! number of messages to recv halo update
          numLocalCopies     ! num local copies for halo update
 
-      integer (POP_i4), dimension(:), pointer :: &
+      integer (i4), dimension(:), pointer :: &
          recvTask,         &! task from which to recv each msg
          sendTask,         &! task to   which to send each msg
          sizeSend,         &! size of each sent message
          sizeRecv           ! size of each recvd message
 
-      integer (POP_i4), dimension(:,:), pointer :: &
+      integer (i4), dimension(:,:), pointer :: &
          srcLocalAddr,     &! src addresses for each local copy
          dstLocalAddr       ! dst addresses for each local copy
 
-      integer (POP_i4), dimension(:,:,:), pointer :: &
+      integer (i4), dimension(:,:,:), pointer :: &
          sendAddr,         &! src addresses for each sent message
          recvAddr           ! dst addresses for each recvd message
 
@@ -92,19 +91,19 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       bufSizeSend,    &! max buffer size for send messages
       bufSizeRecv      ! max buffer size for recv messages
 
-   integer (POP_i4), dimension(:,:), allocatable :: &
+   integer (i4), dimension(:,:), allocatable :: &
       bufSendI4,     &! buffer for use to send in 2D i4 halo updates
       bufRecvI4       ! buffer for use to recv in 2D i4 halo updates
 
-   real (POP_r4), dimension(:,:), allocatable :: &
+   real (r4), dimension(:,:), allocatable :: &
       bufSendR4,     &! buffer for use to send in 2D r4 halo updates
       bufRecvR4       ! buffer for use to recv in 2D r4 halo updates
 
-   real (POP_r8), dimension(:,:), allocatable :: &
+   real (r8), dimension(:,:), allocatable :: &
       bufSendR8,     &! buffer for use to send in 2D r8 halo updates
       bufRecvR8       ! buffer for use to recv in 2D r8 halo updates
 
@@ -114,13 +113,13 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4), dimension(:,:), allocatable :: &
+   integer (i4), dimension(:,:), allocatable :: &
       bufTripoleI4
 
-   real (POP_r4), dimension(:,:), allocatable :: &
+   real (r4), dimension(:,:), allocatable :: &
       bufTripoleR4
 
-   real (POP_r8), dimension(:,:), allocatable :: &
+   real (r8), dimension(:,:), allocatable :: &
       bufTripoleR8
 
 !EOC
@@ -153,12 +152,12 @@ contains
       nsBoundaryType,   &! type of boundary to use in logical ns dir
       ewBoundaryType     ! type of boundary to use in logical ew dir
 
-   integer (POP_i4), intent(in) :: &
+   integer (i4), intent(in) :: &
       nxGlobal           ! global grid extent for tripole grids
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode          ! returned error code
 
    type (POP_halo) :: &
@@ -172,7 +171,7 @@ contains
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) ::             &
+   integer (i4) ::             &
       i,j,k,l,n,m,&
       istat,                       &! allocate status flag
       numProcs,                    &! num of processors involved
@@ -195,10 +194,10 @@ contains
       tripoleMsgSizeOut,           &! size for tripole messages
       cornerMsgSize, msgSize        ! nominal size for corner msg
 
-   integer (POP_i4), dimension(:), allocatable :: &
+   integer (i4), dimension(:), allocatable :: &
       sendCount, recvCount          ! count number of words to each proc
 
-   logical (POP_logical) :: &
+   logical (log_kind) :: &
       resize,               &! flag for resizing buffers
       tripoleFlag,          &! flag for allocating tripole buffers
       tripoleBlock           ! flag for identifying north tripole blocks
@@ -1563,7 +1562,7 @@ contains
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode     ! returned error code
 
 !EOP
@@ -1574,7 +1573,7 @@ contains
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: istat
+   integer (i4) :: istat
 
 !-----------------------------------------------------------------------
 !
@@ -1658,7 +1657,7 @@ contains
       fieldLoc             ! id for location on horizontal grid
                            !  (center, NEcorner, Nface, Eface)
 
-   real (POP_r8), intent(in), optional :: &
+   real (r8), intent(in), optional :: &
       fillValue            ! optional value to put in ghost cells
                            !  where neighbor points are unknown
                            !  (e.g. eliminated land blocks or
@@ -1666,13 +1665,13 @@ contains
 
 ! !INPUT/OUTPUT PARAMETERS:
 
-   real (POP_r8), dimension(:,:,:), intent(inout) :: &
+   real (r8), dimension(:,:,:), intent(inout) :: &
       array                ! array containing field for which halo
                            ! needs to be updated
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error code
 
 !EOP
@@ -1683,7 +1682,7 @@ contains
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) ::           &
+   integer (i4) ::           &
       i,j,n,nmsg,                &! dummy loop indices
       ierr,                      &! error or status flag for MPI,alloc
       msgSize,                   &! size of an individual message
@@ -1695,15 +1694,15 @@ contains
       ioffset, joffset,          &! address shifts for tripole
       isign                       ! sign factor for tripole grids
 
-   integer (POP_i4), dimension(:), allocatable :: &
+   integer (i4), dimension(:), allocatable :: &
       sndRequest,      &! MPI request ids
       rcvRequest        ! MPI request ids
 
-   integer (POP_i4), dimension(:,:), allocatable :: &
+   integer (i4), dimension(:,:), allocatable :: &
       sndStatus,       &! MPI status flags
       rcvStatus         ! MPI status flags
 
-   real (POP_r8) :: &
+   real (r8) :: &
       fill,            &! value to use for unknown points
       x1,x2,xavg        ! scalars for enforcing symmetry at U pts
 
@@ -1718,7 +1717,7 @@ contains
    if (present(fillValue)) then
       fill = fillValue
    else
-      fill = 0.0_POP_r8
+      fill = 0.0_r8
    endif
 
    nxGlobal = 0
@@ -1867,7 +1866,7 @@ contains
          ioffset = 0
          joffset = 0
 
-      case (POP_gridHorzLocNEcorner)   ! cell corner location
+      case (POP_gridHorzLocSWcorner)   ! cell corner location
 
          ioffset = 1
          joffset = 1
@@ -1881,19 +1880,19 @@ contains
             iDst = nxGlobal - i
             x1 = bufTripoleR8(i   ,POP_haloWidth+1)
             x2 = bufTripoleR8(iDst,POP_haloWidth+1)
-            xavg = 0.5_POP_r8*(abs(x1) + abs(x2))
+            xavg = 0.5_r8*(abs(x1) + abs(x2))
             bufTripoleR8(i   ,POP_haloWidth+1) = isign*sign(xavg, x2)
             bufTripoleR8(iDst,POP_haloWidth+1) = isign*sign(xavg, x1)
          end do
          bufTripoleR8(nxGlobal,POP_haloWidth+1) = isign* &
          bufTripoleR8(nxGlobal,POP_haloWidth+1)
 
-      case (POP_gridHorzLocEface)   ! cell center location
+      case (POP_gridHorzLocWface)   ! cell center location
 
          ioffset = 1
          joffset = 0
 
-      case (POP_gridHorzLocNface)   ! cell corner (velocity) location
+      case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
          joffset = 1
@@ -1905,7 +1904,7 @@ contains
             iDst = nxGlobal + 1 - i
             x1 = bufTripoleR8(i   ,POP_haloWidth+1)
             x2 = bufTripoleR8(iDst,POP_haloWidth+1)
-            xavg = 0.5_POP_r8*(abs(x1) + abs(x2))
+            xavg = 0.5_r8*(abs(x1) + abs(x2))
             bufTripoleR8(i   ,POP_haloWidth+1) = isign*sign(xavg, x2)
             bufTripoleR8(iDst,POP_haloWidth+1) = isign*sign(xavg, x1)
          end do
@@ -2004,7 +2003,7 @@ contains
       fieldLoc             ! id for location on horizontal grid
                            !  (center, NEcorner, Nface, Eface)
 
-   real (POP_r4), intent(in), optional :: &
+   real (r4), intent(in), optional :: &
       fillValue            ! optional value to put in ghost cells
                            !  where neighbor points are unknown
                            !  (e.g. eliminated land blocks or
@@ -2012,13 +2011,13 @@ contains
 
 ! !INPUT/OUTPUT PARAMETERS:
 
-   real (POP_r4), dimension(:,:,:), intent(inout) :: &
+   real (r4), dimension(:,:,:), intent(inout) :: &
       array                ! array containing field for which halo
                            ! needs to be updated
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error code
 
 !EOP
@@ -2029,7 +2028,7 @@ contains
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) ::           &
+   integer (i4) ::           &
       i,j,n,nmsg,                &! dummy loop indices
       ierr,                      &! error or status flag for MPI,alloc
       msgSize,                   &! size of an individual message
@@ -2041,15 +2040,15 @@ contains
       ioffset, joffset,          &! address shifts for tripole
       isign                       ! sign factor for tripole grids
 
-   integer (POP_i4), dimension(:), allocatable :: &
+   integer (i4), dimension(:), allocatable :: &
       sndRequest,      &! MPI request ids
       rcvRequest        ! MPI request ids
 
-   integer (POP_i4), dimension(:,:), allocatable :: &
+   integer (i4), dimension(:,:), allocatable :: &
       sndStatus,       &! MPI status flags
       rcvStatus         ! MPI status flags
 
-   real (POP_r4) :: &
+   real (r4) :: &
       fill,            &! value to use for unknown points
       x1,x2,xavg        ! scalars for enforcing symmetry at U pts
 
@@ -2064,7 +2063,7 @@ contains
    if (present(fillValue)) then
       fill = fillValue
    else
-      fill = 0.0_POP_r4
+      fill = 0.0_r4
    endif
 
    nxGlobal = 0
@@ -2213,7 +2212,7 @@ contains
          ioffset = 0
          joffset = 0
 
-      case (POP_gridHorzLocNEcorner)   ! cell corner location
+      case (POP_gridHorzLocSWcorner)   ! cell corner location
 
          ioffset = 1
          joffset = 1
@@ -2225,19 +2224,19 @@ contains
             iDst = nxGlobal - i
             x1 = bufTripoleR4(i   ,POP_haloWidth+1)
             x2 = bufTripoleR4(iDst,POP_haloWidth+1)
-            xavg = 0.5_POP_r4*(abs(x1) + abs(x2))
+            xavg = 0.5_r4*(abs(x1) + abs(x2))
             bufTripoleR4(i   ,POP_haloWidth+1) = isign*sign(xavg, x2)
             bufTripoleR4(iDst,POP_haloWidth+1) = isign*sign(xavg, x1)
          end do
          bufTripoleR4(nxGlobal,POP_haloWidth+1) = isign* &
          bufTripoleR4(nxGlobal,POP_haloWidth+1)
 
-      case (POP_gridHorzLocEface)   ! cell center location
+      case (POP_gridHorzLocWface)   ! cell center location
 
          ioffset = 1
          joffset = 0
 
-      case (POP_gridHorzLocNface)   ! cell corner (velocity) location
+      case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
          joffset = 1
@@ -2249,7 +2248,7 @@ contains
             iDst = nxGlobal + 1 - i
             x1 = bufTripoleR4(i   ,POP_haloWidth+1)
             x2 = bufTripoleR4(iDst,POP_haloWidth+1)
-            xavg = 0.5_POP_r4*(abs(x1) + abs(x2))
+            xavg = 0.5_r4*(abs(x1) + abs(x2))
             bufTripoleR4(i   ,POP_haloWidth+1) = isign*sign(xavg, x2)
             bufTripoleR4(iDst,POP_haloWidth+1) = isign*sign(xavg, x1)
          end do
@@ -2348,7 +2347,7 @@ contains
       fieldLoc             ! id for location on horizontal grid
                            !  (center, NEcorner, Nface, Eface)
 
-   integer (POP_i4), intent(in), optional :: &
+   integer (i4), intent(in), optional :: &
       fillValue            ! optional value to put in ghost cells
                            !  where neighbor points are unknown
                            !  (e.g. eliminated land blocks or
@@ -2356,13 +2355,13 @@ contains
 
 ! !INPUT/OUTPUT PARAMETERS:
 
-   integer (POP_i4), dimension(:,:,:), intent(inout) :: &
+   integer (i4), dimension(:,:,:), intent(inout) :: &
       array                ! array containing field for which halo
                            ! needs to be updated
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error code
 
 !EOP
@@ -2373,7 +2372,7 @@ contains
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) ::           &
+   integer (i4) ::           &
       i,j,n,nmsg,                &! dummy loop indices
       ierr,                      &! error or status flag for MPI,alloc
       msgSize,                   &! size of an individual message
@@ -2385,15 +2384,15 @@ contains
       ioffset, joffset,          &! address shifts for tripole
       isign                       ! sign factor for tripole grids
 
-   integer (POP_i4), dimension(:), allocatable :: &
+   integer (i4), dimension(:), allocatable :: &
       sndRequest,      &! MPI request ids
       rcvRequest        ! MPI request ids
 
-   integer (POP_i4), dimension(:,:), allocatable :: &
+   integer (i4), dimension(:,:), allocatable :: &
       sndStatus,       &! MPI status flags
       rcvStatus         ! MPI status flags
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       fill,            &! value to use for unknown points
       x1,x2,xavg        ! scalars for enforcing symmetry at U pts
 
@@ -2408,7 +2407,7 @@ contains
    if (present(fillValue)) then
       fill = fillValue
    else
-      fill = 0_POP_i4
+      fill = 0_i4
    endif
 
    nxGlobal = 0
@@ -2557,7 +2556,7 @@ contains
          ioffset = 0
          joffset = 0
 
-      case (POP_gridHorzLocNEcorner)   ! cell corner location
+      case (POP_gridHorzLocSWcorner)   ! cell corner location
 
          ioffset = 1
          joffset = 1
@@ -2569,19 +2568,19 @@ contains
             iDst = nxGlobal - i
             x1 = bufTripoleI4(i   ,POP_haloWidth+1)
             x2 = bufTripoleI4(iDst,POP_haloWidth+1)
-            xavg = nint(0.5_POP_r8*(abs(x1) + abs(x2)))
+            xavg = nint(0.5_r8*(abs(x1) + abs(x2)))
             bufTripoleI4(i   ,POP_haloWidth+1) = isign*sign(xavg, x2)
             bufTripoleI4(iDst,POP_haloWidth+1) = isign*sign(xavg, x1)
          end do
          bufTripoleI4(nxGlobal,POP_haloWidth+1) = isign* &
          bufTripoleI4(nxGlobal,POP_haloWidth+1)
 
-      case (POP_gridHorzLocEface)   ! cell center location
+      case (POP_gridHorzLocWface)   ! cell center location
 
          ioffset = 1
          joffset = 0
 
-      case (POP_gridHorzLocNface)   ! cell corner (velocity) location
+      case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
          joffset = 1
@@ -2593,7 +2592,7 @@ contains
             iDst = nxGlobal + 1 - i
             x1 = bufTripoleI4(i   ,POP_haloWidth+1)
             x2 = bufTripoleI4(iDst,POP_haloWidth+1)
-            xavg = nint(0.5_POP_r8*(abs(x1) + abs(x2)))
+            xavg = nint(0.5_r8*(abs(x1) + abs(x2)))
             bufTripoleI4(i   ,POP_haloWidth+1) = isign*sign(xavg, x2)
             bufTripoleI4(iDst,POP_haloWidth+1) = isign*sign(xavg, x1)
          end do
@@ -2692,7 +2691,7 @@ contains
       fieldLoc             ! id for location on horizontal grid
                            !  (center, NEcorner, Nface, Eface)
 
-   real (POP_r8), intent(in), optional :: &
+   real (r8), intent(in), optional :: &
       fillValue            ! optional value to put in ghost cells
                            !  where neighbor points are unknown
                            !  (e.g. eliminated land blocks or
@@ -2700,13 +2699,13 @@ contains
 
 ! !INPUT/OUTPUT PARAMETERS:
 
-   real (POP_r8), dimension(:,:,:,:), intent(inout) :: &
+   real (r8), dimension(:,:,:,:), intent(inout) :: &
       array                ! array containing field for which halo
                            ! needs to be updated
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error code
 
 !EOP
@@ -2717,7 +2716,7 @@ contains
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) ::           &
+   integer (i4) ::           &
       i,j,k,n,nmsg,              &! dummy loop indices
       ierr,                      &! error or status flag for MPI,alloc
       msgSize,                   &! size of an individual message
@@ -2730,22 +2729,22 @@ contains
       ioffset, joffset,          &! address shifts for tripole
       isign                       ! sign factor for tripole grids
 
-   integer (POP_i4), dimension(:), allocatable :: &
+   integer (i4), dimension(:), allocatable :: &
       sndRequest,      &! MPI request ids
       rcvRequest        ! MPI request ids
 
-   integer (POP_i4), dimension(:,:), allocatable :: &
+   integer (i4), dimension(:,:), allocatable :: &
       sndStatus,       &! MPI status flags
       rcvStatus         ! MPI status flags
 
-   real (POP_r8) :: &
+   real (r8) :: &
       fill,            &! value to use for unknown points
       x1,x2,xavg        ! scalars for enforcing symmetry at U pts
 
-   real (POP_r8), dimension(:,:), allocatable :: &
+   real (r8), dimension(:,:), allocatable :: &
       bufSend, bufRecv            ! 3d send,recv buffers
 
-   real (POP_r8), dimension(:,:,:), allocatable :: &
+   real (r8), dimension(:,:,:), allocatable :: &
       bufTripole                  ! 3d tripole buffer
 
 !-----------------------------------------------------------------------
@@ -2759,7 +2758,7 @@ contains
    if (present(fillValue)) then
       fill = fillValue
    else
-      fill = 0.0_POP_r8
+      fill = 0.0_r8
    endif
 
    nxGlobal = 0
@@ -2959,7 +2958,7 @@ contains
          ioffset = 0
          joffset = 0
 
-      case (POP_gridHorzLocNEcorner)   ! cell corner location
+      case (POP_gridHorzLocSWcorner)   ! cell corner location
 
          ioffset = 1
          joffset = 1
@@ -2972,7 +2971,7 @@ contains
             iDst = nxGlobal - i
             x1 = bufTripole(i   ,POP_haloWidth+1,k)
             x2 = bufTripole(iDst,POP_haloWidth+1,k)
-            xavg = 0.5_POP_r8*(abs(x1) + abs(x2))
+            xavg = 0.5_r8*(abs(x1) + abs(x2))
             bufTripole(i   ,POP_haloWidth+1,k) = isign*sign(xavg, x2)
             bufTripole(iDst,POP_haloWidth+1,k) = isign*sign(xavg, x1)
          end do
@@ -2980,12 +2979,12 @@ contains
          bufTripole(nxGlobal,POP_haloWidth+1,k)
          end do
 
-      case (POP_gridHorzLocEface)   ! cell center location
+      case (POP_gridHorzLocWface)   ! cell center location
 
          ioffset = 1
          joffset = 0
 
-      case (POP_gridHorzLocNface)   ! cell corner (velocity) location
+      case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
          joffset = 1
@@ -2998,7 +2997,7 @@ contains
             iDst = nxGlobal + 1 - i
             x1 = bufTripole(i   ,POP_haloWidth+1,k)
             x2 = bufTripole(iDst,POP_haloWidth+1,k)
-            xavg = 0.5_POP_r8*(abs(x1) + abs(x2))
+            xavg = 0.5_r8*(abs(x1) + abs(x2))
             bufTripole(i   ,POP_haloWidth+1,k) = isign*sign(xavg, x2)
             bufTripole(iDst,POP_haloWidth+1,k) = isign*sign(xavg, x1)
          end do
@@ -3110,7 +3109,7 @@ contains
       fieldLoc             ! id for location on horizontal grid
                            !  (center, NEcorner, Nface, Eface)
 
-   real (POP_r4), intent(in), optional :: &
+   real (r4), intent(in), optional :: &
       fillValue            ! optional value to put in ghost cells
                            !  where neighbor points are unknown
                            !  (e.g. eliminated land blocks or
@@ -3118,13 +3117,13 @@ contains
 
 ! !INPUT/OUTPUT PARAMETERS:
 
-   real (POP_r4), dimension(:,:,:,:), intent(inout) :: &
+   real (r4), dimension(:,:,:,:), intent(inout) :: &
       array                ! array containing field for which halo
                            ! needs to be updated
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error code
 
 !EOP
@@ -3135,7 +3134,7 @@ contains
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) ::           &
+   integer (i4) ::           &
       i,j,k,n,nmsg,              &! dummy loop indices
       ierr,                      &! error or status flag for MPI,alloc
       msgSize,                   &! size of an individual message
@@ -3148,22 +3147,22 @@ contains
       ioffset, joffset,          &! address shifts for tripole
       isign                       ! sign factor for tripole grids
 
-   integer (POP_i4), dimension(:), allocatable :: &
+   integer (i4), dimension(:), allocatable :: &
       sndRequest,      &! MPI request ids
       rcvRequest        ! MPI request ids
 
-   integer (POP_i4), dimension(:,:), allocatable :: &
+   integer (i4), dimension(:,:), allocatable :: &
       sndStatus,       &! MPI status flags
       rcvStatus         ! MPI status flags
 
-   real (POP_r4) :: &
+   real (r4) :: &
       fill,            &! value to use for unknown points
       x1,x2,xavg        ! scalars for enforcing symmetry at U pts
 
-   real (POP_r4), dimension(:,:), allocatable :: &
+   real (r4), dimension(:,:), allocatable :: &
       bufSend, bufRecv            ! 3d send,recv buffers
 
-   real (POP_r4), dimension(:,:,:), allocatable :: &
+   real (r4), dimension(:,:,:), allocatable :: &
       bufTripole                  ! 3d tripole buffer
 
 !-----------------------------------------------------------------------
@@ -3177,7 +3176,7 @@ contains
    if (present(fillValue)) then
       fill = fillValue
    else
-      fill = 0.0_POP_r4
+      fill = 0.0_r4
    endif
 
    nxGlobal = 0
@@ -3370,7 +3369,7 @@ contains
          ioffset = 0
          joffset = 0
 
-      case (POP_gridHorzLocNEcorner)   ! cell corner location
+      case (POP_gridHorzLocSWcorner)   ! cell corner location
 
          ioffset = 1
          joffset = 1
@@ -3383,7 +3382,7 @@ contains
             iDst = nxGlobal - i
             x1 = bufTripole(i   ,POP_haloWidth+1,k)
             x2 = bufTripole(iDst,POP_haloWidth+1,k)
-            xavg = 0.5_POP_r4*(abs(x1) + abs(x2))
+            xavg = 0.5_r4*(abs(x1) + abs(x2))
             bufTripole(i   ,POP_haloWidth+1,k) = isign*sign(xavg, x2)
             bufTripole(iDst,POP_haloWidth+1,k) = isign*sign(xavg, x1)
          end do
@@ -3391,12 +3390,12 @@ contains
          bufTripole(nxGlobal,POP_haloWidth+1,k)
          end do
 
-      case (POP_gridHorzLocEface)   ! cell center location
+      case (POP_gridHorzLocWface)   ! cell center location
 
          ioffset = 1
          joffset = 0
 
-      case (POP_gridHorzLocNface)   ! cell corner (velocity) location
+      case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
          joffset = 1
@@ -3409,7 +3408,7 @@ contains
             iDst = nxGlobal + 1 - i
             x1 = bufTripole(i   ,POP_haloWidth+1,k)
             x2 = bufTripole(iDst,POP_haloWidth+1,k)
-            xavg = 0.5_POP_r4*(abs(x1) + abs(x2))
+            xavg = 0.5_r4*(abs(x1) + abs(x2))
             bufTripole(i   ,POP_haloWidth+1,k) = isign*sign(xavg, x2)
             bufTripole(iDst,POP_haloWidth+1,k) = isign*sign(xavg, x1)
          end do
@@ -3521,7 +3520,7 @@ contains
       fieldLoc             ! id for location on horizontal grid
                            !  (center, NEcorner, Nface, Eface)
 
-   integer (POP_i4), intent(in), optional :: &
+   integer (i4), intent(in), optional :: &
       fillValue            ! optional value to put in ghost cells
                            !  where neighbor points are unknown
                            !  (e.g. eliminated land blocks or
@@ -3529,13 +3528,13 @@ contains
 
 ! !INPUT/OUTPUT PARAMETERS:
 
-   integer (POP_i4), dimension(:,:,:,:), intent(inout) :: &
+   integer (i4), dimension(:,:,:,:), intent(inout) :: &
       array                ! array containing field for which halo
                            ! needs to be updated
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error code
 
 !EOP
@@ -3546,7 +3545,7 @@ contains
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) ::           &
+   integer (i4) ::           &
       i,j,k,n,nmsg,              &! dummy loop indices
       ierr,                      &! error or status flag for MPI,alloc
       msgSize,                   &! size of an individual message
@@ -3559,22 +3558,22 @@ contains
       ioffset, joffset,          &! address shifts for tripole
       isign                       ! sign factor for tripole grids
 
-   integer (POP_i4), dimension(:), allocatable :: &
+   integer (i4), dimension(:), allocatable :: &
       sndRequest,      &! MPI request ids
       rcvRequest        ! MPI request ids
 
-   integer (POP_i4), dimension(:,:), allocatable :: &
+   integer (i4), dimension(:,:), allocatable :: &
       sndStatus,       &! MPI status flags
       rcvStatus         ! MPI status flags
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       fill,            &! value to use for unknown points
       x1,x2,xavg        ! scalars for enforcing symmetry at U pts
 
-   integer (POP_i4), dimension(:,:), allocatable :: &
+   integer (i4), dimension(:,:), allocatable :: &
       bufSend, bufRecv            ! 3d send,recv buffers
 
-   integer (POP_i4), dimension(:,:,:), allocatable :: &
+   integer (i4), dimension(:,:,:), allocatable :: &
       bufTripole                  ! 3d tripole buffer
 
 !-----------------------------------------------------------------------
@@ -3588,7 +3587,7 @@ contains
    if (present(fillValue)) then
       fill = fillValue
    else
-      fill = 0_POP_i4
+      fill = 0_i4
    endif
 
    nxGlobal = 0
@@ -3781,7 +3780,7 @@ contains
          ioffset = 0
          joffset = 0
 
-      case (POP_gridHorzLocNEcorner)   ! cell corner location
+      case (POP_gridHorzLocSWcorner)   ! cell corner location
 
          ioffset = 1
          joffset = 1
@@ -3794,7 +3793,7 @@ contains
             iDst = nxGlobal - i
             x1 = bufTripole(i   ,POP_haloWidth+1,k)
             x2 = bufTripole(iDst,POP_haloWidth+1,k)
-            xavg = nint(0.5_POP_r8*(abs(x1) + abs(x2)))
+            xavg = nint(0.5_r8*(abs(x1) + abs(x2)))
             bufTripole(i   ,POP_haloWidth+1,k) = isign*sign(xavg, x2)
             bufTripole(iDst,POP_haloWidth+1,k) = isign*sign(xavg, x1)
          end do
@@ -3802,12 +3801,12 @@ contains
          bufTripole(nxGlobal,POP_haloWidth+1,k)
          end do
 
-      case (POP_gridHorzLocEface)   ! cell center location
+      case (POP_gridHorzLocWface)   ! cell center location
 
          ioffset = 1
          joffset = 0
 
-      case (POP_gridHorzLocNface)   ! cell corner (velocity) location
+      case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
          joffset = 1
@@ -3820,7 +3819,7 @@ contains
             iDst = nxGlobal + 1 - i
             x1 = bufTripole(i   ,POP_haloWidth+1,k)
             x2 = bufTripole(iDst,POP_haloWidth+1,k)
-            xavg = nint(0.5_POP_r8*(abs(x1) + abs(x2)))
+            xavg = nint(0.5_r8*(abs(x1) + abs(x2)))
             bufTripole(i   ,POP_haloWidth+1,k) = isign*sign(xavg, x2)
             bufTripole(iDst,POP_haloWidth+1,k) = isign*sign(xavg, x1)
          end do
@@ -3932,7 +3931,7 @@ contains
       fieldLoc             ! id for location on horizontal grid
                            !  (center, NEcorner, Nface, Eface)
 
-   real (POP_r8), intent(in), optional :: &
+   real (r8), intent(in), optional :: &
       fillValue            ! optional value to put in ghost cells
                            !  where neighbor points are unknown
                            !  (e.g. eliminated land blocks or
@@ -3940,13 +3939,13 @@ contains
 
 ! !INPUT/OUTPUT PARAMETERS:
 
-   real (POP_r8), dimension(:,:,:,:,:), intent(inout) :: &
+   real (r8), dimension(:,:,:,:,:), intent(inout) :: &
       array                ! array containing field for which halo
                            ! needs to be updated
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error code
 
 !EOP
@@ -3957,7 +3956,7 @@ contains
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) ::           &
+   integer (i4) ::           &
       i,j,k,l,n,nmsg,            &! dummy loop indices
       ierr,                      &! error or status flag for MPI,alloc
       msgSize,                   &! size of an individual message
@@ -3970,22 +3969,22 @@ contains
       ioffset, joffset,          &! address shifts for tripole
       isign                       ! sign factor for tripole grids
 
-   integer (POP_i4), dimension(:), allocatable :: &
+   integer (i4), dimension(:), allocatable :: &
       sndRequest,      &! MPI request ids
       rcvRequest        ! MPI request ids
 
-   integer (POP_i4), dimension(:,:), allocatable :: &
+   integer (i4), dimension(:,:), allocatable :: &
       sndStatus,       &! MPI status flags
       rcvStatus         ! MPI status flags
 
-   real (POP_r8) :: &
+   real (r8) :: &
       fill,            &! value to use for unknown points
       x1,x2,xavg        ! scalars for enforcing symmetry at U pts
 
-   real (POP_r8), dimension(:,:), allocatable :: &
+   real (r8), dimension(:,:), allocatable :: &
       bufSend, bufRecv            ! 4d send,recv buffers
 
-   real (POP_r8), dimension(:,:,:,:), allocatable :: &
+   real (r8), dimension(:,:,:,:), allocatable :: &
       bufTripole                  ! 4d tripole buffer
 
 !-----------------------------------------------------------------------
@@ -3999,7 +3998,7 @@ contains
    if (present(fillValue)) then
       fill = fillValue
    else
-      fill = 0.0_POP_r8
+      fill = 0.0_r8
    endif
 
    nxGlobal = 0
@@ -4206,7 +4205,7 @@ contains
          ioffset = 0
          joffset = 0
 
-      case (POP_gridHorzLocNEcorner)   ! cell corner location
+      case (POP_gridHorzLocSWcorner)   ! cell corner location
 
          ioffset = 1
          joffset = 1
@@ -4220,7 +4219,7 @@ contains
             iDst = nxGlobal - i
             x1 = bufTripole(i   ,POP_haloWidth+1,k,l)
             x2 = bufTripole(iDst,POP_haloWidth+1,k,l)
-            xavg = 0.5_POP_r8*(abs(x1) + abs(x2))
+            xavg = 0.5_r8*(abs(x1) + abs(x2))
             bufTripole(i   ,POP_haloWidth+1,k,l) = isign*sign(xavg, x2)
             bufTripole(iDst,POP_haloWidth+1,k,l) = isign*sign(xavg, x1)
          end do
@@ -4229,12 +4228,12 @@ contains
          end do
          end do
 
-      case (POP_gridHorzLocEface)   ! cell center location
+      case (POP_gridHorzLocWface)   ! cell center location
 
          ioffset = 1
          joffset = 0
 
-      case (POP_gridHorzLocNface)   ! cell corner (velocity) location
+      case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
          joffset = 1
@@ -4248,7 +4247,7 @@ contains
             iDst = nxGlobal + 1 - i
             x1 = bufTripole(i   ,POP_haloWidth+1,k,l)
             x2 = bufTripole(iDst,POP_haloWidth+1,k,l)
-            xavg = 0.5_POP_r8*(abs(x1) + abs(x2))
+            xavg = 0.5_r8*(abs(x1) + abs(x2))
             bufTripole(i   ,POP_haloWidth+1,k,l) = isign*sign(xavg, x2)
             bufTripole(iDst,POP_haloWidth+1,k,l) = isign*sign(xavg, x1)
          end do
@@ -4363,7 +4362,7 @@ contains
       fieldLoc             ! id for location on horizontal grid
                            !  (center, NEcorner, Nface, Eface)
 
-   real (POP_r4), intent(in), optional :: &
+   real (r4), intent(in), optional :: &
       fillValue            ! optional value to put in ghost cells
                            !  where neighbor points are unknown
                            !  (e.g. eliminated land blocks or
@@ -4371,13 +4370,13 @@ contains
 
 ! !INPUT/OUTPUT PARAMETERS:
 
-   real (POP_r4), dimension(:,:,:,:,:), intent(inout) :: &
+   real (r4), dimension(:,:,:,:,:), intent(inout) :: &
       array                ! array containing field for which halo
                            ! needs to be updated
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error code
 
 !EOP
@@ -4388,7 +4387,7 @@ contains
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) ::           &
+   integer (i4) ::           &
       i,j,k,l,n,nmsg,            &! dummy loop indices
       ierr,                      &! error or status flag for MPI,alloc
       msgSize,                   &! size of an individual message
@@ -4401,22 +4400,22 @@ contains
       ioffset, joffset,          &! address shifts for tripole
       isign                       ! sign factor for tripole grids
 
-   integer (POP_i4), dimension(:), allocatable :: &
+   integer (i4), dimension(:), allocatable :: &
       sndRequest,      &! MPI request ids
       rcvRequest        ! MPI request ids
 
-   integer (POP_i4), dimension(:,:), allocatable :: &
+   integer (i4), dimension(:,:), allocatable :: &
       sndStatus,       &! MPI status flags
       rcvStatus         ! MPI status flags
 
-   real (POP_r4) :: &
+   real (r4) :: &
       fill,            &! value to use for unknown points
       x1,x2,xavg        ! scalars for enforcing symmetry at U pts
 
-   real (POP_r4), dimension(:,:), allocatable :: &
+   real (r4), dimension(:,:), allocatable :: &
       bufSend, bufRecv            ! 4d send,recv buffers
 
-   real (POP_r4), dimension(:,:,:,:), allocatable :: &
+   real (r4), dimension(:,:,:,:), allocatable :: &
       bufTripole                  ! 4d tripole buffer
 
 !-----------------------------------------------------------------------
@@ -4430,7 +4429,7 @@ contains
    if (present(fillValue)) then
       fill = fillValue
    else
-      fill = 0.0_POP_r4
+      fill = 0.0_r4
    endif
 
    nxGlobal = 0
@@ -4637,7 +4636,7 @@ contains
          ioffset = 0
          joffset = 0
 
-      case (POP_gridHorzLocNEcorner)   ! cell corner location
+      case (POP_gridHorzLocSWcorner)   ! cell corner location
 
          ioffset = 1
          joffset = 1
@@ -4651,7 +4650,7 @@ contains
             iDst = nxGlobal - i
             x1 = bufTripole(i   ,POP_haloWidth+1,k,l)
             x2 = bufTripole(iDst,POP_haloWidth+1,k,l)
-            xavg = 0.5_POP_r4*(abs(x1) + abs(x2))
+            xavg = 0.5_r4*(abs(x1) + abs(x2))
             bufTripole(i   ,POP_haloWidth+1,k,l) = isign*sign(xavg, x2)
             bufTripole(iDst,POP_haloWidth+1,k,l) = isign*sign(xavg, x1)
          end do
@@ -4660,12 +4659,12 @@ contains
          end do
          end do
 
-      case (POP_gridHorzLocEface)   ! cell center location
+      case (POP_gridHorzLocWface)   ! cell center location
 
          ioffset = 1
          joffset = 0
 
-      case (POP_gridHorzLocNface)   ! cell corner (velocity) location
+      case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
          joffset = 1
@@ -4679,7 +4678,7 @@ contains
             iDst = nxGlobal + 1 - i
             x1 = bufTripole(i   ,POP_haloWidth+1,k,l)
             x2 = bufTripole(iDst,POP_haloWidth+1,k,l)
-            xavg = 0.5_POP_r4*(abs(x1) + abs(x2))
+            xavg = 0.5_r4*(abs(x1) + abs(x2))
             bufTripole(i   ,POP_haloWidth+1,k,l) = isign*sign(xavg, x2)
             bufTripole(iDst,POP_haloWidth+1,k,l) = isign*sign(xavg, x1)
          end do
@@ -4794,7 +4793,7 @@ contains
       fieldLoc             ! id for location on horizontal grid
                            !  (center, NEcorner, Nface, Eface)
 
-   integer (POP_i4), intent(in), optional :: &
+   integer (i4), intent(in), optional :: &
       fillValue            ! optional value to put in ghost cells
                            !  where neighbor points are unknown
                            !  (e.g. eliminated land blocks or
@@ -4802,13 +4801,13 @@ contains
 
 ! !INPUT/OUTPUT PARAMETERS:
 
-   integer (POP_i4), dimension(:,:,:,:,:), intent(inout) :: &
+   integer (i4), dimension(:,:,:,:,:), intent(inout) :: &
       array                ! array containing field for which halo
                            ! needs to be updated
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error code
 
 !EOP
@@ -4819,7 +4818,7 @@ contains
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) ::           &
+   integer (i4) ::           &
       i,j,k,l,n,nmsg,            &! dummy loop indices
       ierr,                      &! error or status flag for MPI,alloc
       msgSize,                   &! size of an individual message
@@ -4832,22 +4831,22 @@ contains
       ioffset, joffset,          &! address shifts for tripole
       isign                       ! sign factor for tripole grids
 
-   integer (POP_i4), dimension(:), allocatable :: &
+   integer (i4), dimension(:), allocatable :: &
       sndRequest,      &! MPI request ids
       rcvRequest        ! MPI request ids
 
-   integer (POP_i4), dimension(:,:), allocatable :: &
+   integer (i4), dimension(:,:), allocatable :: &
       sndStatus,       &! MPI status flags
       rcvStatus         ! MPI status flags
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       fill,            &! value to use for unknown points
       x1,x2,xavg        ! scalars for enforcing symmetry at U pts
 
-   integer (POP_i4), dimension(:,:), allocatable :: &
+   integer (i4), dimension(:,:), allocatable :: &
       bufSend, bufRecv            ! 4d send,recv buffers
 
-   integer (POP_i4), dimension(:,:,:,:), allocatable :: &
+   integer (i4), dimension(:,:,:,:), allocatable :: &
       bufTripole                  ! 4d tripole buffer
 
 !-----------------------------------------------------------------------
@@ -4861,7 +4860,7 @@ contains
    if (present(fillValue)) then
       fill = fillValue
    else
-      fill = 0_POP_i4
+      fill = 0_i4
    endif
 
    nxGlobal = 0
@@ -5068,7 +5067,7 @@ contains
          ioffset = 0
          joffset = 0
 
-      case (POP_gridHorzLocNEcorner)   ! cell corner location
+      case (POP_gridHorzLocSWcorner)   ! cell corner location
 
          ioffset = 1
          joffset = 1
@@ -5082,7 +5081,7 @@ contains
             iDst = nxGlobal - i
             x1 = bufTripole(i   ,POP_haloWidth+1,k,l)
             x2 = bufTripole(iDst,POP_haloWidth+1,k,l)
-            xavg = nint(0.5_POP_r8*(abs(x1) + abs(x2)))
+            xavg = nint(0.5_r8*(abs(x1) + abs(x2)))
             bufTripole(i   ,POP_haloWidth+1,k,l) = isign*sign(xavg, x2)
             bufTripole(iDst,POP_haloWidth+1,k,l) = isign*sign(xavg, x1)
          end do
@@ -5091,12 +5090,12 @@ contains
          end do
          end do
 
-      case (POP_gridHorzLocEface)   ! cell center location
+      case (POP_gridHorzLocWface)   ! cell center location
 
          ioffset = 1
          joffset = 0
 
-      case (POP_gridHorzLocNface)   ! cell corner (velocity) location
+      case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
          joffset = 1
@@ -5110,7 +5109,7 @@ contains
             iDst = nxGlobal + 1 - i
             x1 = bufTripole(i   ,POP_haloWidth+1,k,l)
             x2 = bufTripole(iDst,POP_haloWidth+1,k,l)
-            xavg = nint(0.5_POP_r8*(abs(x1) + abs(x2)))
+            xavg = nint(0.5_r8*(abs(x1) + abs(x2)))
             bufTripole(i   ,POP_haloWidth+1,k,l) = isign*sign(xavg, x2)
             bufTripole(iDst,POP_haloWidth+1,k,l) = isign*sign(xavg, x1)
          end do
@@ -5214,20 +5213,20 @@ contains
 
 ! !INPUT PARAMETERS:
 
-   integer (POP_i4), intent(in) :: &
+   integer (i4), intent(in) :: &
       srcProc,               &! source processor for communication
       dstProc,               &! destination processor for communication
       msgSize                 ! number of words for this message
 
 ! !INPUT/OUTPUT PARAMETERS:
 
-   integer (POP_i4), dimension(:), intent(inout) :: &
+   integer (i4), dimension(:), intent(inout) :: &
       sndCounter,       &! array for counting messages to be sent
       rcvCounter         ! array for counting messages to be received
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode          ! returned error code
 !EOP
 !BOC
@@ -5312,7 +5311,7 @@ contains
 
 ! !INPUT PARAMETERS:
 
-   integer (POP_i4), intent(in) :: &
+   integer (i4), intent(in) :: &
       srcBlock,   dstBlock,   & ! source,destination block id
       srcProc,    dstProc,    & ! source,destination processor location
       srcLocalID, dstLocalID    ! source,destination local index
@@ -5329,7 +5328,7 @@ contains
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode          ! returned error code
 
 !EOP
@@ -5340,7 +5339,7 @@ contains
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       msgIndx,               &! message counter and index into msg array
       blockIndx,             &! block counter and index into msg array
       bufSize,               &! size of message buffer
@@ -5349,7 +5348,7 @@ contains
       nxGlobal,              &! size of global domain in e-w direction
       i,j,n                   ! dummy loop index
 
-   integer (POP_i4), dimension(:), pointer :: &
+   integer (i4), dimension(:), pointer :: &
       iGlobal                 ! global i index for location in tripole
 
 !-----------------------------------------------------------------------
@@ -5487,11 +5486,13 @@ contains
                msgIndx = msgIndx + 1
 
                halo%srcLocalAddr(1,msgIndx) = ibSrc + i - 1
-               halo%srcLocalAddr(2,msgIndx) = jeSrc - POP_haloWidth + j
+!YU            halo%srcLocalAddr(2,msgIndx) = jeSrc - POP_haloWidth + j
+               halo%srcLocalAddr(2,msgIndx) = jbSrc + j - 1
                halo%srcLocalAddr(3,msgIndx) = srcLocalID
 
                halo%dstLocalAddr(1,msgIndx) = ibDst + i - 1
-               halo%dstLocalAddr(2,msgIndx) = j
+!YU            halo%dstLocalAddr(2,msgIndx) = j
+               halo%dstLocalAddr(2,msgIndx) = jeDst + j
                halo%dstLocalAddr(3,msgIndx) = dstLocalID
 
             end do
@@ -5564,11 +5565,13 @@ contains
             msgIndx = msgIndx + 1
 
             halo%srcLocalAddr(1,msgIndx) = ibSrc + i - 1
-            halo%srcLocalAddr(2,msgIndx) = jbSrc + j - 1
+!YU         halo%srcLocalAddr(2,msgIndx) = jbSrc + j - 1
+            halo%srcLocalAddr(2,msgIndx) = jeSrc - POP_haloWidth + j 
             halo%srcLocalAddr(3,msgIndx) = srcLocalID
 
             halo%dstLocalAddr(1,msgIndx) = ibDst + i - 1
-            halo%dstLocalAddr(2,msgIndx) = jeDst + j
+!YU         halo%dstLocalAddr(2,msgIndx) = jeDst + j
+            halo%dstLocalAddr(2,msgIndx) = j
             halo%dstLocalAddr(3,msgIndx) = dstLocalID
 
          end do
@@ -5587,12 +5590,16 @@ contains
                msgIndx = msgIndx + 1
 
                halo%srcLocalAddr(1,msgIndx) = ieSrc - POP_haloWidth + i
-               halo%srcLocalAddr(2,msgIndx) = jeSrc - POP_haloWidth + j
+!YU            halo%srcLocalAddr(2,msgIndx) = jeSrc - POP_haloWidth + j
+               halo%srcLocalAddr(2,msgIndx) = jbSrc + j - 1
                halo%srcLocalAddr(3,msgIndx) = srcLocalID
 
                halo%dstLocalAddr(1,msgIndx) = i
-               halo%dstLocalAddr(2,msgIndx) = j
+!YU            halo%dstLocalAddr(2,msgIndx) = j
+               halo%dstLocalAddr(2,msgIndx) = jeDst + j
                halo%dstLocalAddr(3,msgIndx) = dstLocalID
+
+
 
             end do
             end do
@@ -5617,12 +5624,17 @@ contains
                msgIndx = msgIndx + 1
 
                halo%srcLocalAddr(1,msgIndx) = ibSrc + i - 1
-               halo%srcLocalAddr(2,msgIndx) = jeSrc - POP_haloWidth + j
+!YU            halo%srcLocalAddr(2,msgIndx) = jeSrc - POP_haloWidth + j
+               halo%srcLocalAddr(2,msgIndx) = jbSrc + j - 1
                halo%srcLocalAddr(3,msgIndx) = srcLocalID
 
                halo%dstLocalAddr(1,msgIndx) = ieDst + i
-               halo%dstLocalAddr(2,msgIndx) = j
+!YU            halo%dstLocalAddr(2,msgIndx) = j
+               halo%dstLocalAddr(2,msgIndx) = jeDst + j
                halo%dstLocalAddr(3,msgIndx) = dstLocalID
+
+
+
 
             end do
             end do
@@ -5645,11 +5657,13 @@ contains
             msgIndx = msgIndx + 1
 
             halo%srcLocalAddr(1,msgIndx) = ieSrc - POP_haloWidth + i
-            halo%srcLocalAddr(2,msgIndx) = jbSrc + j - 1
+!YU         halo%srcLocalAddr(2,msgIndx) = jbSrc + j - 1
+            halo%srcLocalAddr(2,msgIndx) = jeSrc - POP_haloWidth + j
             halo%srcLocalAddr(3,msgIndx) = srcLocalID
 
             halo%dstLocalAddr(1,msgIndx) = i
-            halo%dstLocalAddr(2,msgIndx) = jeDst + j
+!YU         halo%dstLocalAddr(2,msgIndx) = jeDst + j
+            halo%dstLocalAddr(2,msgIndx) = j
             halo%dstLocalAddr(3,msgIndx) = dstLocalID
 
          end do
@@ -5666,11 +5680,13 @@ contains
             msgIndx = msgIndx + 1
 
             halo%srcLocalAddr(1,msgIndx) = ibSrc + i - 1
-            halo%srcLocalAddr(2,msgIndx) = jbSrc + j - 1
+!YU         halo%srcLocalAddr(2,msgIndx) = jbSrc + j - 1
+            halo%srcLocalAddr(2,msgIndx) = jeSrc - POP_haloWidth + j
             halo%srcLocalAddr(3,msgIndx) = srcLocalID
 
             halo%dstLocalAddr(1,msgIndx) = ieDst + i
-            halo%dstLocalAddr(2,msgIndx) = jeDst + j
+!YU         halo%dstLocalAddr(2,msgIndx) = jeDst + j
+            halo%dstLocalAddr(2,msgIndx) = j
             halo%dstLocalAddr(3,msgIndx) = dstLocalID
 
          end do
@@ -5995,7 +6011,8 @@ contains
                bufSize = bufSize + 1
 
                halo%sendAddr(1,bufSize,msgIndx) = ibSrc + i - 1
-               halo%sendAddr(2,bufSize,msgIndx) = jeSrc-POP_haloWidth+j
+!YU            halo%sendAddr(2,bufSize,msgIndx) = jeSrc-POP_haloWidth+j
+               halo%sendAddr(2,bufSize,msgIndx) = jbSrc + j - 1
                halo%sendAddr(3,bufSize,msgIndx) = srcLocalID
 
             end do
@@ -6034,7 +6051,8 @@ contains
             bufSize = bufSize + 1
 
             halo%sendAddr(1,bufSize,msgIndx) = ibSrc + i - 1
-            halo%sendAddr(2,bufSize,msgIndx) = jbSrc + j - 1
+!YU         halo%sendAddr(2,bufSize,msgIndx) = jbSrc + j - 1
+            halo%sendAddr(2,bufSize,msgIndx) = jeSrc - POP_haloWidth + j 
             halo%sendAddr(3,bufSize,msgIndx) = srcLocalID
 
          end do
@@ -6057,7 +6075,8 @@ contains
                bufSize = bufSize + 1
 
                halo%sendAddr(1,bufSize,msgIndx) = ieSrc-POP_haloWidth+i
-               halo%sendAddr(2,bufSize,msgIndx) = jeSrc-POP_haloWidth+j
+!YU            halo%sendAddr(2,bufSize,msgIndx) = jeSrc-POP_haloWidth+j
+               halo%sendAddr(2,bufSize,msgIndx) = jbSrc + j - 1
                halo%sendAddr(3,bufSize,msgIndx) = srcLocalID
 
             end do
@@ -6099,7 +6118,8 @@ contains
                bufSize = bufSize + 1
 
                halo%sendAddr(1,bufSize,msgIndx) = ibSrc + i - 1
-               halo%sendAddr(2,bufSize,msgIndx) = jeSrc-POP_haloWidth+j
+!YU            halo%sendAddr(2,bufSize,msgIndx) = jeSrc-POP_haloWidth+j
+               halo%sendAddr(2,bufSize,msgIndx) = jbSrc + j - 1
                halo%sendAddr(3,bufSize,msgIndx) = srcLocalID
 
             end do
@@ -6138,7 +6158,8 @@ contains
             bufSize = bufSize + 1
 
             halo%sendAddr(1,bufSize,msgIndx) = ieSrc - POP_haloWidth + i
-            halo%sendAddr(2,bufSize,msgIndx) = jbSrc + j - 1
+!YU         halo%sendAddr(2,bufSize,msgIndx) = jbSrc + j - 1
+            halo%sendAddr(2,bufSize,msgIndx) = jeSrc - POP_haloWidth + j
             halo%sendAddr(3,bufSize,msgIndx) = srcLocalID
 
          end do
@@ -6157,7 +6178,8 @@ contains
             bufSize = bufSize + 1
 
             halo%sendAddr(1,bufSize,msgIndx) = ibSrc + i - 1
-            halo%sendAddr(2,bufSize,msgIndx) = jbSrc + j - 1
+!YU         halo%sendAddr(2,bufSize,msgIndx) = jbSrc + j - 1
+            halo%sendAddr(2,bufSize,msgIndx) = jeSrc - POP_haloWidth + j
             halo%sendAddr(3,bufSize,msgIndx) = srcLocalID
 
          end do
@@ -6255,7 +6277,8 @@ contains
                bufSize = bufSize + 1
 
                halo%recvAddr(1,bufSize,msgIndx) = ibDst + i - 1
-               halo%recvAddr(2,bufSize,msgIndx) = j
+!YU            halo%recvAddr(2,bufSize,msgIndx) = j
+               halo%recvAddr(2,bufSize,msgIndx) = jeDst + j
                halo%recvAddr(3,bufSize,msgIndx) = dstLocalID
 
             end do
@@ -6294,7 +6317,8 @@ contains
             bufSize = bufSize + 1
 
             halo%recvAddr(1,bufSize,msgIndx) = ibDst + i - 1
-            halo%recvAddr(2,bufSize,msgIndx) = jeDst + j
+!YU         halo%recvAddr(2,bufSize,msgIndx) = jeDst + j
+            halo%recvAddr(2,bufSize,msgIndx) = j
             halo%recvAddr(3,bufSize,msgIndx) = dstLocalID
 
          end do
@@ -6316,7 +6340,8 @@ contains
                bufSize = bufSize + 1
 
                halo%recvAddr(1,bufSize,msgIndx) = i
-               halo%recvAddr(2,bufSize,msgIndx) = j
+!YU            halo%recvAddr(2,bufSize,msgIndx) = j
+               halo%recvAddr(2,bufSize,msgIndx) = jeDst + j
                halo%recvAddr(3,bufSize,msgIndx) = dstLocalID
 
             end do
@@ -6358,7 +6383,8 @@ contains
                bufSize = bufSize + 1
 
                halo%recvAddr(1,bufSize,msgIndx) = ieDst + i
-               halo%recvAddr(2,bufSize,msgIndx) = j
+!YU            halo%recvAddr(2,bufSize,msgIndx) = j
+               halo%recvAddr(2,bufSize,msgIndx) = jeDst + j
                halo%recvAddr(3,bufSize,msgIndx) = dstLocalID
 
             end do
@@ -6397,7 +6423,8 @@ contains
             bufSize = bufSize + 1
 
             halo%recvAddr(1,bufSize,msgIndx) = i
-            halo%recvAddr(2,bufSize,msgIndx) = jeDst + j
+!YU         halo%recvAddr(2,bufSize,msgIndx) = jeDst + j
+            halo%recvAddr(2,bufSize,msgIndx) = j
             halo%recvAddr(3,bufSize,msgIndx) = dstLocalID
 
          end do
@@ -6416,7 +6443,8 @@ contains
             bufSize = bufSize + 1
 
             halo%recvAddr(1,bufSize,msgIndx) = ieDst + i
-            halo%recvAddr(2,bufSize,msgIndx) = jeDst + j
+!YU         halo%recvAddr(2,bufSize,msgIndx) = jeDst + j
+            halo%recvAddr(2,bufSize,msgIndx) = j
             halo%recvAddr(3,bufSize,msgIndx) = dstLocalID
 
          end do
@@ -6470,7 +6498,7 @@ contains
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode          ! returned error code
 
 !EOP
@@ -6481,14 +6509,14 @@ contains
 !
 !-----------------------------------------------------------------------
  
-   integer (POP_i4) ::              &
+   integer (i4) ::              &
       bytesSend,     bytesRecv,     &
       maxBytesSend,  maxBytesRecv,  &
       minBytesSend,  minBytesRecv,  & 
       minNumMsgRecv, maxNumMsgRecv, &
       numProcs, n
 
-   real (POP_r8) ::  &
+   real (r8) ::  &
       avgBytesSend, avgBytesRecv
 
 !-----------------------------------------------------------------------

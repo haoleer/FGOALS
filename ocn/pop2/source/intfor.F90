@@ -9,24 +9,20 @@ use precision_mod
 use param_mod
 use pconst_mod
 use forc_mod
-#if ( defined SPMD )
 use msg_mod
-#endif
+use domain
       IMPLICIT NONE
  
-      INTEGER :: IPT1,IPT2
+      INTEGER :: IPT1,IPT2, IBLOCK
       REAL(r8):: FACTOR
       INTEGER :: IYEAR,IREC
       CHARACTER (LEN=180) :: FNAME 
       CHARACTER (LEN=4)   :: FHEAD 
       CHARACTER (LEN=3)   :: FTAIL(12)
-      REAL(r8),dimension(:,:),allocatable :: sx,sy
-!      REAL(r4),dimension(imt,jmt) :: sx_in,sy_in 
-!      REAL(r8),dimension(imt,jmt) :: sx,sy 
-!      REAL(r8) :: EK
+      REAL(r8),dimension(:,:,:),allocatable :: sx,sy
       REAL(r8) :: epsln
-      allocate(sx(imt,jmt))
-      allocate(sy(imt,jmt))
+      allocate(sx(imt,jmt,max_blocks_clinic))
+      allocate(sy(imt,jmt,max_blocks_clinic))
 !
       epsln = 1.0D-25
 !
@@ -50,74 +46,58 @@ use msg_mod
             PSA3=1000.
 !lhl0711
 
-!$OMP PARALLEL DO PRIVATE (J,I)
+!$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
+   DO IBLOCK = 1, NBLOCKS_CLINIC
       DO J = JST,JET
          DO I = 1,IMT
-            SU (I,J)= ( (SU3 (I,J,IPT2) - SU3 (I,J,IPT1))               &
-                    * FACTOR + SU3 (I,J,IPT1))
-            SV (I,J)= ( (SV3 (I,J,IPT2) - SV3 (I,J,IPT1))               &
-                    * FACTOR + SV3 (I,J,IPT1))
-            PSA (I,J)= (PSA3 (I,J,IPT2) - PSA3 (I,J,IPT1))              &
-                    * FACTOR + PSA3 (I,J, IPT1)
-            TSA (I,J)= (TSA3 (I,J,IPT2) - TSA3 (I,J,IPT1))              &
-                    * FACTOR + TSA3 (I,J, IPT1)
-            SSS (I,J)= (SSS3 (I,J,IPT2) - SSS3 (I,J,IPT1))              &
-                    * FACTOR + SSS3 (I,J, IPT1)
-            SWV (I,J)= ( (SWV3 (I,J,IPT2) - SWV3 (I,J,IPT1))            &
-                    * FACTOR + SWV3 (I,J, IPT1))
-            UVA (I,J)= ( (UVA3 (I,J,IPT2) - UVA3 (I,J,IPT1))            &
-                    * FACTOR + UVA3 (I,J, IPT1))
-            QAR (I,J)= ( (QAR3 (I,J,IPT2) - QAR3 (I,J,IPT1))            &
-                    * FACTOR + QAR3 (I,J, IPT1))
-            CLD (I,J)= ( (CLD3 (I,J,IPT2) - CLD3 (I,J,IPT1))            &
-                    * FACTOR + CLD3 (I,J, IPT1))
-            SST (I,J)= ( (SST3 (I,J,IPT2) - SST3 (I,J,IPT1))            &
-                    * FACTOR + SST3 (I,J, IPT1))
+            SU (I,J,IBLOCK)= ( (SU3 (I,J,IPT2,IBLOCK) - SU3 (I,J,IPT1,IBLOCK))               &
+                             * FACTOR + SU3 (I,J,IPT1,IBLOCK))
+            SV (I,J,IBLOCK)= ( (SV3 (I,J,IPT2,IBLOCK) - SV3 (I,J,IPT1,IBLOCK))               &
+                             * FACTOR + SV3 (I,J,IPT1,IBLOCK))
+            PSA (I,J,IBLOCK)= (PSA3 (I,J,IPT2,IBLOCK) - PSA3 (I,J,IPT1,IBLOCK))              &
+                             * FACTOR + PSA3 (I,J,IPT1,IBLOCK)
+            TSA (I,J,IBLOCK)= (TSA3 (I,J,IPT2,IBLOCK) - TSA3 (I,J,IPT1,IBLOCK))              &
+                             * FACTOR + TSA3 (I,J,IPT1,IBLOCK)
+            SSS (I,J,IBLOCK)= (SSS3 (I,J,IPT2,IBLOCK) - SSS3 (I,J,IPT1,IBLOCK))              &
+                             * FACTOR + SSS3 (I,J,IPT1,IBLOCK)
+            SWV (I,J,IBLOCK)= ( (SWV3 (I,J,IPT2,IBLOCK) - SWV3 (I,J,IPT1,IBLOCK))            &
+                             * FACTOR + SWV3 (I,J,IPT1,IBLOCK))
+            UVA (I,J,IBLOCK)= ( (UVA3 (I,J,IPT2,IBLOCK) - UVA3 (I,J,IPT1,IBLOCK))            &
+                             * FACTOR + UVA3 (I,J,IPT1,IBLOCK))
+            QAR (I,J,IBLOCK)= ( (QAR3 (I,J,IPT2,IBLOCK) - QAR3 (I,J,IPT1,IBLOCK))            &
+                             * FACTOR + QAR3 (I,J,IPT1,IBLOCK))
+            CLD (I,J,IBLOCK)= ( (CLD3 (I,J,IPT2,IBLOCK) - CLD3 (I,J,IPT1,IBLOCK))            &
+                             * FACTOR + CLD3 (I,J,IPT1,IBLOCK))
+            SST (I,J,IBLOCK)= ( (SST3 (I,J,IPT2,IBLOCK) - SST3 (I,J,IPT1,IBLOCK))            &
+                             * FACTOR + SST3 (I,J,IPT1,IBLOCK))
 !lhl
-           NSWV (I,J)= ( (NSWV3(I,J,IPT2) - NSWV3(I,J,IPT1))            &
-                    * FACTOR + NSWV3 (I,J, IPT1))
-           DQDT (I,J)= ( (DQDT3(I,J,IPT2) - DQDT3(I,J,IPT1))            &
-                    * FACTOR + DQDT3(I,J, IPT1))
+           NSWV (I,J,IBLOCK)= ( (NSWV3(I,J,IPT2,IBLOCK) - NSWV3(I,J,IPT1,IBLOCK))            &
+                             * FACTOR + NSWV3 (I,J,IPT1,IBLOCK))
+           DQDT (I,J,IBLOCK)= ( (DQDT3(I,J,IPT2,IBLOCK) - DQDT3(I,J,IPT1,IBLOCK))            &
+                             * FACTOR + DQDT3(I,J,IPT1,IBLOCK))
 !lhl
          END DO
       END DO
+   END DO
 !lhl1204
 !
 ! Calculate the friction velocity at T-grid
 !
-      SX=0.0D0
-      SY=0.0D0
+!$OMP PARALLEL DO PRIVATE (IBLOCK)
+      DO IBLOCK = 1, NBLOCKS_CLINIC
+          call ugrid_to_tgrid(sx(:,:,iblock),su(:,:,iblock),iblock)
+          call ugrid_to_tgrid(sy(:,:,iblock),sv(:,:,iblock),iblock)
+      END DO
+
 !M
-!$OMP PARALLEL DO PRIVATE (J,I)
-         DO J = JSM,JET
-            DO I = 2,IMM
-               sx(i,j)= VIT(I,J,1)*(su(i,j  )+su(i+1,j  )&
-                                   +su(i,j-1)+su(i+1,j-1)) &
-                                 /(VIV(i,j  ,1)+VIV(i+1,j  ,1) &
-                                  +VIV(i,j-1,1)+VIV(i+1,j-1,1) + epsln)
-               sy(i,j)= VIT(I,J,1)*(sv(i,j  )+sv(i+1,j  )&
-                                   +sv(i,j-1)+sv(i+1,j-1)) &
-                                 /(VIV(i,j  ,1)+VIV(i+1,j  ,1) &
-                                  +VIV(i,j-1,1)+VIV(i+1,j-1,1) + epsln)
-            END DO
-        END DO
-!       
-        if ( nx_proc == 1) then
-!$OMP PARALLEL DO PRIVATE (J)
-        do j=jsm,jem
-               sx(IMT,j)= sx(2,j)
-               sy(IMT,j)= sy(2,j)
-               sx(1,j)= sx(imm,j)
-               sy(1,j)= sy(imm,j)
-        end do
-        end if
-!
-!M
-!$OMP PARALLEL DO PRIVATE (J,I)
+!$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
+      DO IBLOCK = 1, NBLOCKS_CLINIC
       DO J = JST,JET
          DO I = 1,IMT
-         USTAR(I,J)=sqrt(sqrt(sx(I,J)*sx(I,J)+sy(I,J)*sy(I,J))*OD0)*vit(i,j,1)
+            USTAR(I,J,iblock)=sqrt(sqrt(sx(I,J,iblock)*sx(I,J,iblock)+ &
+                                        sy(I,J,iblock)*sy(I,J,iblock))*OD0)*vit(i,j,1,iblock)
          END DO
+      END DO
       END DO
 
 #ifdef DEBUG
@@ -127,91 +107,40 @@ use msg_mod
 #endif
 !
 !!lhl1204
+   
 
+!$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
+      DO IBLOCK = 1, NBLOCKS_CLINIC
         DO J = JST,JET
          DO I = 1,IMT 
-           seaice(I,J)= ( (seaice3 (I,J,IPT2) - seaice3 (I,J,IPT1))     &
-                    * FACTOR + seaice3 (I,J,IPT1))
+           seaice(I,J,iblock)= ( (seaice3 (I,J,IPT2,IBLOCK) - seaice3 (I,J,IPT1,IBLOCK))     &
+                    * FACTOR + seaice3 (I,J,IPT1,IBLOCK))
            END DO
         END DO
+      END DO
 
+!$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
+      DO IBLOCK = 1, NBLOCKS_CLINIC
         DO J = JST,JET
          DO I = 1,IMT
-           runoff(I,J)= runoff3(i,j,1)
+           runoff(I,J,iblock)= runoff3(i,j,1,iblock)
            END DO
         END DO
+      END DO
 
 #if (defined SOLARCHLORO) 
 !M
 !$OMP PARALLEL DO PRIVATE (J,I)
+      DO IBLOCK = 1, NBLOCKS_CLINIC
         DO J = JST,JET
          DO I = 1,IMT
-           chloro(I,J)= ( (chloro3 (I,J,IPT2) - chloro3 (I,J,IPT1))     &
-                    * FACTOR + chloro3 (I,J,IPT1))
+           chloro(I,J,iblock)= ( (chloro3 (I,J,IPT2,IBLOCK) - chloro3 (I,J,IPT1,IBLOCK))     &
+                    * FACTOR + chloro3 (I,J,IPT1,IBLOCK))
            END DO
         END DO
-#endif
- 
-#if ( defined FRC_DAILY)
-#ifdef SPMD
-      if (mytid==0)then
-      IYEAR = 1078+ IYFM
-!      PRINT *,IYEAR,MON0,IDAY
-      write (FHEAD,'(i4)') IYEAR
-      FNAME ="/export/home/lhl/LICOM2.0/forcing/ew"//FHEAD//FTAIL(MON0)//".dat"
-!      PRINT *,FNAME
-      OPEN (110,FILE = FNAME,FORM ='UNFORMATTED',ACCESS ='DIRECT',      &
-                      RECL = JMT_global * IMT*4)
-      IREC = IDAY
-      READ (110,REC = IREC) ( (SU_in_io (I,J),I = 1,IMT),J = 1,JMT_global)
-      CLOSE (110)
-
-      FNAME ="/export/home/lhl/LICOM2.0/forcing/ns"//FHEAD//FTAIL(MON0)//".dat"
-      OPEN (110,FILE = FNAME,FORM ='UNFORMATTED',ACCESS ='DIRECT',      &
-                      RECL = JMT_global * IMT*4 )
-      IREC = IDAY
-      READ (110,REC = IREC) ( (SV_in_io (I,J),I = 1,IMT),J = 1,JMT_global)
-      CLOSE (110)
-       SU_io=SU_in_io
-       SV_io=SV_in_io
-!
-!
-      end if
-!
-       call global_distribute(su_io,sx)
-       call global_distribute(sv_io,sy)
-
-!Yu
-#else
-      IYEAR = 1078+ IYFM
-      PRINT *,IYEAR,MON0,IDAY
-      write (FHEAD,'(i4)') IYEAR
-      FNAME ="/export/home/lhl/LICOM2.0/forcing/ew"//FHEAD//FTAIL(MON0)//".dat"
-      OPEN (110,FILE = FNAME,FORM ='UNFORMATTED',ACCESS ='DIRECT',      &
-                      RECL = JMT * IMT*4)
-      IREC = IDAY
-      READ (110,REC = IREC) ( (SX_in (I,J),I = 1,IMT),J = 1,JMT)
-      CLOSE (110)
- 
-      FNAME ="/export/home/lhl/LICOM2.0/forcing/ns"//FHEAD//FTAIL(MON0)//".dat"
-      OPEN (110,FILE = FNAME,FORM ='UNFORMATTED',ACCESS ='DIRECT',      &
-                      RECL = JMT * IMT*4)
-      IREC = IDAY
-      READ (110,REC = IREC) ( (SY_in (I,J),I = 1,IMT),J = 1,JMT)
-      CLOSE (110)
-       SX=SX_in
-       SY=SY_in
-#endif
-!M
-!$OMP PARALLEL DO PRIVATE (J,I) 
-      DO J = 1,JMT
-         DO I = 1,IMT
-            SU (I,J)=   SX (I,J)
-            SV (I,J)= - SY (I,J)
-         END DO
       END DO
- !
 #endif
+ 
       deallocate(sx)
       deallocate(sy)
       RETURN

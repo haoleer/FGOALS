@@ -12,12 +12,14 @@ use precision_mod
 use param_mod
 use pconst_mod
 use isopyc_mod
+use domain
  
       IMPLICIT NONE
       REAL(r8) :: c1e10,eps,p5,p25,c0,c1,chkslp,ahfctr,xx
 !lhl060506
       REAL(r8) , dimension(IMT,JMT,KM) :: F1,F2
       REAL(r8) :: NONDIMR,SLOPEMOD
+      integer :: iblock
 
       F1=0.0D0
       F2=0.0D0
@@ -38,44 +40,43 @@ use isopyc_mod
 !yyq 0803408
 !M
  
-!$OMP PARALLEL DO PRIVATE (j,k,m,i)
+!$OMP PARALLEL DO PRIVATE (iblock,j,k,m,i)
+   do iblock = 1, nblocks_clinic
       DO j = 2,jmm
          DO k = 2,km
             m = kisrpl (k)
             DO i = 2,imm
-               e (i,k -1,j,1) = OTX (j)* p25* c1e10 &
-               * (tmask (i -1,k -1,j)* tmask (i,k -1,j)* (rhoi (i,k -1,j,m) &
-               - rhoi (i -1,k -1,j,m)) &
-               + tmask (i,k -1,j)* tmask (i +1,k -1,j)* (rhoi (i +1,k -1,j,m)&
-               - rhoi (i,k -1,j,m)) &
-               + tmask (i -1,k,j)* tmask (i,k,j)* (rhoi (i,k,j,m) &
-               - rhoi (i -1,k,j,m)) &
-               + tmask (i,k,j)* tmask (i +1,k,j)* (rhoi (i +1,k,j,m) &
-                                - rhoi (i,k,j,m)))                     
-               e (i,k -1,j,2) = dytr (j)* p25* c1e10 &
-               * (tmask (i,k -1,j -1)* tmask (i,k -1,j)* (rhoi (i,k -1,j,m) &
-               - rhoi (i,k -1,j -1,m)) &
-               + tmask (i,k -1,j)* tmask (i,k -1,j +1)* (rhoi (i,k -1,j +1,m)&
-               - rhoi (i,k -1,j,m)) &
-               + tmask (i,k,j -1)* tmask (i,k,j)* (rhoi (i,k,j,m) &
-               - rhoi (i,k,j -1,m)) &
-               + tmask (i,k,j)* tmask (i,k,j +1)* (rhoi (i,k,j +1,m) &
-                                - rhoi (i,k,j,m)))
-               e (i,k -1,j,3) = dzwr (k -1)* tmask (i,k -1,j)* tmask (i,&
-                               k,j)* c1e10 &
-                                * (rhoi (i,k -1,j,m) - rhoi (i,k,j,m))  
+               e (i,k -1,j,1,iblock) = OTX (j)* p25* c1e10 &
+               * (tmask (i -1,k -1,j,iblock)* tmask (i,k -1,j,iblock)* (rhoi (i,k -1,j,m,iblock) &
+               - rhoi (i -1,k -1,j,m,iblock)) &
+               + tmask (i,k -1,j,iblock)* tmask (i +1,k -1,j,iblock)* (rhoi (i +1,k -1,j,m,iblock)&
+               - rhoi (i,k -1,j,m,iblock)) &
+               + tmask (i -1,k,j,iblock)* tmask (i,k,j,iblock)* (rhoi (i,k,j,m,iblock) &
+               - rhoi (i -1,k,j,m,iblock)) &
+               + tmask (i,k,j,iblock)* tmask (i +1,k,j,iblock)* (rhoi (i +1,k,j,m,iblock) &
+                                - rhoi (i,k,j,m,iblock)))                     
+               e (i,k -1,j,2,iblock) = dytr (j)* p25* c1e10 &
+               * (tmask (i,k -1,j -1,iblock)* tmask (i,k -1,j,iblock)* (rhoi (i,k -1,j,m,iblock) &
+               - rhoi (i,k -1,j -1,m,iblock)) &
+               + tmask (i,k -1,j,iblock)* tmask (i,k -1,j +1,iblock)* (rhoi (i,k -1,j +1,m,iblock)&
+               - rhoi (i,k -1,j,m,iblock)) &
+               + tmask (i,k,j -1,iblock)* tmask (i,k,j,iblock)* (rhoi (i,k,j,m,iblock) &
+               - rhoi (i,k,j -1,m,iblock)) &
+               + tmask (i,k,j,iblock)* tmask (i,k,j +1,iblock)* (rhoi (i,k,j +1,m,iblock) &
+                                - rhoi (i,k,j,m,iblock)))
+               e (i,k -1,j,3,iblock) = dzwr (k -1)* tmask (i,k -1,j,iblock)* tmask (i,k,j,iblock)* c1e10 &
+                                * (rhoi (i,k -1,j,m,iblock) - rhoi (i,k,j,m,iblock))  
             END DO
          END DO
  
 !nickbegin
 !       k = km
 !nickend
-         DO i = 2,imm
-            e (i,km,j,1) = c0
-            e (i,km,j,2) = c0
-            e (i,km,j,3) = c0
-         END DO
+            e (:,km,j,1,iblock) = c0
+            e (i,km,j,2,iblock) = c0
+            e (:,km,j,3,iblock) = c0
       END DO
+   end do
  
  
 !-----------------------------------------------------------------------
@@ -85,59 +86,56 @@ use isopyc_mod
  
 #ifdef LDD97
 !lhl060506
-!$OMP PARALLEL DO PRIVATE (j,k,i,chkslp,SLOPEMOD,NONDIMR,ahfctr)
+!$OMP PARALLEL DO PRIVATE (iblock,j,k,i,chkslp,SLOPEMOD,NONDIMR,ahfctr)
+   do iblock = 1, nblocks_clinic
       DO j = 2,jmm
          DO k = 1,km
             DO i = 1,imt
-               chkslp = - sqrt (e (i,k,j,1)**2+ e (i,k,j,2)**2)* slmxr
+               chkslp = - sqrt (e (i,k,j,1,iblock)**2+ e (i,k,j,2,iblock)**2)* slmxr
                if (e (i,k,j,3) > chkslp) e (i,k,j,3) = chkslp
 !
-               SLOPEMOD= sqrt(e(i,k,j,1)**2+e(i,k,j,2)**2)/abs(e(i,k,j,3)+eps)
-               F1(i,j,k)=0.5D0*( 1.0D0 + tanh((0.004D0-SLOPEMOD)/0.001D0))
+               SLOPEMOD= sqrt(e(i,k,j,1,iblock)**2+e(i,k,j,2,iblock)**2)/abs(e(i,k,j,3,iblock)+eps)
+               F1(i,j,k,iblock)=0.5D0*( 1.0D0 + tanh((0.004D0-SLOPEMOD)/0.001D0))
                NONDIMR=-ZKP(k)/(RRD1(j)*(SLOPEMOD+eps))
                IF ( NONDIMR>=1.0 ) THEN
-               F2(i,j,k)=1.0D0
+               F2(i,j,k,iblock)=1.0D0
                ELSE         
-               F2(i,j,k) = 0.5D0*( 1.0D0 + SIN(PI*(NONDIMR-0.5D0)))
+               F2(i,j,k,iblock) = 0.5D0*( 1.0D0 + SIN(PI*(NONDIMR-0.5D0)))
                ENDIF
-               ahfctr = 1.0D0/ (e (i,k,j,3)**2+ eps)*F1(i,j,k)*F2(i,j,k)*F3(j)
+               ahfctr = 1.0D0/ (e (i,k,j,3,iblock)**2+ eps)*F1(i,j,k,iblock)*F2(i,j,k,iblock)*F3(j)
 !yyq 080408    ahfctr = 1.0D0/ (e (i,k,j,3)**2+ eps)*F1(i,j,k)*F2(i,j,k)
-               K3 (i,k,j,1) = - e (i,k,j,3)* e (i,k,j,1)* ahfctr
-               K3 (i,k,j,2) = - e (i,k,j,3)* e (i,k,j,2)* ahfctr
-               K3 (i,k,j,3) = (e (i,k,j,1)**2+ e (i,k,j,2)**2)* ahfctr
+               K3 (i,k,j,1,iblock) = - e (i,k,j,3,iblock)* e (i,k,j,1,iblock)* ahfctr
+               K3 (i,k,j,2,iblock) = - e (i,k,j,3)* e (i,k,j,2)* ahfctr
+               K3 (i,k,j,3,iblock) = (e (i,k,j,1,iblock)**2+ e (i,k,j,2,iblock)**2)* ahfctr
             END DO
          END DO   
       END DO
+   end do
 !lhl060506
 
 #else
 
-!$OMP PARALLEL DO PRIVATE (j,k,i,chkslp,ahfctr)
+!$OMP PARALLEL DO PRIVATE (iblock,j,k,i,chkslp,ahfctr)
+   do iblock = 1, nblocks_clinic
       DO j = 2,jmm
          DO k = 1,km
             DO i = 2,imt -1
-               chkslp = - sqrt (e (i,k,j,1)**2+ e (i,k,j,2)**2)* slmxr
-               if (e (i,k,j,3) > chkslp) e (i,k,j,3) = chkslp
-               ahfctr = 1.0/ (e (i,k,j,3)**2+ eps)
-               K3 (i,k,j,1) = - e (i,k,j,3)* e (i,k,j,1)* ahfctr
-               K3 (i,k,j,2) = - e (i,k,j,3)* e (i,k,j,2)* ahfctr
-               K3 (i,k,j,3) = (e (i,k,j,1)**2+ e (i,k,j,2)**2)* ahfctr
+               chkslp = - sqrt (e (i,k,j,1,iblock)**2+ e (i,k,j,2,iblock)**2)* slmxr
+               if (e (i,k,j,3,iblock) > chkslp) e (i,k,j,3,iblock) = chkslp
+               ahfctr = 1.0/ (e (i,k,j,3,iblock)**2+ eps)
+               K3 (i,k,j,1,iblock) = - e (i,k,j,3,iblock)* e (i,k,j,1,iblock)* ahfctr
+               K3 (i,k,j,2,iblock) = - e (i,k,j,3,iblock)* e (i,k,j,2,iblock)* ahfctr
+               K3 (i,k,j,3,iblock) = (e (i,k,j,1,iblock)**2+ e (i,k,j,2,iblock)**2)* ahfctr
             END DO
          END DO
       END DO
+  end do
  
 #endif
  
 !-----------------------------------------------------------------------
 !     impose zonal boundary conditions at "i"=1 and "imt"
 !-----------------------------------------------------------------------
-!$OMP PARALLEL DO PRIVATE (j)
-      DO j = 2,jmm
-         CALL setbcx (K3 (1,1,j,1), imt, km)
-         CALL setbcx (K3 (1,1,j,2), imt, km)
-         CALL setbcx (K3 (1,1,j,3), imt, km)
-      END DO
- 
  
       RETURN
       END SUBROUTINE K3_123

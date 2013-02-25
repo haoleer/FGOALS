@@ -14,7 +14,6 @@
 
 ! !USES:
 
-   use POP_KindsMod
    use precision_mod
    use param_mod
    use LICOM_Error_mod
@@ -29,6 +28,8 @@
    use gather_scatter
    use constant_mod
    use msg_mod
+   use global_reductions
+   use pconst_mod
 
    implicit none
    private
@@ -39,42 +40,43 @@
    public  :: init_grid1,     &
               init_grid2,     &
               read_horiz_grid,&
-              read_topography
-!             tgrid_to_ugrid, &
-!             ugrid_to_tgrid, &
+              tgrid_to_ugrid, &
+              ugrid_to_tgrid, &
+              read_topography,&
+              calc_coeff
 
 ! !PUBLIC DATA MEMBERS:
 
-   real (POP_r8), public :: &
+   real (r8), public :: &
       area_u, area_t       ,&! total ocean area of U,T cells
       volume_u, volume_t   ,&! total ocean volume of U,T cells
       volume_t_marg        ,&! volume of marginal seas (T cells)
       area_t_marg          ,&! area of marginal seas (T cells)
       uarea_equator          ! area of equatorial cell
 
-   real (POP_r8), dimension(km), public :: &
+   real (r8), dimension(km), public :: &
       area_t_k             ,&! total ocean area (T cells) at each dpth
       volume_t_k           ,&! total ocean volume (T cells) at each dpth
       volume_t_marg_k        ! tot marginal seas vol (T cells) at each dpth
 
-   integer (POP_i4), public :: &
+   integer (i4), public :: &
       sfc_layer_type,       &! choice for type of surface layer
       kmt_kmin, 	    &! minimum allowed non-zero KMT value
       n_topo_smooth 	     ! number of topo smoothing passes
 
-   integer (POP_i4), parameter, public :: &
+   integer (i4), parameter, public :: &
       sfc_layer_varthick = 1,  &! variable thickness surface layer
       sfc_layer_rigid    = 2,  &! rigid lid surface layer
       sfc_layer_oldfree  = 3    ! old free surface form
 
-   logical (POP_logical), public ::    &
+   logical (log_kind), public ::    &
       partial_bottom_cells   ! flag for partial bottom cells
 
-   real (POP_r8), dimension(:,:), allocatable, public :: &
+   real (r8), dimension(:,:), allocatable, public :: &
       BATH_G           ! Observed ocean bathymetry mapped to global T grid
                        ! for use in computing KMT internally
 
-   integer (POP_i4), dimension(:,:), allocatable, public :: &
+   integer (i4), dimension(:,:), allocatable, public :: &
       KMT_G            ! k index of deepest grid cell on global T grid
                        ! for use in performing work distribution
 
@@ -87,7 +89,7 @@
 
    !*** dimension(1:km)
 
-   real (POP_r8), dimension(km), public :: &
+   real (r8), dimension(km), public :: &
       dz                ,&! thickness of layer k
       c2dz              ,&! 2*dz
       dzr, dz2r         ,&! reciprocals of dz, c2dz
@@ -96,19 +98,19 @@
 
    !*** dimension(0:km)
 
-   real (POP_r8), dimension(0:km), public :: &
+   real (r8), dimension(0:km), public :: &
       dzw, dzwr          ! midpoint of k to midpoint of k+1
                          !   and its reciprocal
 
    !*** geometric 2d arrays
 
-   real (POP_r8), dimension(nx_block,ny_block,max_blocks_clinic), public :: &
+   real (r8), dimension(nx_block,ny_block,max_blocks_clinic), public :: &
       DXU, DYU            ,&! {x,y} spacing centered at U points
       DXT, DYT            ,&! {x,y} spacing centered at T points
       DXUR, DYUR          ,&! reciprocals of DXU, DYU
       DXTR, DYTR          ,&! reciprocals of DXT, DYT
-      HTN, HTE            ,&! cell widths on {N,E} sides of T cell
-      HUS, HUW            ,&! cell widths on {S,W} sides of U cell
+      HTS, HTW            ,&! cell widths on {S,W} sides of T cell
+      HUN, HUE            ,&! cell widths on {N,E} sides of U cell
       ULAT, ULON          ,&! {latitude,longitude} of U points
       TLAT, TLON          ,&! {latitude,longitude} of T points
       ANGLE, ANGLET       ,&! angle grid makes with latitude line
@@ -119,37 +121,37 @@
 
    !*** 3d depth fields for partial bottom cells
 
-   real (POP_r8), dimension(:,:,:,:), allocatable, public :: &
+   real (r8), dimension(:,:,:,:), allocatable, public :: &
       DZU, DZT               ! thickness of U,T cell for pbc
 
    !*** 2d landmasks
 
-   integer (POP_i4), dimension(nx_block,ny_block,max_blocks_clinic), &
+   integer (i4), dimension(nx_block,ny_block,max_blocks_clinic), &
       public :: &
       KMT            ,&! k index of deepest grid cell on T grid
       KMU            ,&! k index of deepest grid cell on U grid
       KMTOLD           ! KMT field before smoothing
 
-   logical (POP_logical), dimension(nx_block,ny_block,max_blocks_clinic), &
+   logical (log_kind), dimension(nx_block,ny_block,max_blocks_clinic), &
       public :: &
       CALCT          ,&! flag=true if point is an ocean point
       CALCU            !   at the surface
 
-   real (POP_r8), dimension(nx_block,ny_block,max_blocks_clinic), public :: &
+   real (r8), dimension(nx_block,ny_block,max_blocks_clinic), public :: &
       RCALCT         ,&! real equiv of CALCT,U to use as more
       RCALCU           !   efficient multiplicative mask
 
-   integer (POP_i4), dimension(nx_block,ny_block,max_blocks_clinic), &
+   integer (i4), dimension(nx_block,ny_block,max_blocks_clinic), &
       public :: &
       KMTN,KMTS,KMTE,KMTW   ,&! KMT field at neighbor points
       KMUN,KMUS,KMUE,KMUW     ! KMU field at neighbor points
 
-   integer (POP_i4), dimension(nx_block,ny_block,max_blocks_clinic), &
+   integer (i4), dimension(nx_block,ny_block,max_blocks_clinic), &
       public :: &
       KMTEE,KMTNN      ! KMT field 2 cells away for upwind stencil
                        ! allocated and computed in advection module
 
-   integer (POP_i4), dimension(:,:,:), allocatable, public :: &
+   integer (i4), dimension(:,:,:), allocatable, public :: &
       REGION_MASK      ! mask defining regions, marginal seas
 
 !-----------------------------------------------------------------------
@@ -157,34 +159,34 @@
 !     define types used with region masks and marginal seas balancing
 !
 !-----------------------------------------------------------------------
-   integer (POP_i4), parameter, public :: &
+   integer (i4), parameter, public :: &
       max_regions =   15, &              ! max no. ocean regions
       max_ms      =    7                 ! max no. marginal seas
  
-   integer (POP_i4), public :: &
+   integer (i4), public :: &
       num_regions, &
       num_ms
 
    type, public :: ms_bal
-      real    (POP_r8)         :: lat         ! transport latitude
-      real    (POP_r8)         :: lon         ! transport longitude
-      real    (POP_r8)         :: area        ! total distribution area
-      real    (POP_r8)         :: transport   ! total excess/deficit (E+P+M+R)
-      integer (POP_i4)   :: mask_index  ! index of m-s balancing mask
+      real    (r8)         :: lat         ! transport latitude
+      real    (r8)         :: lon         ! transport longitude
+      real    (r8)         :: area        ! total distribution area
+      real    (r8)         :: transport   ! total excess/deficit (E+P+M+R)
+      integer (i4)   :: mask_index  ! index of m-s balancing mask
    end type ms_bal
 
    type, public :: regions                ! region-mask info
-      integer   (POP_i4) :: number 
+      integer   (i4) :: number 
       character (char_len) :: name          
-      logical   (POP_logical) :: marginal_sea
-      real      (POP_r8      ) :: area
-      real      (POP_r8      ) :: volume
+      logical   (log_kind) :: marginal_sea
+      real      (r8      ) :: area
+      real      (r8      ) :: volume
       type      (ms_bal)   :: ms_bal
    end type regions       
 
    type (regions),dimension(max_regions), public :: region_info
 
-   integer (POP_i4),public ::       &
+   integer (i4),public ::       &
       nocean_u, nocean_t,      &! num of ocean U,T points
       nsurface_u, nsurface_t    ! num of ocean U,T points at surface
 
@@ -203,15 +205,15 @@
 
    !*** geometric scalars
 
-   integer (POP_i4) ::       &
+   integer (i4) ::       &
       jeq                       ! j index of equatorial cell
 
-   logical (POP_logical) ::  &
+   logical (log_kind) ::  &
       flat_bottom,        &! flag for flat-bottom topography
       lremove_points       ! flag for removing isolated points
 
-   real (POP_r8), dimension(:,:), allocatable :: &
-      ULAT_G, ULON_G        ! {latitude,longitude} of U points
+   real (r8), dimension(:,:), allocatable :: &
+      TLAT_G, TLON_G        ! {latitude,longitude} of U points
                             ! in global-sized array
 
 !-----------------------------------------------------------------------
@@ -224,8 +226,8 @@
 !
 !-----------------------------------------------------------------------
 
-   real (POP_r8), dimension (nx_block,ny_block,max_blocks_clinic) :: &
-      AT0,ATS,ATW,ATSW,AU0,AUN,AUE,AUNE
+   real (r8), dimension (nx_block,ny_block,max_blocks_clinic) :: &
+      AT0,ATN,ATE,ATNE,AU0,AUS,AUW,AUSW
 
 !-----------------------------------------------------------------------
 !
@@ -247,6 +249,7 @@
       bottom_cell_file,     &! input file for thickness of pbc
       topography_outfile     ! output file for writing horiz grid info
 
+    integer :: stdout
 !EOC
 !***********************************************************************
 
@@ -281,7 +284,7 @@
                       region_mask_file, region_info_file,sfc_layer_opt,&
                       partial_bottom_cells, bottom_cell_file, kmt_kmin
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       nml_error           ! namelist i/o error flag
 
 !-----------------------------------------------------------------------
@@ -325,7 +328,7 @@
 !
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4) :: errorCode              ! returned error code
+   integer (i4) :: errorCode              ! returned error code
 
 !EOP
 !BOC
@@ -335,14 +338,14 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       reclength,ioerr,nu,i,j,k,n,iblock,    &! dummy loop index variables
       range_count         ! counter for angle out of range
 
-   real (POP_r8), dimension(nx_block,ny_block,max_blocks_clinic) :: &
+   real (r8), dimension(nx_block,ny_block,max_blocks_clinic) :: &
       WORK                 ! local temp space
 
-   real (POP_r8), dimension(nx_block,ny_block,max_blocks_clinic) :: &
+   real (r8), dimension(nx_block,ny_block,max_blocks_clinic) :: &
       DZBC                 ! thickness of bottom T cell for pbc
 
    character (*), parameter ::  &! output formats
@@ -357,9 +360,9 @@
    type (block) :: &
       this_block  ! block info for current block
 
-   real (POP_r8) ::         &
-      angle_0, angle_w, &! temporaries for computing angle at T points
-      angle_s, angle_sw 
+   real (r8) ::         &
+      angle_0, angle_e, &! temporaries for computing angle at T points
+      angle_n, angle_ne 
 
 !-----------------------------------------------------------------------
 !
@@ -369,11 +372,9 @@
 
    errorCode = 0
 
+   stdout = 6
    if (my_task == master_task) then
-      write(stdout,delim_fmt)
-      write(stdout,blank_fmt)
       write(stdout,'(a13)') ' Grid options'
-      write(stdout,blank_fmt)
    endif
 
 !-----------------------------------------------------------------------
@@ -420,7 +421,7 @@
          end do
       endif
 
-      if (this_block%j_glob(1) == 0) then ! closed southern bndy
+      if (this_block%j_glob(1) == 0) then ! closed north bndy
          do j=1,this_block%jb-1
          do i=1,nx_block
             DXU(i,j,iblock) = DXU(i,this_block%jb,iblock)
@@ -431,7 +432,7 @@
          end do
       endif
 
-      if (this_block%j_glob(this_block%je+1) == 0) then ! closed north bndy
+      if (this_block%j_glob(this_block%je+1) == 0) then ! closed south bndy
          do j=this_block%je+1,ny_block
          do i=1,nx_block
             DXU(i,j,iblock) = DXU(i,this_block%je,iblock)
@@ -463,7 +464,7 @@
 !
 !-----------------------------------------------------------------------
 
-!  call cf_area_avg  ! coefficients for area-weighted averages
+   call cf_area_avg  ! coefficients for area-weighted averages
 
 !-----------------------------------------------------------------------
 !
@@ -471,81 +472,81 @@
 !
 !-----------------------------------------------------------------------
 
-!  call calc_tpoints(errorCode)
+   call calc_upoints(errorCode)
 
-!  if (errorCode /= 0) then
-!     call POP_ErrorSet(errorCode, &
-!        'init_grid2: error in calc_tpoints')
-!     return
-!  endif
+   if (errorCode /= 0) then
+      call LICOM_ErrorSet(errorCode, &
+         'init_grid2: error in calc_upoints')
+      return
+   endif
 
 !  !***
-!  !*** first, ensure that -pi <= ANGLE <= pi
+!  !*** first, ensure that -pi <= ANGLET <= pi
 !  !***
 
-!  range_count = global_count ((ANGLE < - pi .or. ANGLE > pi), &
-!                              distrb_clinic, field_loc_NEcorner)
+   range_count = global_count ((ANGLET < - pi .or. ANGLET > pi), &
+                               distrb_clinic, field_loc_SWcorner)
 
-!  if (range_count > 0) call exit_POP(sigAbort, &
-!                       'ERROR: ANGLE is outside its expected range')
+   if (range_count > 0) call exit_LICOM(sigAbort, &
+                        'ERROR: ANGLET is outside its expected range')
 
 !  !***
 !  !*** compute ANGLE on T-grid
 !  !***
 
-!  ANGLET = c0
+   ANGLET = c0
 
 
-!  !$OMP PARALLEL DO PRIVATE (n,i,j,angle_0,angle_w,angle_s,angle_sw, &
-!  !$OMP                      this_block)
+   !$OMP PARALLEL DO PRIVATE (n,i,j,angle_0,angle_w,angle_s,angle_sw, &
+   !$OMP                      this_block)
 
-!  do n=1,nblocks_clinic
-!     this_block = get_block(blocks_clinic(n),n)
+   do n=1,nblocks_clinic
+      this_block = get_block(blocks_clinic(n),n)
 
-!     do j=this_block%jb,this_block%je
-!        do i=this_block%ib,this_block%ie
+      do j=this_block%jb,this_block%je
+         do i=this_block%ib,this_block%ie
 
-!           angle_0  = ANGLE(i,  j  ,n)
-!           angle_w  = ANGLE(i-1,j  ,n)
-!           angle_s  = ANGLE(i,  j-1,n)
-!           angle_sw = ANGLE(i-1,j-1,n)
+            angle_0  = ANGLET(i,  j  ,n)
+            angle_e  = ANGLET(i+1,j  ,n)
+            angle_n  = ANGLET(i,  j-1,n)
+            angle_ne = ANGLET(i+1,j-1,n)
 
-!           if ( angle_0 < c0 ) then
-!              if ( abs(angle_w -angle_0) > pi ) &
-!                 angle_w  = angle_w  - pi2 
-!              if ( abs(angle_s -angle_0) > pi ) &
-!                 angle_s  = angle_s  - pi2 
-!              if ( abs(angle_sw-angle_0) > pi ) &
-!                 angle_sw = angle_sw - pi2 
-!           endif
+            if ( angle_0 < c0 ) then
+               if ( abs(angle_e -angle_0) > pi ) &
+                  angle_e  = angle_e  - pi2 
+               if ( abs(angle_n -angle_0) > pi ) &
+                  angle_n  = angle_n  - pi2 
+               if ( abs(angle_ne-angle_0) > pi ) &
+                  angle_ne = angle_ne - pi2 
+            endif
 
-!           ANGLET(i,j,n) =  angle_0 *AT0 (i,j,n) + &
-!                            angle_w *ATW (i,j,n) + &
-!                            angle_s *ATS (i,j,n) + &
-!                            angle_sw*ATSW(i,j,n)
+            ANGLE(i,j,n) =  angle_0 *AU0 (i,j,n) + &
+                             angle_e *AUE (i,j,n) + &
+                             angle_n *AUN (i,j,n) + &
+                             angle_ne*AUNE(i,j,n)
 
-!        enddo
+         enddo
 
-!        !***
-!        !*** set ANGLET to zero for all of (global) j=1 row 
-!        !*** (bottom row of ANGLET is not used, but is written to file)
-!        !***
+         !***
+         !*** set ANGLET to zero for all of (global) j=1 row 
+         !*** (bottom row of ANGLET is not used, but is written to file)
+         !***
 
-!        if (this_block%j_glob(j) == 1) ANGLET(:,j,n) = c0
+         if (this_block%j_glob(j) == 1) ANGLET(:,j,n) = c0
 
-!     enddo
-!  enddo
-!  !$OMP END PARALLEL DO
+      enddo
+   enddo
+   !$OMP END PARALLEL DO
 
-!  call POP_HaloUpdate(ANGLET, POP_haloClinic, POP_gridHorzLocCenter, &
-!                              POP_fieldKindAngle, errorCode,         &
-!                              fillValue = 0.0_POP_r8)
+   call POP_HaloUpdate(ANGLE, POP_haloClinic, POP_gridHorzLocCenter, &
+                               POP_fieldKindAngle, errorCode,         &
+                               fillValue = 0.0_r8)
 
-!  if (errorCode /= 0) then
-!     call POP_ErrorSet(errorCode, &
-!        'init_grid2: error updating angleT halo')
-!     return
-!  endif
+   if (errorCode /= 0) then
+      call LICOM_ErrorSet(errorCode, &
+         'init_grid2: error updating angleT halo')
+      return
+   endif
 
 !-----------------------------------------------------------------------
 !
@@ -564,35 +565,32 @@
 !  !*** calculate other vertical grid quantities
 !  !***
 
-!  dzw(0)  = p5*dz(1)
-!  dzw(km) = p5*dz(km)
-!  dzwr(0) = c1/dzw(0)
-!  zw(1) = dz(1)
-!  zt(1) = dzw(0)
+   dzw(0)  = p5*dz(1)
+   dzw(km) = p5*dz(km)
+   dzwr(0) = c1/dzw(0)
+   zw(1) = dz(1)
+   zt(1) = dzw(0)
 
-!  do k = 1,km-1
-!     dzw(k) = p5*(dz(k) + dz(k+1))
-!     zw(k+1) = zw(k) + dz(k+1)
-!     zt(k+1) = zt(k) + dzw(k)
-!  enddo
+   do k = 1,km-1
+      dzw(k) = p5*(dz(k) + dz(k+1))
+      zw(k+1) = zw(k) + dz(k+1)
+      zt(k+1) = zt(k) + dzw(k)
+   enddo
 
-!  do k = 1,km
-!     c2dz(k) = c2*dz(k)
-!     dzr(k)  = c1/dz(k)
-!     dz2r(k) = c1/c2dz(k)
-!     dzwr(k) = c1/dzw(k)
-!  enddo
+   do k = 1,km
+      c2dz(k) = c2*dz(k)
+      dzr(k)  = c1/dz(k)
+      dz2r(k) = c1/c2dz(k)
+      dzwr(k) = c1/dzw(k)
+   enddo
 
-!  if (my_task == master_task) then
-!     write(stdout,blank_fmt)
-!     write(stdout,'(a15)') ' Vertical grid:'
-!     write(stdout,vgrid_fmt1)
-!     write(stdout,vgrid_fmt2)
-!     do k=1,km
-!        write(stdout,vgrid_fmt3) k,dz(k),zt(k)
-!     end do
-!     write(stdout,blank_fmt)
-!  endif
+   if (my_task == master_task) then
+      write(stdout,'(a15)') ' Vertical grid:'
+      do k=1,km
+         write(stdout,vgrid_fmt3) k,dz(k),zt(k)
+      end do
+      write(stdout,blank_fmt)
+   endif
 
 !-----------------------------------------------------------------------
 !
@@ -611,7 +609,7 @@
 !
 !-----------------------------------------------------------------------
 
-!  call landmasks
+   call landmasks
 
 !-----------------------------------------------------------------------
 !
@@ -619,50 +617,49 @@
 !
 !-----------------------------------------------------------------------
 
-!  area_t   = global_sum(TAREA, distrb_clinic, field_loc_center, RCALCT)
-!  area_u   = global_sum(UAREA, distrb_clinic, field_loc_NEcorner, RCALCU)
-!  WORK = TAREA*HT
-!  volume_t = global_sum(WORK, distrb_clinic, field_loc_center, RCALCT)
-!  WORK = UAREA*HU
-!  volume_u = global_sum(WORK, distrb_clinic, field_loc_NEcorner, RCALCU)
-!  area_t_k(1) = area_t
-!  volume_t_k(1) = global_sum(TAREA*dz(1), distrb_clinic, &
-!                             field_loc_center, RCALCT)
-!  do k=2,km
-!     WORK = merge(TAREA, c0, k <= KMT)
-!     area_t_k(k) = global_sum(WORK, distrb_clinic, field_loc_center)
-!     WORK = merge(TAREA*dz(k), c0, k <= KMT)
-!     volume_t_k(k) = global_sum(WORK, distrb_clinic, field_loc_center)
-!  end do
+   area_t   = global_sum(TAREA, distrb_clinic, field_loc_center, RCALCT)
+   area_u   = global_sum(UAREA, distrb_clinic, field_loc_SWcorner, RCALCU)
+   WORK = TAREA*HT
+   volume_t = global_sum(WORK, distrb_clinic, field_loc_center, RCALCT)
+   WORK = UAREA*HU
+   volume_u = global_sum(WORK, distrb_clinic, field_loc_SWcorner, RCALCU)
+   area_t_k(1) = area_t
+   volume_t_k(1) = global_sum(TAREA*dz(1), distrb_clinic, &
+                              field_loc_center, RCALCT)
+   do k=2,km
+      WORK = merge(TAREA, c0, k <= KMT)
+      area_t_k(k) = global_sum(WORK, distrb_clinic, field_loc_center)
+      WORK = merge(TAREA*dz(k), c0, k <= KMT)
+      volume_t_k(k) = global_sum(WORK, distrb_clinic, field_loc_center)
+   end do
 
-!  nsurface_t = global_count(RCALCT, distrb_clinic, field_loc_center)
-!  nsurface_u = global_count(RCALCU, distrb_clinic, field_loc_NEcorner)
-!  nocean_t = global_sum(KMT, distrb_clinic, field_loc_center)
-!  nocean_u = global_sum(KMU, distrb_clinic, field_loc_NEcorner)
+   nsurface_t = global_count(RCALCT, distrb_clinic, field_loc_center)
+   nsurface_u = global_count(RCALCU, distrb_clinic, field_loc_SWcorner)
+   nocean_t = global_sum(KMT, distrb_clinic, field_loc_center)
+   nocean_u = global_sum(KMU, distrb_clinic, field_loc_SWcorner)
 
-!  if (my_task == master_task) then
-!     write(stdout,blank_fmt)
-!     write(stdout,topo_fmt1) nsurface_t, nsurface_u
-!     write(stdout,topo_fmt2) nocean_t, nocean_u
-!     write(stdout,topo_fmt3) area_t*1.0e-10_POP_r8, &
-!                             area_u*1.0e-10_POP_r8
-!     write(stdout,topo_fmt4) volume_t*1.0e-15_POP_r8, &
-!                             volume_u*1.0e-15_POP_r8
-!     write(stdout,blank_fmt)
-!  endif
+   if (my_task == master_task) then
+      write(stdout,blank_fmt)
+      write(stdout,topo_fmt1) nsurface_t, nsurface_u
+      write(stdout,topo_fmt2) nocean_t, nocean_u
+      write(stdout,topo_fmt3) area_t*1.0e-10_r8, &
+                              area_u*1.0e-10_r8
+      write(stdout,topo_fmt4) volume_t*1.0e-15_r8, &
+                              volume_u*1.0e-15_r8
+      write(stdout,blank_fmt)
+   endif
 
 !
 !  compute coriolis parameter 2*omega*sin(true_latitude)
 !
 !-----------------------------------------------------------------------
 
-!  FCOR  = c2*omega*sin(ULAT)    ! at u-points
-!  FCORT = c2*omega*sin(TLAT)    ! at t-points
+   FCOR  = c2*omega*sin(ULAT)    ! at u-points
+   FCORT = c2*omega*sin(TLAT)    ! at t-points
 
 !-----------------------------------------------------------------------
 !EOC
 
-!call flushm (stdout)
 
  end subroutine init_grid2
 
@@ -683,7 +680,7 @@
    character (*), intent(in) :: &
       horiz_grid_file     ! filename of file containing grid data
 
-   logical (POP_logical), intent(in) :: &
+   logical (log_kind), intent(in) :: &
       latlon_only       ! flag requesting only ULAT, ULON
 
 !EOP
@@ -694,7 +691,7 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i,j,iblock        ,&! loop counters
       ip1, im1, jp1, jm1,&! shift indexes
       nu                ,&! i/o unit number
@@ -711,122 +708,120 @@
 !-----------------------------------------------------------------------
 
 
-      allocate (ULAT_G(imt_global,jmt_global), &
-                ULON_G(imt_global,jmt_global))
+      allocate (TLAT_G(imt_global,jmt_global), &
+                TLON_G(imt_global,jmt_global))
 
 
 
       if (my_task == master_task) then
-         read(nu,rec=1,iostat=ioerr) ULAT_G
-         read(nu,rec=2,iostat=ioerr) ULON_G
+         read(nu,rec=1,iostat=ioerr) TLAT_G
+         read(nu,rec=2,iostat=ioerr) TLON_G
       endif
 
-      call scatter_global(ULAT, ULAT_G, master_task, distrb_clinic, &
-                          field_loc_NEcorner, field_type_scalar)
-      call scatter_global(ULON, ULON_G, master_task, distrb_clinic, &
-                          field_loc_NEcorner, field_type_scalar)
+      call scatter_global(ULAT, TLAT_G, master_task, distrb_clinic, &
+                          field_loc_SWcorner, field_type_scalar)
+      call scatter_global(ULON, TLON_G, master_task, distrb_clinic, &
+                          field_loc_SWcorner, field_type_scalar)
 
       if (my_task == master_task) then
-         read(nu,rec=3,iostat=ioerr) ULAT_G  ! holds HTN
+         read(nu,rec=3,iostat=ioerr) TLAT_G  ! holds HTS
       endif
 
-      call scatter_global(HTN, ULAT_G, master_task, distrb_clinic, &
-                          field_loc_Nface, field_type_scalar)
-
-      do j=1,jmt_global
-      do i=1,imt_global
-         ip1 = i+1
-         if (i == imt_global) ip1 = 1 ! assume cyclic. non-cyclic
-                                     ! will be handled during scatter
-         !DXU
-         ULON_G(i,j) = p5*(ULAT_G(i,j) + ULAT_G(ip1,j))
-      end do
-      end do
-      call scatter_global(DXU, ULON_G, master_task, distrb_clinic, &
-                          field_loc_NEcorner, field_type_scalar)
-
-      do j=1,jmt_global
-         jm1 = j-1
-         if (j == 1) jm1 = jmt_global ! assume cyclic. non-cyclic
-                                     ! will be handled during scatter
-         do i=1,imt_global
-
-            !DXT = p5(HTN(i,j)+HTN(i,j-1))
-            ULON_G(i,j) = p5*(ULAT_G(i,j) + ULAT_G(i,jm1))
-         end do
-      end do
-      call scatter_global(DXT, ULON_G, master_task, distrb_clinic, &
-                          field_loc_center, field_type_scalar)
-
-      if (my_task == master_task) then
-         read(nu,rec=4,iostat=ioerr) ULAT_G  ! holds HTE
-      endif
-
-      call scatter_global(HTE, ULAT_G, master_task, distrb_clinic, &
-                          field_loc_Eface, field_type_scalar)
+      call scatter_global(HTS, TLAT_G, master_task, distrb_clinic, &
+                          field_loc_Sface, field_type_scalar)
 
       do j=1,jmt_global
       do i=1,imt_global
          im1 = i-1
-         if (i == 1) im1 = imt_global ! assume cyclic. non-cyclic
+         if (i == 1) ip1 = imt_global ! assume cyclic. non-cyclic
+                                     ! will be handled during scatter
+         !DXU
+         TLON_G(i,j) = p5*(TLAT_G(i,j) + TLAT_G(im1,j))
+      end do
+      end do
+      call scatter_global(DXU, TLON_G, master_task, distrb_clinic, &
+                          field_loc_SWcorner, field_type_scalar)
+
+      do j=1,jmt_global
+         jm1 = j-1
+         if (j == 1) jm1 = 1 ! assume cyclic. non-cyclic
+                                     ! will be handled during scatter
+         do i=1,imt_global
+            !DXT = p5(HTS(i,j)+HTS(i,j-1))
+            TLON_G(i,j) = p5*(TLAT_G(i,j) + TLAT_G(i,jm1))
+         end do
+      end do
+!
+!-----------------------------------------------------------------------
+!   Add tripole-grid correction (KL and GD)
+!
+!-----------------------------------------------------------------------
+      if (ltripole_grid) then
+         j= 1
+         do i=1,imt_global
+            TLON_G(i,j) = TLAT_G(i,j)
+         end do
+      endif
+
+      call scatter_global(DXT, TLON_G, master_task, distrb_clinic, &
+                          field_loc_center, field_type_scalar)
+
+      if (my_task == master_task) then
+         read(nu,rec=4,iostat=ioerr) TLAT_G  ! holds HTW
+      endif
+
+      call scatter_global(HTW, TLAT_G, master_task, distrb_clinic, &
+                          field_loc_Wface, field_type_scalar)
+
+      do j=1,jmt_global
+      do i=1,imt_global
+         ip1 = i+1
+         if (i == imt_global + 1 ) ip1 = 1 ! assume cyclic. non-cyclic
                                      ! will be handled during scatter
          !DYT
-         ULON_G(i,j) = p5*(ULAT_G(i,j) + ULAT_G(im1,j))
+         TLON_G(i,j) = p5*(TLAT_G(i,j) + TLAT_G(ip1,j))
       end do
       end do
-      call scatter_global(DYT, ULON_G, master_task, distrb_clinic, &
+      call scatter_global(DYT, TLON_G, master_task, distrb_clinic, &
                           field_loc_center, field_type_scalar)
 
       do j=1,jmt_global
          jp1 = j+1
-         if (j == jmt_global) jp1 = 1 ! assume cyclic. non-cyclic
+         if (j == jmt_global) jp1 = jmt_global ! assume cyclic. non-cyclic
                                      ! will be handled during scatter
          do i=1,imt_global
 
-            !DYU = p5(HTE(i,j)+HTN(i,j+1))
-            ULON_G(i,j) = p5*(ULAT_G(i,j) + ULAT_G(i,jp1))
+            !DYU = p5(HTW(i,j)+HTS(i,j+1))
+            TLON_G(i,j) = p5*(TLAT_G(i,j) + TLAT_G(i,jp1))
          end do
       end do
 
-!-----------------------------------------------------------------------
- 
-!   Add tripole-grid correction (KL and GD)
-!
-!-----------------------------------------------------------------------
-
-      if (ltripole_grid) then
-         j=jmt_global
-         do i=1,imt_global
-            ULON_G(i,j) = ULAT_G(i,j)
-         end do
-      endif
-
-      call scatter_global(DYU, ULON_G, master_task, distrb_clinic, &
-                          field_loc_NEcorner, field_type_scalar)
+      call scatter_global(DYU, TLON_G, master_task, distrb_clinic, &
+                          field_loc_SWcorner, field_type_scalar)
 
       if (my_task == master_task) then
-         read(nu,rec=5,iostat=ioerr) ULAT_G
-         read(nu,rec=6,iostat=ioerr) ULON_G
+         read(nu,rec=5,iostat=ioerr) TLAT_G
+         read(nu,rec=6,iostat=ioerr) TLON_G
       endif
 
-      call scatter_global(HUS, ULAT_G, master_task, distrb_clinic, &
-                          field_loc_Eface, field_type_scalar)
-      call scatter_global(HUW, ULON_G, master_task, distrb_clinic, &
-                          field_loc_Nface, field_type_scalar)
+      call scatter_global(HUN, TLAT_G, master_task, distrb_clinic, &
+                          field_loc_Wface, field_type_scalar)
+      call scatter_global(HUE, TLON_G, master_task, distrb_clinic, &
+                          field_loc_Sface, field_type_scalar)
 
       if (my_task == master_task) then
-         read(nu,rec=7,iostat=ioerr) ULAT_G
+         read(nu,rec=7,iostat=ioerr) TLAT_G
          close(nu)
       endif
 
-      call scatter_global(ANGLE, ULAT_G, master_task, distrb_clinic, &
-                          field_loc_NEcorner, field_type_angle)
-      deallocate(ULAT_G,ULON_G)
+      call scatter_global(ANGLET, TLAT_G, master_task, distrb_clinic, &
+                          field_loc_SWcorner, field_type_angle)
+      deallocate(TLAT_G,TLON_G)
 
-      where (HTN <= c0) HTN = c1
-      where (HTE <= c0) HTE = c1
-      where (HUS <= c0) HUS = c1
-      where (HUW <= c0) HUW = c1
+      where (HTS <= c0) HTS = c1
+      where (HTW <= c0) HTW = c1
+      where (HUN <= c0) HUN = c1
+      where (HUE <= c0) HUE = c1
       where (DXU <= c0) DXU = c1
       where (DYU <= c0) DYU = c1
       where (DXT <= c0) DXT = c1
@@ -858,14 +853,14 @@
 
 ! !INPUT PARAMETERS:
 
-   real (POP_r8), intent(in) :: &
+   real (r8), intent(in) :: &
       zlength,          &! gaussian parameter for thickness func
       dz_sfc,           &! thickness of surface layer
       dz_deep            ! thickness of deep ocean layers
 
 ! !OUTPUT PARAMETERS:
 
-   real (POP_r8), intent(out) :: &
+   real (r8), intent(out) :: &
       depth               ! depth based on integrated thicknesses
 
 !EOP
@@ -876,11 +871,11 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: k
+   integer (i4) :: k
 
 !-----------------------------------------------------------------------
 
-!  depth = c0
+   depth = c0
 
 !  do k=1,km
 !     dz(k) = dz_deep - (dz_deep - dz_sfc)*exp(-(depth/zlength)**2)
@@ -918,7 +913,7 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       k,                 &! vertical level index
       nu,                &! i/o unit number
       ioerr               ! i/o error flag
@@ -928,32 +923,45 @@
 !  read vertical layer thickness from file
 !
 !-----------------------------------------------------------------------
+!--------------------------------------------------------------
+!     VERTICAL LAYERED PARAMETERS
+!--------------------------------------------------------------
+!     ZKP    DEPTHS OF BOX BOTTOMS ON MODEL GRID "T" BOXES (M)
+!            (0 -25 -50 -75 ... -5600)
+!     ZKT    DEPTHS OF BOX BOTTOMS ON MODEL GRID "W" BOXES (M)
+!     DZP    D(ZKP)
+!     ODZP   1/DZP
+!     ODZT   1/DZT
 
-!  call get_unit(nu)
-!  if (my_task == master_task) then
-!     open(nu,file=vert_grid_file,status='old',form='formatted', &
-!             iostat=ioerr)
-!  endif
-!  call broadcast_scalar(ioerr, master_task)
-!  if (ioerr /= 0) call exit_POP(sigAbort, &
-!                                'Error opening vert_grid_file')
+   if (my_task == master_task) then
+      if (ioerr == 0) then ! successful open
+         open (25, file='vertical.grid',form='formatted')
+         grid_read: do k = 1,km
+            read(25,*) zkp(k)
+         end do grid_read
+         close(nu)
+      endif
+   endif
 
-!  if (my_task == master_task) then
-!     if (ioerr == 0) then ! successful open
-!        grid_read: do k = 1,km
-!           read(nu,*,iostat=ioerr) dz(k)
-!           if (ioerr /= 0) exit grid_read
-!        end do grid_read
-!        close(nu)
-!     endif
-!  endif
-!  call release_unit(nu)
 
-!  call broadcast_scalar(ioerr, master_task)
-!  if (ioerr /= 0) call exit_POP(sigAbort, &
-!                                'Error reading vert_grid_file')
+      call broadcast_array(zkp, master_task)
+#if (defined NETCDF) || (defined ALL)
+      lev1=zkp
+#endif
+      DO K = 1,KM
+         DZP (K) = ZKP (K) - ZKP (K +1)
+         ZKT (K) = (ZKP (K) + ZKP (K +1))*0.5D0
+#if (defined NETCDF) || (defined ALL)
+         lev (k)= (ZKP (K) + ZKP (K +1))*0.5D0
+#endif
+         ODZP (K)= 1.0D0/ DZP (K)
+      END DO
 
-!  call broadcast_array(dz, master_task)
+      ODZT (1)= 2.0D0* ODZP (1)
+      DO K = 2,KM
+         ODZT (K)= 1.0D0/ (ZKT (K -1) - ZKT (K))
+      END DO
+
 
 !-----------------------------------------------------------------------
 !EOC
@@ -975,7 +983,7 @@
    character (char_len), intent(in) :: &
       topography_file     ! input file containing KMT field
 
-   logical(POP_logical), intent(in) :: &
+   logical(log_kind), intent(in) :: &
       kmt_global       ! flag for generating only global KMT field
 
 !EOP
@@ -986,7 +994,7 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       nu                ,&! i/o unit number
       ioerr             ,&! i/o error flag
       reclength           ! record length
@@ -1018,6 +1026,9 @@
       call scatter_global(KMT, KMT_G, master_task, distrb_clinic, &
                           field_loc_center, field_type_scalar)
       deallocate(KMT_G)
+!
+      call boundary(KMT)
+!
    endif
 
 !-----------------------------------------------------------------------
@@ -1048,21 +1059,21 @@
 !
 !-----------------------------------------------------------------------
 
-!  where (KMT >= 1)
-!     CALCT = .true.
-!     RCALCT = c1
-!  elsewhere
-!     CALCT = .false.
-!     RCALCT = c0
-!  endwhere
+   where (KMT >= 1)
+      CALCT = .true.
+      RCALCT = c1
+   elsewhere
+      CALCT = .false.
+      RCALCT = c0
+   endwhere
 
-!  where (KMU >= 1)
-!     CALCU = .true.
-!     RCALCU = c1
-!  elsewhere
-!     CALCU = .false.
-!     RCALCU = c0
-!  endwhere
+   where (KMU >= 1)
+      CALCU = .true.
+      RCALCU = c1
+   elsewhere
+      CALCU = .false.
+      RCALCU = c0
+   endwhere
 
 !-----------------------------------------------------------------------
 !
@@ -1070,18 +1081,18 @@
 !
 !-----------------------------------------------------------------------
 
-!  KMTN = eoshift(KMT,dim=2,shift=+1)
-!  KMTS = eoshift(KMT,dim=2,shift=-1)
-!  KMTE = eoshift(KMT,dim=1,shift=+1)
-!  KMTW = eoshift(KMT,dim=1,shift=-1)
+   KMTN = eoshift(KMT,dim=2,shift=+1)
+   KMTS = eoshift(KMT,dim=2,shift=-1)
+   KMTE = eoshift(KMT,dim=1,shift=+1)
+   KMTW = eoshift(KMT,dim=1,shift=-1)
 
-!  KMUN = eoshift(KMU,dim=2,shift=+1)
-!  KMUS = eoshift(KMU,dim=2,shift=-1)
-!  KMUE = eoshift(KMU,dim=1,shift=+1)
-!  KMUW = eoshift(KMU,dim=1,shift=-1)
+   KMUN = eoshift(KMU,dim=2,shift=+1)
+   KMUS = eoshift(KMU,dim=2,shift=-1)
+   KMUE = eoshift(KMU,dim=1,shift=+1)
+   KMUW = eoshift(KMU,dim=1,shift=-1)
 
-!  KMTEE = eoshift(KMT,dim=1,shift=2)
-!  KMTNN = eoshift(KMT,dim=2,shift=2)
+   KMTEE = eoshift(KMT,dim=1,shift=2)
+   KMTNN = eoshift(KMT,dim=2,shift=2)
 
 !-----------------------------------------------------------------------
 !EOC
@@ -1116,22 +1127,22 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       k, n,              &! loop counters
       nu,                &! i/o unit number
       reclength,         &! record length of file
       ioerr,             &! i/o error flag
       region              ! region counter
 
-   real (POP_r8) :: &
+   real (r8) :: &
       tmp_vol,  &! temporary volume
       sea_area, &! total volume of a particular sea
       sea_vol    ! total volume of a particular sea
 
-   real (POP_r8), dimension(nx_block,ny_block,max_blocks_clinic) :: &
+   real (r8), dimension(nx_block,ny_block,max_blocks_clinic) :: &
       WORK                ! temporary space
 
-   integer (POP_i4), dimension(:,:), allocatable :: &
+   integer (i4), dimension(:,:), allocatable :: &
       REGION_G            ! global-sized region mask
 
 !-----------------------------------------------------------------------
@@ -1152,7 +1163,7 @@
 !  endif
 
 !  call broadcast_scalar(ioerr, master_task)
-!  if (ioerr /= 0) call exit_POP(sigAbort, &
+!  if (ioerr /= 0) call exit_LICOM(sigAbort, &
 !                                'Error opening region mask file')
 
 !  if (my_task == master_task) then
@@ -1162,7 +1173,7 @@
 !  call release_unit(nu)
 
 !  call broadcast_scalar(ioerr, master_task)
-!  if (ioerr /= 0) call exit_POP(sigAbort, &
+!  if (ioerr /= 0) call exit_LICOM(sigAbort, &
 !                                'Error reading region mask file')
 
 !  call scatter_global(REGION_MASK, REGION_G, master_task,distrb_clinic, &
@@ -1181,7 +1192,7 @@
 
 
 !  if(info_filename == 'unknown_region_info') then
-!    call exit_POP (sigAbort,'ERROR: unknown region_info_filename')
+!    call exit_LICOM (sigAbort,'ERROR: unknown region_info_filename')
 !  endif
 !
 !  region_info(:)%name   = 'unknown_region_name'
@@ -1210,7 +1221,7 @@
 !  call release_unit(nu)
 !
 !  call broadcast_scalar(ioerr, master_task)
-!  if (ioerr /= 0) call exit_POP(sigAbort, &
+!  if (ioerr /= 0) call exit_LICOM(sigAbort, &
 !                                'Error reading region name file')
 
 !  do n = 1,num_regions
@@ -1241,7 +1252,7 @@
 !    if (my_task == master_task) then
 !      write(stdout,*)'area_masks: maximum number of marginal seas exceeded'   
 !    endif
-!    call exit_POP(sigAbort, &
+!    call exit_LICOM(sigAbort, &
 !                 'ERROR: must increase max_ms in module grid.F')
 !  endif
 
@@ -1275,7 +1286,7 @@
 
 !     if(sea_area /= c0) then
 !       if (.not. region_info(region)%marginal_sea) then
-!         call exit_POP (sigAbort,'ERROR: marginal-sea mismatch')
+!         call exit_LICOM (sigAbort,'ERROR: marginal-sea mismatch')
 !       endif
 !       region_info(region)%area   = sea_area
 !       region_info(region)%volume = sea_vol
@@ -1285,7 +1296,7 @@
 !        write(stdout,"('Region #',i2,' is a marginal sea')") region
 !        write(stdout, &
 !            "('  area (km^2) = ',e12.5, '  volume (km^3) = ',e12.5)") &
-!            sea_area*1.0e-10_POP_r8, sea_vol*1.0e-15_POP_r8
+!            sea_area*1.0e-10_r8, sea_vol*1.0e-15_r8
 !     endif
 
 !  enddo
@@ -1305,8 +1316,8 @@
 !     if (region_info(n)%marginal_sea) then
 !       write(stdout,1004) region_info(n)%number                   , &
 !                          trim(region_info(n)%name)               , &
-!                          region_info(n)%area  *1.0e-10_POP_r8        , &
-!                          region_info(n)%volume*1.0e-15_POP_r8      
+!                          region_info(n)%area  *1.0e-10_r8        , &
+!                          region_info(n)%volume*1.0e-15_r8      
 !     else
 !       write(stdout,1004) region_info(n)%number, trim(region_info(n)%name)
 !     endif
@@ -1333,8 +1344,8 @@
 
 !  do n = 1,num_regions
 !    if (region_info(n)%marginal_sea) then
-!        region_info(n)%area  =region_info(n)%area  *1.0e-4_POP_r8
-!        region_info(n)%volume=region_info(n)%volume*1.0e-6_POP_r8
+!        region_info(n)%area  =region_info(n)%area  *1.0e-4_r8
+!        region_info(n)%volume=region_info(n)%volume*1.0e-6_r8
 !    endif
 !  enddo
 
@@ -1381,10 +1392,10 @@
 !-----------------------------------------------------------------------
 
 
-!  AT0  = p25
-!  ATS  = p25
-!  ATW  = p25
-!  ATSW = p25
+   AU0  = p25
+   AUS  = p25
+   AUW  = p25
+   AUSW = p25
 
 !-----------------------------------------------------------------------
 !
@@ -1393,15 +1404,15 @@
 !
 !-----------------------------------------------------------------------
 
-!  AU0  = TAREA
-!  AUN  = eoshift(TAREA,dim=2,shift=+1)
-!  AUE  = eoshift(TAREA,dim=1,shift=+1)
-!  AUNE = eoshift(AUE  ,dim=2,shift=+1)
+   AT0  = UAREA
+   ATN  = eoshift(UAREA,dim=2,shift=-1)
+   ATE  = eoshift(UAREA,dim=1,shift=+1)
+   ATNE = eoshift(ATE  ,dim=2,shift=-1)
 
-!  AU0  = AU0 *p25*UAREA_R
-!  AUN  = AUN *p25*UAREA_R
-!  AUE  = AUE *p25*UAREA_R
-!  AUNE = AUNE*p25*UAREA_R
+   AT0  = AT0 *p25*TAREA_R
+   ATN  = ATN *p25*TAREA_R
+   ATE  = ATE *p25*TAREA_R
+   ATNE = ATNE*p25*TAREA_R
 
 !-----------------------------------------------------------------------
 
@@ -1409,10 +1420,10 @@
 
 !***********************************************************************
 !BOP
-! !IROUTINE: calc_tpoints
+! !IROUTINE: calc_upoints
 ! !INTERFACE:
 
-!subroutine calc_tpoints(errorCode)
+ subroutine calc_upoints(errorCode)
 
 ! !DESCRIPTION:
 !  Calculates lat/lon coordinates of T points from U points
@@ -1423,8 +1434,8 @@
 !
 ! !OUTPUT PARAMETERS:
 
-!  integer (POP_i4), intent(out) :: &
-!     errorCode                ! returned error code
+   integer (i4), intent(out) :: &
+      errorCode                ! returned error code
 
 !EOP
 !BOC
@@ -1434,14 +1445,14 @@
 !
 !-----------------------------------------------------------------------
 
-!  integer (POP_i4) :: i,j,n
+   integer (i4) :: i,j,n
 
-!  real (POP_r8) ::                   &
-!     xc,yc,zc,xs,ys,zs,xw,yw,zw, &! Cartesian coordinates for
-!     xsw,ysw,zsw,tx,ty,tz,da      !    nbr points
+   real (r8) ::                   &
+      xc,yc,zc,xs,ys,zs,xw,yw,zw, &! Cartesian coordinates for
+      xsw,ysw,zsw,tx,ty,tz,da      !    nbr points
 
-!  type (block) :: &
-!     this_block    ! block info for this block
+   type (block) :: &
+      this_block    ! block info for this block
 
 !-----------------------------------------------------------------------
 !
@@ -1451,93 +1462,93 @@
 !
 !-----------------------------------------------------------------------
 
-!  !$OMP PARALLEL DO PRIVATE(n,i,j,this_block,xsw,ysw,zsw,xw,yw,zw,xs,ys,zs,xc,yc,zc, &
-!  !$OMP                     tx,ty,tz,da)
+   !$OMP PARALLEL DO PRIVATE(n,i,j,this_block,xne,yne,zne,xe,ye,ze,xn,yn,zn,xc,yc,zc, &
+   !$OMP                     tx,ty,tz,da)
 
-!  do n=1,nblocks_clinic
-!     this_block = get_block(blocks_clinic(n),n)
+   do n=1,nblocks_clinic
+      this_block = get_block(blocks_clinic(n),n)
 
-!     do j=2,ny_block
-!     do i=2,nx_block
+      do j=1,ny_block-1
+      do i=2,nx_block
 
 !        !***
 !        !*** set up averaging weights
 !        !***
 
-!        !wt0  = AT0 (i,j,n)
-!        !wts  = ATS (i,j,n)
-!        !wtw  = ATW (i,j,n)
-!        !wtsw = ATSW(i,j,n)
+         !wt0  = AT0 (i,j,n)
+         !wts  = ATS (i,j,n)
+         !wtw  = ATW (i,j,n)
+         !wtsw = ATSW(i,j,n)
 
 !        !***
 !        !*** convert neighbor U-cell coordinates to 3-d Cartesian coordinates 
 !        !*** to prevent problems with averaging near the pole
 !        !***
 
-!        zsw = cos(ULAT(i-1,j-1,n))
-!        xsw = cos(ULON(i-1,j-1,n))*zsw
-!        ysw = sin(ULON(i-1,j-1,n))*zsw
-!        zsw = sin(ULAT(i-1,j-1,n))
+         zsw = cos(TLAT(i-1,j+1,n))
+         xsw = cos(TLON(i-1,j+1,n))*zne
+         ysw = sin(TLON(i-1,j+1,n))*zne
+         zsw = sin(TLAT(i-1,j+1,n))
 
-!        zs  = cos(ULAT(i  ,j-1,n))
-!        xs  = cos(ULON(i  ,j-1,n))*zs
-!        ys  = sin(ULON(i  ,j-1,n))*zs
-!        zs  = sin(ULAT(i  ,j-1,n))
+         zs  = cos(TLAT(i  ,j+1,n))
+         xs  = cos(TLON(i  ,j+1,n))*zn
+         ys  = sin(TLON(i  ,j+1,n))*zn
+         zs  = sin(TLAT(i  ,j+1,n))
 
-!        zw  = cos(ULAT(i-1,j  ,n))
-!        xw  = cos(ULON(i-1,j  ,n))*zw
-!        yw  = sin(ULON(i-1,j  ,n))*zw
-!        zw  = sin(ULAT(i-1,j  ,n))
+         ze  = cos(TLAT(i-1,j  ,n))
+         xe  = cos(TLON(i-1,j  ,n))*ze
+         ye  = sin(TLON(i-1,j  ,n))*ze
+         ze  = sin(TLAT(i-1,j  ,n))
 
-!        zc  = cos(ULAT(i  ,j  ,n))
-!        xc  = cos(ULON(i  ,j  ,n))*zc
-!        yc  = sin(ULON(i  ,j  ,n))*zc
-!        zc  = sin(ULAT(i  ,j  ,n))
+         zc  = cos(TLAT(i  ,j  ,n))
+         xc  = cos(TLON(i  ,j  ,n))*zc
+         yc  = sin(TLON(i  ,j  ,n))*zc
+         zc  = sin(TLAT(i  ,j  ,n))
 
 !        !***
 !        !*** straight 4-point average to T-cell Cartesian coords
 !        !***
 
-!        tx = p25*(xc + xs + xw + xsw)
-!        ty = p25*(yc + ys + yw + ysw)
-!        tz = p25*(zc + zs + zw + zsw)
+         tx = p25*(xc + xn + xe + xne)
+         ty = p25*(yc + yn + ye + yne)
+         tz = p25*(zc + zn + ze + zne)
 
 !        !***
 !        !*** convert to lat/lon in radians
 !        !***
 
-!        da = sqrt(tx**2 + ty**2 + tz**2)
+         da = sqrt(tx**2 + ty**2 + tz**2)
 
-!        TLAT(i,j,n) = asin(tz/da)
+         ULAT(i,j,n) = asin(tz/da)
 
-!        if (tx /= c0 .or. ty /= c0) then
-!           TLON(i,j,n) = atan2(ty,tx)
-!        else
-!           TLON(i,j,n) = c0
-!        endif
-!          
-!     end do
-!     end do
+         if (tx /= c0 .or. ty /= c0) then
+            ULON(i,j,n) = atan2(ty,tx)
+         else
+            ULON(i,j,n) = c0
+         endif
+           
+      end do
+      end do
 
       !***
       !*** for bottom row of domain where sw 4pt average is not valid,
       !*** extrapolate from interior
-      !*** NOTE: THIS ASSUMES A CLOSED SOUTH BOUNDARY - WILL NOT
+      !*** NOTE: THIS ASSUMES A CLOSED NORTH BOUNDARY - WILL NOT
       !***       WORK CORRECTLY FOR CYCLIC OPTION
       !***
 
-!     if (this_block%j_glob(this_block%jb) == 1) then
-!        do i=this_block%ib,this_block%ie
-!           TLON(i,this_block%jb,n) = TLON(i,this_block%jb+1,n)
-!           TLAT(i,this_block%jb,n) = c2*TLAT(i,this_block%jb+1,n) - &
-!                                        TLAT(i,this_block%jb+2,n)
-!        end do
-!     endif
+      if (this_block%j_glob(this_block%je) == jmt_global) then
+         do i=this_block%ib,this_block%ie
+            ULON(i,this_block%je,n) = ULON(i,this_block%je-1,n)
+            ULAT(i,this_block%je,n) = c2*ULAT(i,this_block%je-1,n) - &
+                                         ULAT(i,this_block%je-2,n)
+         end do
+      endif
 
-!     where (TLON(:,:,n) > pi2) TLON(:,:,n) = TLON(:,:,n) - pi2
-!     where (TLON(:,:,n) < c0 ) TLON(:,:,n) = TLON(:,:,n) + pi2
+      where (ULON(:,:,n) > pi2) ULON(:,:,n) = ULON(:,:,n) - pi2
+      where (ULON(:,:,n) < c0 ) ULON(:,:,n) = ULON(:,:,n) + pi2
 
-!  end do
+   end do
 !  !$OMP END PARALLEL DO
 
 !-----------------------------------------------------------------------
@@ -1546,36 +1557,34 @@
 !
 !-----------------------------------------------------------------------
 
-!  call POP_HaloUpdate(TLAT, POP_haloClinic, POP_gridHorzLocCenter,  & 
-!                      POP_fieldKindScalar, errorCode,               &
-!                      fillValue = 0.0_POP_r8)
+   call POP_HaloUpdate(ULAT, POP_haloClinic, POP_gridHorzLocSWcorner, & 
+                       POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
 
-!  if (errorCode /= 0) then
-!     call POP_ErrorSet(errorCode, &
-!        'calc_tpoints: error updating tlat halo')
-!     return
-!  endif
+   if (errorCode /= 0) then
+      call LICOM_ErrorSet(errorCode, &
+         'calc_upoints: error updating tlat halo')
+      return
+   endif
 
-!  call POP_HaloUpdate(TLON, POP_haloClinic, POP_gridHorzLocCenter,  & 
-!                      POP_fieldKindScalar, errorCode,               &
-!                      fillValue = 0.0_POP_r8)
+   call POP_HaloUpdate(ULON, POP_haloClinic, POP_gridHorzLocSWcorner, & 
+                       POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
 
-!  if (errorCode /= 0) then
-!     call POP_ErrorSet(errorCode, &
-!        'calc_tpoints: error updating tlon halo')
-!     return
-!  endif
+   if (errorCode /= 0) then
+      call LICOM_ErrorSet(errorCode, &
+         'calc_upoints: error updating tlon halo')
+      return
+   endif
 
 !-----------------------------------------------------------------------
 
-!end subroutine calc_tpoints
+ end subroutine calc_upoints
 
 !***********************************************************************
 !BOP
 ! !IROUTINE: ugrid_to_tgrid
 ! !INTERFACE:
 
-!subroutine ugrid_to_tgrid(ARRAY_TGRID, ARRAY_UGRID, iblock)
+ subroutine ugrid_to_tgrid(ARRAY_TGRID, ARRAY_UGRID, iblock)
 
 ! !DESCRIPTION:
 !  Interpolates values at U points on a B grid to T points.
@@ -1588,16 +1597,16 @@
 
 ! !INPUT PARAMETERS:
 
-!  integer (POP_i4), intent(in) :: &
-!    iblock                  ! index for block in baroclinic distrb
+   integer (i4), intent(in) :: &
+     iblock                  ! index for block in baroclinic distrb
 
-!  real (POP_r8), dimension(nx_block,ny_block), intent(in) :: &
-!    ARRAY_UGRID             ! field on U points
+   real (r8), dimension(nx_block,ny_block), intent(in) :: &
+     ARRAY_UGRID             ! field on U points
 
 ! !OUTPUT PARAMETERS:
 
-!  real (POP_r8), dimension(nx_block,ny_block), intent(out) :: &
-!    ARRAY_TGRID             ! field on T points
+   real (r8), dimension(nx_block,ny_block), intent(out) :: &
+     ARRAY_TGRID             ! field on T points
 
 !EOP
 !BOC
@@ -1607,8 +1616,8 @@
 !
 !-----------------------------------------------------------------------
 
-!  integer (POP_i4) :: &
-!    i,j                 ! dummy indices
+   integer (i4) :: &
+     i,j                 ! dummy indices
 
 !-----------------------------------------------------------------------
 !
@@ -1616,31 +1625,31 @@
 !
 !-----------------------------------------------------------------------
 
-!  do j=2,ny_block
-!  do i=2,nx_block
+   do j=2,ny_block
+   do i=1,nx_block-1
 
-!    ARRAY_TGRID(i,j) = AT0 (i,j,iblock)*ARRAY_UGRID(i  ,j  ) + &
-!                       ATS (i,j,iblock)*ARRAY_UGRID(i  ,j-1) + &
-!                       ATW (i,j,iblock)*ARRAY_UGRID(i-1,j  ) + &
-!                       ATSW(i,j,iblock)*ARRAY_UGRID(i-1,j-1)
+     ARRAY_TGRID(i,j) = AT0 (i,j,iblock)*ARRAY_UGRID(i  ,j  ) + &
+                        ATN (i,j,iblock)*ARRAY_UGRID(i  ,j-1) + &
+                        ATE (i,j,iblock)*ARRAY_UGRID(i+1,j  ) + &
+                        ATNE(i,j,iblock)*ARRAY_UGRID(i+1,j-1)
 
-!  end do
-!  end do
+   end do
+   end do
 
-!  ARRAY_TGRID(:,1) = c0
-!  ARRAY_TGRID(1,:) = c0
+   ARRAY_TGRID(:,1) = c0
+   ARRAY_TGRID(nx_block,:) = c0
 
 !-----------------------------------------------------------------------
 !EOC
 
-!end subroutine ugrid_to_tgrid
+ end subroutine ugrid_to_tgrid
 
 !***********************************************************************
 !BOP
 ! !IROUTINE: tgrid_to_ugrid
 ! !INTERFACE:
 
-!subroutine tgrid_to_ugrid(ARRAY_UGRID, ARRAY_TGRID, iblock)
+ subroutine tgrid_to_ugrid(ARRAY_UGRID, ARRAY_TGRID, iblock)
 
 ! !DESCRIPTION:
 !  Interpolates values at T points on a B grid to U points.
@@ -1653,16 +1662,16 @@
 
 ! !INPUT PARAMETERS:
 
-!  integer (POP_i4), intent(in) :: &
-!    iblock                  ! index for block in baroclinic distrb
+   integer (i4), intent(in) :: &
+     iblock                  ! index for block in baroclinic distrb
 
-!  real (POP_r8), dimension(nx_block,ny_block), intent(in) :: &
-!    ARRAY_TGRID    ! field on T points
+   real (r8), dimension(nx_block,ny_block), intent(in) :: &
+     ARRAY_TGRID    ! field on T points
 
 ! !OUTPUT PARAMETERS:
 
-!  real (POP_r8), dimension(nx_block,ny_block), intent(out) :: &
-!    ARRAY_UGRID    ! field on U points
+   real (r8), dimension(nx_block,ny_block), intent(out) :: &
+     ARRAY_UGRID    ! field on U points
 
 !EOP
 !BOC
@@ -1672,8 +1681,7 @@
 !
 !-----------------------------------------------------------------------
 
-!  integer (POP_i4) :: &
-!    i,j                 ! dummy indices
+   integer (i4) :: i,j                 ! dummy indices
 
 !-----------------------------------------------------------------------
 !
@@ -1681,26 +1689,110 @@
 !
 !-----------------------------------------------------------------------
 
-!  do j=1,ny_block-1
-!  do i=1,nx_block-1
+   do j=1,ny_block-1
+   do i=2,nx_block
 
-!    ARRAY_UGRID(i,j) = AU0 (i,j,iblock)*ARRAY_TGRID(i  ,j  ) + &
-!                       AUN (i,j,iblock)*ARRAY_TGRID(i  ,j+1) + &
-!                       AUE (i,j,iblock)*ARRAY_TGRID(i+1,j  ) + &
-!                       AUNE(i,j,iblock)*ARRAY_TGRID(i+1,j+1)
+     ARRAY_UGRID(i,j) = AU0 (i,j,iblock)*ARRAY_TGRID(i  ,j  ) + &
+                        AUS (i,j,iblock)*ARRAY_TGRID(i  ,j+1) + &
+                        AUW (i,j,iblock)*ARRAY_TGRID(i-1,j  ) + &
+                        AUSW(i,j,iblock)*ARRAY_TGRID(i-1,j+1)
 
-!  end do
-!  end do
+   end do
+   end do
 
-!  ARRAY_UGRID(:,ny_block) = c0
-!  ARRAY_UGRID(nx_block,:) = c0
+   ARRAY_UGRID(:,1) = c0
+   ARRAY_UGRID(nx_block,:) = c0
 
 !-----------------------------------------------------------------------
 !EOC
 
-!end subroutine tgrid_to_ugrid
+ end subroutine tgrid_to_ugrid
 
 !***********************************************************************
+
+ subroutine calc_coeff
+!
+      real(r8) eps, abcd
+      integer :: iblock
+!
+      do iblock = 1, nblocks_clinic
+!
+      do j = 1,jmt
+      do i=  1,imt
+         EPS = 0.5D0* FCOR(I,J,IBLOCK)* DTC
+         EPEA_global(I,J,IBLOCK) = 1.0D0/ (1.0D0+ EPS * EPS)
+         EPEB_global(I,J,IBLOCK) = EPS / (1.0D0+ EPS * EPS)
+         EPS = FCOR(I,J,IBLOCK)* DTC
+         EPLA_global(I,J,IBLOCK) = 1.0D0/ (1.0D0+ EPS * EPS)
+         EPLB_global(I,J,IBLOCK) = EPS / (1.0D0+ EPS * EPS)
+         EPS = 0.5D0* FCOR(I,J,IBLOCK)* DTB
+         EBEA_global(I,J,IBLOCK) = 1.0D0/ (1.0D0+ EPS * EPS)
+         EBEB_global(I,J,IBLOCK) = EPS / (1.0D0+ EPS * EPS)
+         EPS = FF_global(I,J,IBLOCK)* DTB
+         EBLA_global(I,J,IBLOCK) = 1.0D0/ (1.0D0+ EPS * EPS)
+         EBLB_global(I,J,IBLOCK) = EPS / (1.0D0+ EPS * EPS)
+      end do
+      end do
+!
+      DO J = 1,JMT
+         DO I = 1,IMT
+!
+            ABCD = 0.0
+            DO K = 1,KM
+               ABCD = ABCD+ VIT (I,J,K,iblock)* DZP (K)
+            END DO
+            IF (ABCD > 0.0)THEN
+               OHBT (I,J,iblock)= 1.0D0/ ABCD
+            ELSE
+               OHBT (I,J,iblock)= 0.0D0
+            END IF
+!
+            ABCD = 0.0
+            DO K = 1,KM
+               ABCD = ABCD+ VIV (I,J,K,iblock)* DZP (K)
+            END DO
+            DZPH (I,J,iblock)= ABCD
+            IF (ABCD > 0.0)THEN
+               OHBU (I,J,iblock)= 1.0D0/ ABCD
+            ELSE
+               OHBU (I,J,iblock)= 0.0D0
+            END IF
+         END DO
+      END DO
+!
+      DO J = 2,jmt-1
+      DO I = 2,imt-1
+         R1A_u(I,J,iblock)= hue(i  ,j  ,iblock)*dyur(i,j,iblock)*dxur(i,j,iblock)*p5
+         R1B_u(I,J,iblock)= hue(i+1,j  ,iblock)*dyur(i,j,iblock)*dxur(i,j,iblock)*p5
+         R2A_u(I,J,iblock)= hun(i  ,j  ,iblock)*dxur(i,j,iblock)*dyur(i,j,iblock)*p5
+         R2B_u(I,J,iblock)= hun(i  ,j+1,iblock)*dxur(i,j,iblock)*dyur(i,j,iblock)*p5
+         R1A_t(I,J,iblock)= htw(i-1,j  ,iblock)*dytr(i,j,iblock)*dxur(i,j,iblock)*p5
+         R1B_t(I,J,iblock)= htw(i  ,j  ,iblock)*dytr(i,j,iblock)*dxur(i,j,iblock)*p5
+         R2A_t(I,J,iblock)= hts(i  ,j-1,iblock)*dxtr(i,j,iblock)*dyur(i,j,iblock)*p5
+         R2B_t(I,J,iblock)= hts(i  ,j  ,iblock)*dxtr(i,j,iblock)*dyur(i,j,iblock)*p5
+      END DO
+      END DO
+!
+      end do
+!
+   call POP_HaloUpdate(r1a_u, POP_haloClinic, POP_gridHorzLocSface, &
+                       POP_fieldKindScaler, errorCode,fillValue = 0.0_r8)
+   call POP_HaloUpdate(r1b_u, POP_haloClinic, POP_gridHorzLocSface, &
+                       POP_fieldKindScaler, errorCode,fillValue = 0.0_r8)
+   call POP_HaloUpdate(r2a_u, POP_haloClinic, POP_gridHorzLocWface, &
+                       POP_fieldKindScaler, errorCode,fillValue = 0.0_r8)
+   call POP_HaloUpdate(r2b_u, POP_haloClinic, POP_gridHorzLocWface, &
+                       POP_fieldKindScaler, errorCode,fillValue = 0.0_r8)
+   call POP_HaloUpdate(r1a_t, POP_haloClinic, POP_gridHorzLocWface, &
+                       POP_fieldKindScaler, errorCode,fillValue = 0.0_r8)
+   call POP_HaloUpdate(r1b_t, POP_haloClinic, POP_gridHorzLocEface, &
+                       POP_fieldKindScaler, errorCode,fillValue = 0.0_r8)
+   call POP_HaloUpdate(r2a_t, POP_haloClinic, POP_gridHorzLocNface, &
+                       POP_fieldKindScaler, errorCode,fillValue = 0.0_r8)
+   call POP_HaloUpdate(r2b_t, POP_haloClinic, POP_gridHorzLocSface, &
+                       POP_fieldKindScaler, errorCode,fillValue = 0.0_r8)
+!
+ end subroutine calc_coeff
 
  end module grid
 

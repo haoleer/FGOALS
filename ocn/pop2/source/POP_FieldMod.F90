@@ -6,8 +6,6 @@
 ! !MODULE: POP_FieldMod
 !
 
-   use POP_KindsMod
-
    implicit none
    private
    save

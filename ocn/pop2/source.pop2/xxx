@@ -1,0 +1,586 @@
+POP_SolversMod.F90:!     allocate(WORKS (POP_nxBlock,POP_nyBlock,nblocks_clinic), &
+POP_SolversMod.F90:!              WORKW (POP_nxBlock,POP_nyBlock,nblocks_clinic), &
+POP_SolversMod.F90:!              WORKSE(POP_nxBlock,POP_nyBlock,nblocks_clinic), &
+POP_SolversMod.F90:!              WORKSW(POP_nxBlock,POP_nyBlock,nblocks_clinic))
+POP_SolversMod.F90:!     allocate(icheck(nblocks_clinic))
+POP_SolversMod.F90:!     do iblock = 1,nblocks_clinic
+advection.F90:   use domain, only: nblocks_clinic, blocks_clinic, distrb_clinic,          &
+advection.F90:   do iblock = 1,nblocks_clinic
+advection.F90:      this_block = get_block(blocks_clinic(iblock),iblock)  
+advection.F90:      allocate (AUX   (nx_block,ny_block,nt,nblocks_clinic))
+advection.F90:      allocate (TALFXP(nx_block,ny_block,nblocks_clinic), &
+advection.F90:                TBETXP(nx_block,ny_block,nblocks_clinic), &
+advection.F90:                TGAMXP(nx_block,ny_block,nblocks_clinic), &
+advection.F90:                TALFYP(nx_block,ny_block,nblocks_clinic), &
+advection.F90:                TBETYP(nx_block,ny_block,nblocks_clinic), &
+advection.F90:                TGAMYP(nx_block,ny_block,nblocks_clinic), &
+advection.F90:                TALFXM(nx_block,ny_block,nblocks_clinic), &
+advection.F90:                TBETXM(nx_block,ny_block,nblocks_clinic), &
+advection.F90:                TDELXM(nx_block,ny_block,nblocks_clinic), &
+advection.F90:                TALFYM(nx_block,ny_block,nblocks_clinic), &
+advection.F90:                TBETYM(nx_block,ny_block,nblocks_clinic), &
+advection.F90:                TDELYM(nx_block,ny_block,nblocks_clinic))
+advection.F90:      do iblock = 1,nblocks_clinic
+advection.F90:         this_block = get_block(blocks_clinic(iblock),iblock)  
+advection.F90:                p5_DXT_ph_R(nx_block,ny_block,nblocks_clinic), &
+advection.F90:                p5_DYT_ph_R(nx_block,ny_block,nblocks_clinic), &
+advection.F90:                UTE_jbm2(nx_block,km,nblocks_clinic), &
+advection.F90:                WTKB_jbm2(nx_block,km,nblocks_clinic), &
+advection.F90:                WTKB_jep2(nx_block,km,nblocks_clinic), &
+advection.F90:                WTKB_ibm2(ny_block,km,nblocks_clinic), &
+advection.F90:                WTKB_iep2(ny_block,km,nblocks_clinic), &
+advection.F90:                FLUX_VEL_prev(nx_block,ny_block,5,nblocks_clinic) )
+advection.F90:         allocate (UTE_to_UVEL_E(nx_block,ny_block,km,nblocks_clinic), &
+advection.F90:                   VTN_to_VVEL_N(nx_block,ny_block,km,nblocks_clinic))
+advection.F90:         allocate (UTE_to_UVEL_E(nx_block,ny_block,1,nblocks_clinic), &
+advection.F90:                   VTN_to_VVEL_N(nx_block,ny_block,1,nblocks_clinic))
+advection.F90:      do iblock = 1,nblocks_clinic
+advection.F90:         this_block = get_block(blocks_clinic(iblock),iblock)
+advection.F90:   call get_timer(timer_advu,'ADVECTION_MOMENTUM', nblocks_clinic, &
+advection.F90:                                 nblocks_clinic, distrb_clinic%nprocs)
+advection.F90:                                 nblocks_clinic, distrb_clinic%nprocs)
+advection.F90:                                 nblocks_clinic, distrb_clinic%nprocs)
+advection.F90:                                 nblocks_clinic, distrb_clinic%nprocs)
+advection.F90:   real (r8), dimension(nx_block,ny_block,nblocks_clinic) :: & 
+advection.F90:      do iblock = 1,nblocks_clinic
+advection.F90:         this_block = get_block(blocks_clinic(iblock),iblock)  
+advection.F90:      do iblock = 1,nblocks_clinic
+advection.F90:         this_block = get_block(blocks_clinic(iblock),iblock)  
+baroclinic.F90:   use domain, only: nblocks_clinic, blocks_clinic, POP_haloClinic
+baroclinic.F90:   do iblock = 1,nblocks_clinic
+baroclinic.F90:      this_block = get_block(blocks_clinic(iblock),iblock)  
+baroclinic.F90:   do iblock = 1,nblocks_clinic
+baroclinic.F90:      this_block = get_block(blocks_clinic(iblock),iblock)  
+baroclinic.F90:   do iblock = 1,nblocks_clinic
+baroclinic.F90:      this_block = get_block(blocks_clinic(iblock),iblock)  
+barotropic.F90:   use domain, only: distrb_clinic, blocks_clinic, nblocks_clinic,  &
+barotropic.F90:      do iblock = 1,nblocks_clinic
+barotropic.F90:         this_block = get_block(blocks_clinic(iblock),iblock)  
+barotropic.F90:   do iblock = 1,nblocks_clinic
+barotropic.F90:      this_block = get_block(blocks_clinic(iblock),iblock)  
+barotropic.F90:      do iblock = 1,nblocks_clinic
+barotropic.F90:   do iblock = 1,nblocks_clinic
+barotropic.F90:      this_block = get_block(blocks_clinic(iblock),iblock)  
+budget_diagnostics.F90:   do iblock = 1,nblocks_clinic
+budget_diagnostics.F90:       do iblock = 1,nblocks_clinic
+cfc11_mod.F90:   use domain, only: nblocks_clinic, distrb_clinic
+cfc11_mod.F90:    do iblock=1,nblocks_clinic
+cfc11_mod.F90:       do iblock=1,nblocks_clinic
+cfc11_mod.F90:       do iblock=1,nblocks_clinic
+cfc11_mod.F90:       do iblock=1,nblocks_clinic
+cfc11_mod.F90:      do iblock = 1, nblocks_clinic
+cfc11_mod.F90:   do iblock = 1, nblocks_clinic
+cfc11_mod.F90:    do iblock = 1, nblocks_clinic
+cfc11_mod.F90:   do iblock = 1,nblocks_clinic
+cfc_mod.F90:   use domain, only: nblocks_clinic, distrb_clinic
+cfc_mod.F90:   do iblock = 1, nblocks_clinic
+cfc_mod.F90:      do iblock=1,nblocks_clinic
+cfc_mod.F90:      do iblock=1,nblocks_clinic
+cfc_mod.F90:      do iblock=1,nblocks_clinic
+cfc_mod.F90:   do iblock = 1, nblocks_clinic
+cfc_mod.F90:   do iblock = 1, nblocks_clinic
+cfc_mod.F90:   do iblock = 1, nblocks_clinic
+co2calc.F90:  USE domain, ONLY : blocks_clinic
+co2calc.F90:             this_block = get_block(blocks_clinic(iblock), iblock)
+diag_bsf.F90:   allocate(WORK0    (nx_block,ny_block,nblocks_clinic), &
+diag_bsf.F90:            WORK2    (nx_block,ny_block,nblocks_clinic), &
+diag_bsf.F90:            BSFC     (nx_block,ny_block,nblocks_clinic), &
+diag_bsf.F90:            BSFN     (nx_block,ny_block,nblocks_clinic), &
+diag_bsf.F90:            BSFNE    (nx_block,ny_block,nblocks_clinic), &
+diag_bsf.F90:            BSFE     (nx_block,ny_block,nblocks_clinic), &
+diag_bsf.F90:            BSFSE    (nx_block,ny_block,nblocks_clinic), &
+diag_bsf.F90:            BSFS     (nx_block,ny_block,nblocks_clinic), &
+diag_bsf.F90:            BSFSW    (nx_block,ny_block,nblocks_clinic), &
+diag_bsf.F90:            BSFW     (nx_block,ny_block,nblocks_clinic), &
+diag_bsf.F90:            BSFNW    (nx_block,ny_block,nblocks_clinic), &
+diag_bsf.F90:            RCALC_TMP(nx_block,ny_block,nblocks_clinic))
+diag_bsf.F90:   allocate(ISMASK   (nx_block,ny_block,nblocks_clinic), &
+diag_bsf.F90:            WORK1    (nx_block,ny_block,nblocks_clinic))
+diag_bsf.F90:   allocate(MASKI    (nx_block,ny_block,nblocks_clinic))
+diag_bsf.F90:   do iblock = 1, nblocks_clinic
+diag_bsf.F90:   do iblock = 1,nblocks_clinic
+diag_bsf.F90:     do iblock = 1,nblocks_clinic
+diagnostics.F90:         do iblock=1,nblocks_clinic
+diagnostics.F90:            this_block = get_block(blocks_clinic(iblock),iblock)  
+diagnostics.F90:      do iblock = 1,nblocks_clinic
+diagnostics.F90:         this_block = get_block(blocks_clinic(iblock),iblock)  
+diagnostics.F90:        do iblock=1,nblocks_clinic
+diagnostics.F90:        do iblock=1,nblocks_clinic
+diagnostics.F90:        do iblock=1,nblocks_clinic
+diagnostics.F90:        do iblock=1,nblocks_clinic
+diagnostics.F90:        do iblock=1,nblocks_clinic
+diagnostics.F90:        do iblock=1,nblocks_clinic
+diagnostics.F90:        do iblock=1,nblocks_clinic
+diagnostics.F90:        do iblock=1,nblocks_clinic
+diagnostics.F90:        do iblock=1,nblocks_clinic
+diagnostics.F90:        do iblock=1,nblocks_clinic
+diagnostics.F90:      do iblock = 1,nblocks_clinic
+diagnostics.F90:         this_block = get_block(blocks_clinic(iblock),iblock)  
+diagnostics.F90:      allocate(mass_tran(nblocks_clinic,num_transports), &
+diagnostics.F90:               heat_tran(nblocks_clinic,num_transports), &
+diagnostics.F90:               salt_tran(nblocks_clinic,num_transports))
+diagnostics.F90:      do iblock = 1,nblocks_clinic
+diagnostics.F90:         this_block = get_block(blocks_clinic(iblock),iblock)  
+diags_on_lat_aux_grid.F90:                  nblocks_clinic, distrb_clinic%nprocs)
+diags_on_lat_aux_grid.F90:                  nblocks_clinic, distrb_clinic%nprocs)
+diags_on_lat_aux_grid.F90:   allocate ( WORK1(nx_block,ny_block,nblocks_clinic), &
+diags_on_lat_aux_grid.F90:              WORK2(nx_block,ny_block,nblocks_clinic) )
+diags_on_lat_aux_grid.F90:     do iblock = 1,nblocks_clinic
+diags_on_lat_aux_grid.F90:        do iblock = 1,nblocks_clinic
+diags_on_lat_aux_grid.F90:        do iblock = 1,nblocks_clinic
+diags_on_lat_aux_grid.F90:     do iblock = 1,nblocks_clinic
+diags_on_lat_aux_grid.F90:        do iblock = 1,nblocks_clinic
+diags_on_lat_aux_grid.F90:        do iblock = 1,nblocks_clinic
+diags_on_lat_aux_grid.F90:   allocate ( WORK1(nx_block,ny_block,nblocks_clinic) )
+diags_on_lat_aux_grid.F90:   do iblock = 1,nblocks_clinic
+diags_on_lat_aux_grid.F90:   do iblock = 1,nblocks_clinic
+diags_on_lat_aux_grid.F90:     do iblock = 1,nblocks_clinic
+diags_on_lat_aux_grid.F90:     do iblock = 1,nblocks_clinic
+diags_on_lat_aux_grid.F90:     do iblock = 1,nblocks_clinic
+diags_on_lat_aux_grid.F90:     do iblock = 1,nblocks_clinic
+diags_on_lat_aux_grid.F90:     do iblock = 1,nblocks_clinic
+domain.F90:      nblocks_clinic   ,&! actual number of blocks on this processor
+domain.F90:      blocks_clinic    ,&! block ids for local blocks in baroclinic dist
+domain.F90:   call create_local_block_ids(blocks_clinic, distrb_clinic)
+domain.F90:   if (associated(blocks_clinic)) then
+domain.F90:      nblocks_clinic = size(blocks_clinic)
+domain.F90:      nblocks_clinic = 0
+domain.F90:     nblocks_tmp_clinic = nblocks_clinic
+ecosys_mod.F90:   allocate( LAND_MASK(nx_block,ny_block,nblocks_clinic) )
+ecosys_mod.F90:   do iblock=1,nblocks_clinic
+ecosys_mod.F90:                  nblocks_clinic, distrb_clinic%nprocs)
+ecosys_mod.F90:                  nblocks_clinic, distrb_clinic%nprocs)
+ecosys_mod.F90:      do iblock=1,nblocks_clinic
+ecosys_mod.F90:      do iblock=1,nblocks_clinic
+ecosys_mod.F90:      do iblock=1,nblocks_clinic
+ecosys_mod.F90:      do iblock=1,nblocks_clinic
+ecosys_mod.F90:      do iblock=1,nblocks_clinic
+ecosys_mod.F90:      do iblock=1,nblocks_clinic
+ecosys_mod.F90:      do iblock=1,nblocks_clinic
+ecosys_mod.F90:      do iblock=1,nblocks_clinic
+ecosys_mod.F90:   do iblock=1,nblocks_clinic
+ecosys_mod.F90:      do iblock=1,nblocks_clinic
+ecosys_mod.F90:      do iblock=1,nblocks_clinic
+ecosys_mod.F90:      do iblock=1,nblocks_clinic
+ecosys_mod.F90:   do iblock=1,nblocks_clinic
+ecosys_mod.F90:   do iblock = 1, nblocks_clinic
+ecosys_mod.F90:      do iblock = 1, nblocks_clinic
+ecosys_mod.F90:      do iblock = 1, nblocks_clinic
+ecosys_mod.F90:         this_block = get_block(blocks_clinic(iblock),iblock)
+ecosys_mod.F90:      do iblock = 1, nblocks_clinic
+ecosys_mod.F90:      do iblock = 1, nblocks_clinic
+ecosys_mod.F90:         this_block = get_block(blocks_clinic(iblock),iblock)
+ecosys_mod.F90:      do iblock = 1, nblocks_clinic
+ecosys_mod.F90:   do iblock = 1,nblocks_clinic
+ecosys_mod.F90:   do iblock = 1,nblocks_clinic
+ecosys_mod.F90:      this_block = get_block(blocks_clinic(iblock),iblock)
+forcing.F90:         do iblock = 1, nblocks_clinic
+forcing.F90:   do iblock = 1,nblocks_clinic
+forcing.F90:      this_block = get_block(blocks_clinic(iblock),iblock)
+forcing.F90:   do iblock = 1,nblocks_clinic
+forcing.F90:      this_block = get_block(blocks_clinic(iblock),iblock)
+forcing_ap.F90:      do iblock=1,nblocks_clinic
+forcing_ap.F90:         this_block = get_block(blocks_clinic(iblock),iblock)
+forcing_ap.F90:      do iblock=1,nblocks_clinic
+forcing_coupled.F90:          QSW_COSZ_WGHT(nx_block,ny_block,nblocks_clinic), &
+forcing_coupled.F90:          QSW_COSZ_WGHT_NORM(nx_block,ny_block,nblocks_clinic))
+forcing_coupled.F90:      call get_timer (timer_compute_cosz, 'COMPUTE_COSZ', nblocks_clinic, &
+forcing_coupled.F90:   do iblock = 1, nblocks_clinic
+forcing_coupled.F90:      do iblock = 1, nblocks_clinic
+forcing_coupled.F90:      do iblock = 1, nblocks_clinic
+forcing_coupled.F90:   do iblock = 1, nblocks_clinic
+forcing_coupled.F90:       do iblock = 1, nblocks_clinic
+forcing_coupled.F90:     do iblock=1,nblocks_clinic
+forcing_coupled.F90:       do iblock=1,nblocks_clinic
+forcing_coupled.F90:         do iblock=1,nblocks_clinic
+forcing_coupled.F90:         do iblock=1,nblocks_clinic
+forcing_coupled.F90:         do iblock=1,nblocks_clinic
+forcing_coupled.F90:   do iblock = 1,nblocks_clinic
+forcing_coupled.F90:      this_block = get_block(blocks_clinic(iblock),iblock)
+forcing_coupled.F90:   do iblock=1,nblocks_clinic
+forcing_sfwf.F90:            do iblock=1,nblocks_clinic
+forcing_sfwf.F90:               this_block = get_block(blocks_clinic(iblock),iblock)
+forcing_sfwf.F90:      do iblock=1,nblocks_clinic
+forcing_sfwf.F90:         do iblock=1,nblocks_clinic
+forcing_sfwf.F90:            this_block = get_block(blocks_clinic(iblock),iblock)
+forcing_sfwf.F90:         do iblock=1,nblocks_clinic
+forcing_sfwf.F90:            this_block = get_block(blocks_clinic(iblock),iblock)
+forcing_sfwf.F90:         do iblock=1,nblocks_clinic
+forcing_sfwf.F90:            this_block = get_block(blocks_clinic(iblock),iblock)
+forcing_sfwf.F90:         do iblock=1,nblocks_clinic
+forcing_sfwf.F90:            this_block = get_block(blocks_clinic(iblock),iblock)
+forcing_sfwf.F90:   do iblock=1,nblocks_clinic
+forcing_sfwf.F90:      this_block = get_block(blocks_clinic(iblock),iblock)
+forcing_sfwf.F90:   do iblock=1,nblocks_clinic
+forcing_sfwf.F90:      this_block = get_block(blocks_clinic(iblock),iblock)
+forcing_sfwf.F90:      do iblock=1,nblocks_clinic
+forcing_sfwf.F90:         this_block = get_block(blocks_clinic(iblock),iblock)
+forcing_sfwf.F90:         do iblock=1,nblocks_clinic
+forcing_sfwf.F90:            this_block = get_block(blocks_clinic(iblock),iblock)
+forcing_sfwf.F90:   do iblock=1,nblocks_clinic
+forcing_sfwf.F90:      this_block = get_block(blocks_clinic(iblock),iblock)
+forcing_sfwf.F90:   do iblock=1,nblocks_clinic
+forcing_sfwf.F90:      this_block = get_block(blocks_clinic(iblock),iblock)
+forcing_sfwf.F90:      do iblock=1,nblocks_clinic
+forcing_sfwf.F90:         this_block = get_block(blocks_clinic(iblock),iblock)
+forcing_sfwf.F90:         do iblock=1,nblocks_clinic
+forcing_sfwf.F90:            this_block = get_block(blocks_clinic(iblock),iblock)
+forcing_shf.F90:      do iblock=1,nblocks_clinic
+forcing_shf.F90:      do iblock=1,nblocks_clinic
+forcing_shf.F90:      do iblock=1,nblocks_clinic
+forcing_shf.F90:         do iblock=1,nblocks_clinic
+forcing_shf.F90:         do iblock=1,nblocks_clinic
+forcing_shf.F90:         do iblock=1,nblocks_clinic
+forcing_shf.F90:         do iblock=1,nblocks_clinic
+forcing_shf.F90:         do iblock=1,nblocks_clinic
+forcing_shf.F90:         do iblock=1,nblocks_clinic
+forcing_shf.F90:         do iblock=1,nblocks_clinic
+forcing_shf.F90:         do iblock=1,nblocks_clinic
+forcing_shf.F90:   do iblock=1,nblocks_clinic
+forcing_shf.F90:   do iblock=1,nblocks_clinic
+forcing_shf.F90:   do iblock=1,nblocks_clinic
+forcing_shf.F90:   do iblock=1,nblocks_clinic
+forcing_tools.F90:         do iblock=1,nblocks_clinic
+forcing_tools.F90:         do iblock=1,nblocks_clinic
+forcing_tools.F90:         do iblock=1,nblocks_clinic
+forcing_tools.F90:         do iblock=1,nblocks_clinic
+forcing_ws.F90:      do iblock = 1,nblocks_clinic
+forcing_ws.F90:      do iblock=1,nblocks_clinic
+forcing_ws.F90:      do iblock=1,nblocks_clinic
+forcing_ws.F90:      do iblock=1,nblocks_clinic
+forcing_ws.F90:      do iblock=1,nblocks_clinic
+forcing_ws.F90:      do iblock=1,nblocks_clinic
+grid.F90:   do iblock=1,nblocks_clinic
+grid.F90:      this_block = get_block(blocks_clinic(iblock),iblock)
+grid.F90:   do n=1,nblocks_clinic
+grid.F90:      this_block = get_block(blocks_clinic(n),n)
+grid.F90:      do n=1,nblocks_clinic
+grid.F90:   do n=1,nblocks_clinic
+grid.F90:      do n=1,nblocks_clinic
+grid.F90:      do n=1,nblocks_clinic
+grid.F90:      do n=1,nblocks_clinic
+grid.F90:         this_block = get_block(blocks_clinic(n),n)
+grid.F90:      do n=1,nblocks_clinic
+grid.F90:         this_block = get_block(blocks_clinic(n),n)
+grid.F90:   do n=1,nblocks_clinic
+grid.F90:   do n=1,nblocks_clinic
+grid.F90:   do n=1,nblocks_clinic
+grid.F90:   do n=1,nblocks_clinic
+grid.F90:   do n=1,nblocks_clinic
+grid.F90:      this_block = get_block(blocks_clinic(n),n)
+grid.F90:     do n=1,nblocks_clinic
+history.F90:            do iblock=1,nblocks_clinic
+hmix_aniso.F90:   allocate(K1E(nx_block,ny_block,nblocks_clinic),        &
+hmix_aniso.F90:            K1W(nx_block,ny_block,nblocks_clinic),        &
+hmix_aniso.F90:            K2N(nx_block,ny_block,nblocks_clinic),        &
+hmix_aniso.F90:            K2S(nx_block,ny_block,nblocks_clinic),        &
+hmix_aniso.F90:            H1E(nx_block,ny_block,nblocks_clinic),        &
+hmix_aniso.F90:            H1W(nx_block,ny_block,nblocks_clinic),        &
+hmix_aniso.F90:            H2N(nx_block,ny_block,nblocks_clinic),        &
+hmix_aniso.F90:            H2S(nx_block,ny_block,nblocks_clinic),        &
+hmix_aniso.F90:            AMAX_CFL(nx_block,ny_block,nblocks_clinic),   &
+hmix_aniso.F90:      allocate(DSMIN(nx_block,ny_block,nblocks_clinic))
+hmix_aniso.F90:   do iblock=1,nblocks_clinic
+hmix_aniso.F90:      allocate(F_PARA(nx_block,ny_block,km,nblocks_clinic), &
+hmix_aniso.F90:               F_PERP(nx_block,ny_block,km,nblocks_clinic))
+hmix_aniso.F90:         do iblock=1,nblocks_clinic
+hmix_aniso.F90:         do iblock=1,nblocks_clinic
+hmix_aniso.F90:         do iblock=1,nblocks_clinic
+hmix_aniso.F90:   do iblock=1,nblocks_clinic
+hmix_aniso.F90:      do iblock=1,nblocks_clinic
+hmix_del2.F90:      allocate(AMF(nx_block,ny_block,nblocks_clinic))
+hmix_del2.F90:      do iblock=1,nblocks_clinic
+hmix_del2.F90:      allocate(AMF(nx_block,ny_block,nblocks_clinic))
+hmix_del2.F90:   allocate(DUC(nx_block,ny_block,nblocks_clinic),  &
+hmix_del2.F90:            DUN(nx_block,ny_block,nblocks_clinic),  &
+hmix_del2.F90:            DUS(nx_block,ny_block,nblocks_clinic),  &
+hmix_del2.F90:            DUE(nx_block,ny_block,nblocks_clinic),  &
+hmix_del2.F90:            DUW(nx_block,ny_block,nblocks_clinic),  &
+hmix_del2.F90:            DMC(nx_block,ny_block,nblocks_clinic),  &
+hmix_del2.F90:            DMN(nx_block,ny_block,nblocks_clinic),  &
+hmix_del2.F90:            DMS(nx_block,ny_block,nblocks_clinic),  &
+hmix_del2.F90:            DME(nx_block,ny_block,nblocks_clinic),  &
+hmix_del2.F90:            DMW(nx_block,ny_block,nblocks_clinic),  &
+hmix_del2.F90:            DUM(nx_block,ny_block,nblocks_clinic))
+hmix_del2.F90:   do iblock=1,nblocks_clinic
+hmix_del2.F90:      allocate(AHF(nx_block,ny_block,nblocks_clinic))
+hmix_del2.F90:      do iblock=1,nblocks_clinic
+hmix_del2.F90:      allocate(AHF(nx_block,ny_block,nblocks_clinic))
+hmix_del2.F90:   allocate(DTN(nx_block,ny_block,nblocks_clinic), &
+hmix_del2.F90:            DTS(nx_block,ny_block,nblocks_clinic), &
+hmix_del2.F90:            DTE(nx_block,ny_block,nblocks_clinic), &
+hmix_del2.F90:            DTW(nx_block,ny_block,nblocks_clinic))
+hmix_del2.F90:   do iblock=1,nblocks_clinic
+hmix_del4.F90:      allocate(AMF(nx_block,ny_block,nblocks_clinic))
+hmix_del4.F90:      do iblock=1,nblocks_clinic
+hmix_del4.F90:      allocate(AMF(nx_block,ny_block,nblocks_clinic))
+hmix_del4.F90:   allocate(DUC(nx_block,ny_block,nblocks_clinic), &
+hmix_del4.F90:            DUN(nx_block,ny_block,nblocks_clinic), &
+hmix_del4.F90:            DUS(nx_block,ny_block,nblocks_clinic), &
+hmix_del4.F90:            DUE(nx_block,ny_block,nblocks_clinic), &
+hmix_del4.F90:            DUW(nx_block,ny_block,nblocks_clinic), &
+hmix_del4.F90:            DMC(nx_block,ny_block,nblocks_clinic), &
+hmix_del4.F90:            DMN(nx_block,ny_block,nblocks_clinic), &
+hmix_del4.F90:            DMS(nx_block,ny_block,nblocks_clinic), &
+hmix_del4.F90:            DME(nx_block,ny_block,nblocks_clinic), &
+hmix_del4.F90:            DMW(nx_block,ny_block,nblocks_clinic), &
+hmix_del4.F90:            DUM(nx_block,ny_block,nblocks_clinic))
+hmix_del4.F90:   do iblock=1,nblocks_clinic
+hmix_del4.F90:      allocate(AHF(nx_block,ny_block,nblocks_clinic))
+hmix_del4.F90:      do iblock=1,nblocks_clinic
+hmix_del4.F90:   allocate(DTN(nx_block,ny_block,nblocks_clinic),  &
+hmix_del4.F90:            DTS(nx_block,ny_block,nblocks_clinic),  &
+hmix_del4.F90:            DTE(nx_block,ny_block,nblocks_clinic),  &
+hmix_del4.F90:            DTW(nx_block,ny_block,nblocks_clinic))
+hmix_del4.F90:   do iblock=1,nblocks_clinic
+hmix_gm.F90:    allocate (HYXW(nx_block,ny_block,nblocks_clinic),    &
+hmix_gm.F90:             HXYS(nx_block,ny_block,nblocks_clinic),    &
+hmix_gm.F90:             RBR (nx_block,ny_block,nblocks_clinic),    &
+hmix_gm.F90:             BTP (nx_block,ny_block,nblocks_clinic),    &
+hmix_gm.F90:             BL_DEPTH(nx_block,ny_block,nblocks_clinic))
+hmix_gm.F90:    allocate (SF_SLX(nx_block,ny_block,2,2,km,nblocks_clinic),  &
+hmix_gm.F90:             SF_SLY(nx_block,ny_block,2,2,km,nblocks_clinic))
+hmix_gm.F90:    allocate (FZTOP(nx_block,ny_block,nt,nblocks_clinic))
+hmix_gm.F90:    allocate (KAPPA_ISOP(nx_block,ny_block,2,km,nblocks_clinic),  &
+hmix_gm.F90:             KAPPA_THIC(nx_block,ny_block,2,km,nblocks_clinic),  &
+hmix_gm.F90:             HOR_DIFF  (nx_block,ny_block,2,km,nblocks_clinic))
+hmix_gm.F90:    allocate (KAPPA_LATERAL (nx_block,ny_block,nblocks_clinic),  &
+hmix_gm.F90:             KAPPA_VERTICAL(nx_block,ny_block,km,nblocks_clinic))
+hmix_gm.F90:    allocate (BUOY_FREQ_SQ(nx_block,ny_block,km,nblocks_clinic))
+hmix_gm.F90:    allocate (VDC_GM(nx_block,ny_block,km,nblocks_clinic))
+hmix_gm.F90:    allocate (compute_kappa(nblocks_clinic))
+hmix_gm.F90:     allocate (SLA_SAVE(nx_block,ny_block,2,km,nblocks_clinic))
+hmix_gm.F90:     allocate (RB(nx_block,ny_block,nblocks_clinic))
+hmix_gm.F90:   do iblock = 1,nblocks_clinic
+hmix_gm.F90:     this_block = get_block(blocks_clinic(iblock),iblock)
+hmix_gm.F90:     allocate (SIGMA_TOPO_MASK(nx_block,ny_block,km,nblocks_clinic))
+hmix_gm.F90:     do iblock=1,nblocks_clinic
+hmix_gm.F90:     allocate(WTOP_ISOP(nx_block,ny_block,nblocks_clinic), &
+hmix_gm.F90:              WBOT_ISOP(nx_block,ny_block,nblocks_clinic), &
+hmix_gm.F90:                    UIT(nx_block,ny_block,nblocks_clinic), &
+hmix_gm.F90:                    VIT(nx_block,ny_block,nblocks_clinic))
+hmix_gm.F90:                                  nblocks_clinic, distrb_clinic%nprocs)
+hmix_gm_submeso_share.F90:   use domain, only: nblocks_clinic
+hmix_gm_submeso_share.F90:   allocate (HXY (nx_block,ny_block,nblocks_clinic),    &
+hmix_gm_submeso_share.F90:             HYX (nx_block,ny_block,nblocks_clinic))
+hmix_gm_submeso_share.F90:    allocate (SLX   (nx_block,ny_block,2,2,km,nblocks_clinic),  &
+hmix_gm_submeso_share.F90:              SLY   (nx_block,ny_block,2,2,km,nblocks_clinic))
+hmix_gm_submeso_share.F90:   allocate (TX(nx_block,ny_block,km,nt,nblocks_clinic),  &
+hmix_gm_submeso_share.F90:             TY(nx_block,ny_block,km,nt,nblocks_clinic),  &
+hmix_gm_submeso_share.F90:             TZ(nx_block,ny_block,km,nt,nblocks_clinic))
+hmix_gm_submeso_share.F90:   allocate (RX(nx_block,ny_block,2,km,nblocks_clinic),  &
+hmix_gm_submeso_share.F90:             RY(nx_block,ny_block,2,km,nblocks_clinic))
+hmix_gm_submeso_share.F90:   allocate (RZ_SAVE(nx_block,ny_block,km,nblocks_clinic))
+hmix_gm_submeso_share.F90:  do iblock = 1,nblocks_clinic
+horizontal_mix.F90:   use domain, only: nblocks_clinic, distrb_clinic
+horizontal_mix.F90:                                  nblocks_clinic, distrb_clinic%nprocs)
+horizontal_mix.F90:                                  nblocks_clinic, distrb_clinic%nprocs)
+horizontal_mix.F90:                                  nblocks_clinic, distrb_clinic%nprocs)
+horizontal_mix.F90:                                  nblocks_clinic, distrb_clinic%nprocs)
+horizontal_mix.F90:                                  nblocks_clinic, distrb_clinic%nprocs)
+horizontal_mix.F90:                                  nblocks_clinic, distrb_clinic%nprocs)
+horizontal_mix.F90:                                  nblocks_clinic, distrb_clinic%nprocs)
+iage_mod.F90:   use domain, only: nblocks_clinic
+iage_mod.F90:   do iblock=1,nblocks_clinic
+initial.F90:   use domain, only: nblocks_clinic, blocks_clinic, init_domain_blocks,    &
+initial.F90:      do iblock=1,nblocks_clinic
+initial.F90:      do iblock=1,nblocks_clinic
+initial.F90:         do iblock = 1,nblocks_clinic
+initial.F90:            this_block = get_block(blocks_clinic(iblock),iblock)
+initial.F90:      do iblock = 1,nblocks_clinic
+initial.F90:      do iblock=1,nblocks_clinic
+initial.F90:      do iblock = 1,nblocks_clinic
+initial.F90:      do iblock = 1,nblocks_clinic
+initial.F90:      do iblock = 1,nblocks_clinic
+initial.F90:      do iblock=1,nblocks_clinic
+initial.F90:   do iblock = 1,nblocks_clinic
+initial.F90:      this_block = get_block(blocks_clinic(iblock),iblock)
+io_pio.F90:      use domain, only : nblocks_clinic, blocks_clinic
+io_pio.F90:            allocate(dof3d(nx_block*ny_block*nblocks_clinic))
+io_pio.F90:            do iblk = 1, nblocks_clinic
+io_pio.F90:               this_block = get_block(blocks_clinic(iblk),iblk)         
+io_pio.F90:            allocate(dof3d(nx_block*ny_block*nblocks_clinic*kdim3))
+io_pio.F90:            do iblk = 1, nblocks_clinic
+io_pio.F90:               this_block = get_block(blocks_clinic(iblk),iblk)         
+mix_submeso.F90:   allocate (SF_SUBM_X(nx_block,ny_block,2,2,km,nblocks_clinic),  &
+mix_submeso.F90:             SF_SUBM_Y(nx_block,ny_block,2,2,km,nblocks_clinic))
+mix_submeso.F90:   allocate (TIME_SCALE(nx_block,ny_block,nblocks_clinic))
+mix_submeso.F90:   allocate (FZTOP_SUBM(nx_block,ny_block,nt,nblocks_clinic))
+mix_submeso.F90:   do iblock = 1,nblocks_clinic
+movie.F90:         MOVIE_BUF_2D(nx_block,ny_block,   nblocks_clinic,movie_bufsize_2d) )
+movie.F90:             WORK (nx_block,ny_block,nblocks_clinic))
+movie.F90:            do iblock = 1,nblocks_clinic
+ms_balance.F90:         do iblock = 1,nblocks_clinic
+ms_balance.F90:         do iblock = 1,nblocks_clinic
+named_field_mod.F90:   use domain, only: nblocks_clinic
+named_field_mod.F90:   allocate(named_field_array(named_field_cnt)%field(nx_block,ny_block,nblocks_clinic))
+named_field_mod.F90:   do iblock=1,nblocks_clinic
+named_field_mod.F90:   do iblock=1,nblocks_clinic
+output.F90:      call get_timer(timer_out, 'OUTPUT'     ,nblocks_clinic,distrb_clinic%nprocs)
+output.F90:      call get_timer(timer_tavg,'OUTPUT TAVG',nblocks_clinic,distrb_clinic%nprocs)
+output.F90:      call get_timer(timer_rest,'OUTPUT REST',nblocks_clinic,distrb_clinic%nprocs)
+overflows.F90:      do iblock = 1,nblocks_clinic
+overflows.F90:         this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:      do iblock = 1,nblocks_clinic
+overflows.F90:         this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:   real (r8), dimension(nx_block,ny_block,nblocks_clinic), intent(in) :: &
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:           this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:           this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:           this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:            this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:            do iblock = 1,nblocks_clinic
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:            do iblock = 1,nblocks_clinic
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:            do iblock = 1,nblocks_clinic
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:            do iblock = 1,nblocks_clinic
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:            do iblock = 1,nblocks_clinic
+overflows.F90:            do iblock = 1,nblocks_clinic
+overflows.F90:            do iblock = 1,nblocks_clinic
+overflows.F90:            do iblock = 1,nblocks_clinic
+overflows.F90:               this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:               do iblock = 1,nblocks_clinic
+overflows.F90:                  this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:            this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:            this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:            this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:            this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:            this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:            this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:            this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:            this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:            this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         do iblock=1,nblocks_clinic
+overflows.F90:            this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         do iblock=1,nblocks_clinic
+overflows.F90:            this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:            this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:            this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:            this_block = get_block(blocks_clinic(iblock),iblock)
+overflows.F90:         do iblock = 1,nblocks_clinic
+overflows.F90:            this_block = get_block(blocks_clinic(iblock),iblock)
+passive_tracer_tools.F90:   use domain, only: nblocks_clinic
+passive_tracer_tools.F90:         do iblock = 1,nblocks_clinic
+passive_tracer_tools.F90:         do iblock=1,nblocks_clinic
+passive_tracer_tools.F90:      do iblock=1,nblocks_clinic
+passive_tracers.F90:   use domain, only: nblocks_clinic
+passive_tracers.F90:   allocate(FvPER(nx_block,ny_block,3:nt,nblocks_clinic))
+passive_tracers.F90:      do iblock = 1,nblocks_clinic
+passive_tracers.F90:   do iblock = 1,nblocks_clinic
+passive_tracers.F90:   do iblock = 1,nblocks_clinic
+passive_tracers.F90:   do iblock = 1,nblocks_clinic
+restart.F90:   do iblock = 1,nblocks_clinic
+restart.F90:      this_block = get_block(blocks_clinic(iblock),iblock)
+step_mod.F90:         do iblock = 1,nblocks_clinic
+step_mod.F90:      do iblock = 1,nblocks_clinic
+step_mod.F90:   do iblock = 1,nblocks_clinic
+step_mod.F90:      do iblock = 1,nblocks_clinic
+step_mod.F90:         this_block = get_block(blocks_clinic(iblock),iblock)  
+step_mod.F90:      do iblock = 1,nblocks_clinic
+step_mod.F90:     do iblock = 1,nblocks_clinic
+surface_hgt.F90:   use domain, only: nblocks_clinic, blocks_clinic
+surface_hgt.F90:   do iblock = 1,nblocks_clinic
+surface_hgt.F90:      this_block = get_block(blocks_clinic(iblock),iblock)  
+sw_absorption.F90:      do iblock=1,nblocks_clinic
+sw_absorption.F90:         do iblock=1,nblocks_clinic
+tavg.F90:      allocate(TAVG_BUF_2D(nx_block,ny_block,nblocks_clinic,tavg_bufsize_2d))
+tavg.F90:      allocate(TAVG_BUF_3D(nx_block,ny_block,km,nblocks_clinic,tavg_bufsize_3d))
+tavg.F90:     allocate(TAVG_TEMP(nx_block,ny_block,nblocks_clinic))
+tavg.F90:     allocate (MASK_22(nx_block,ny_block,km,nblocks_clinic))
+tavg.F90:     do iblock = 1,nblocks_clinic 
+tavg.F90:     this_block = get_block(blocks_clinic(iblock),iblock)  
+tavg.F90:   call get_timer(timer_write_std,'TAVG_WRITE_STD', nblocks_clinic, distrb_clinic%nprocs)
+tavg.F90:   call get_timer(timer_write_nstd,'TAVG_WRITE_NONSTD', nblocks_clinic, distrb_clinic%nprocs)
+tavg.F90:   call get_timer(timer_tavg_ccsm_diags_bsf,'TAVG_CCSM_DIAGS_BSF', nblocks_clinic, distrb_clinic%nprocs)
+tavg.F90:   call get_timer(timer_tavg_ccsm_diags_moc,'TAVG_CCSM_DIAGS_MOC', nblocks_clinic, distrb_clinic%nprocs)
+tavg.F90:   call get_timer(timer_tavg_ccsm_diags_trans,'TAVG_CCSM_DIAGS_TRANS', nblocks_clinic, distrb_clinic%nprocs)
+tavg.F90:             WORK (nx_block,ny_block,nblocks_clinic))
+tavg.F90:            do iblock = 1,nblocks_clinic
+tavg.F90:            do iblock = 1,nblocks_clinic
+tavg.F90:   do iblock = 1,nblocks_clinic
+tavg.F90:  do iblock=1,nblocks_clinic
+tavg.F90:       do iblock=1,nblocks_clinic
+tavg.F90:       do iblock=1,nblocks_clinic
+tavg.F90:       this_block = get_block(blocks_clinic(iblock),iblock)
+tavg.F90:   do iblock=1,nblocks_clinic
+tavg.F90:     this_block = get_block(blocks_clinic(iblock),iblock)
+tavg.F90:   do iblock=1,nblocks_clinic
+tavg.F90:   do iblock=1,nblocks_clinic
+tavg.F90:   do iblock=1,nblocks_clinic
+tavg.F90:              SAVG_0D_MASK(nx_block,ny_block,nblocks_clinic,n_reg_0D) )
+tavg.F90:   do iblock = 1,nblocks_clinic
+tavg.F90:      this_block = get_block(blocks_clinic(iblock),iblock) 
+tavg.F90:   allocate (WORK(nx_block,ny_block,nblocks_clinic))
+tavg.F90:   do iblock = 1,nblocks_clinic
+tavg.F90:      this_block = get_block(blocks_clinic(iblock),iblock) 
+tidal_mixing.F90:   allocate ( TIDAL_ENERGY_FLUX(nx_block,ny_block,nblocks_clinic), &
+tidal_mixing.F90:              VERTICAL_FUNC    (nx_block,ny_block,nblocks_clinic), &
+tidal_mixing.F90:              WORK1            (nx_block,ny_block,nblocks_clinic), &
+tidal_mixing.F90:              TIDAL_COEF       (nx_block,ny_block,km,nblocks_clinic))
+tidal_mixing.F90:   do iblock = 1,nblocks_clinic
+topostress.F90:      allocate (TSU(nx_block,ny_block,nblocks_clinic), & 
+topostress.F90:                TSV(nx_block,ny_block,nblocks_clinic))
+topostress.F90:   real (POP_r8), dimension(nx_block,ny_block,nblocks_clinic) :: &
+topostress.F90:   do iblock = 1,nblocks_clinic
+topostress.F90:      do iblock = 1,nblocks_clinic
+topostress.F90:         this_block = get_block(blocks_clinic(iblock),iblock)  
+topostress.F90:   do iblock = 1,nblocks_clinic
+topostress.F90:      this_block = get_block(blocks_clinic(iblock),iblock)  
+vertical_mix.F90:         allocate (VDC(nx_block,ny_block,km,1,nblocks_clinic),  &
+vertical_mix.F90:                   VVC(nx_block,ny_block,km,  nblocks_clinic))
+vertical_mix.F90:         allocate (VDC(nx_block,ny_block,1,1,nblocks_clinic),  &
+vertical_mix.F90:                   VVC(nx_block,ny_block,1  ,nblocks_clinic))
+vertical_mix.F90:                                  nblocks_clinic, distrb_clinic%nprocs)
+vertical_mix.F90:         allocate (VDC(nx_block,ny_block,km,1,nblocks_clinic), &
+vertical_mix.F90:                   VVC(nx_block,ny_block,km  ,nblocks_clinic))
+vertical_mix.F90:         allocate (VDC(nx_block,ny_block,1,1,nblocks_clinic), &
+vertical_mix.F90:                   VVC(nx_block,ny_block,km ,nblocks_clinic))
+vertical_mix.F90:                                  nblocks_clinic, distrb_clinic%nprocs)
+vertical_mix.F90:      allocate (VDC(nx_block,ny_block,0:km+1,2,nblocks_clinic), &
+vertical_mix.F90:                VVC(nx_block,ny_block,km,      nblocks_clinic))
+vertical_mix.F90:                                  nblocks_clinic, distrb_clinic%nprocs)
+vertical_mix.F90:                               nblocks_clinic, distrb_clinic%nprocs)
+vertical_mix.F90:                               nblocks_clinic, distrb_clinic%nprocs)
+vertical_mix.F90:                                   nblocks_clinic, distrb_clinic%nprocs)
+vertical_mix.F90:                                   nblocks_clinic, distrb_clinic%nprocs)
+vmix_kpp.F90:   allocate  (bckgrnd_vvc(nx_block,ny_block,km,nblocks_clinic))
+vmix_kpp.F90:   allocate  (bckgrnd_vdc(nx_block,ny_block,km,nblocks_clinic))
+vmix_kpp.F90:     do iblock=1,nblocks_clinic
+vmix_kpp.F90:   allocate (HMXL     (nx_block,ny_block,nblocks_clinic), &
+vmix_kpp.F90:             KPP_HBLT (nx_block,ny_block,nblocks_clinic), &
+vmix_kpp.F90:             KPP_SRC  (nx_block,ny_block,km,nt,nblocks_clinic))
+vmix_kpp.F90:     allocate ( TIDAL_DIFF(nx_block,ny_block,km,nblocks_clinic) ) 
+vmix_kpp.F90:     allocate ( BOLUS_SP(nx_block,ny_block,nblocks_clinic) )
+vmix_kpp.F90:   allocate (FSTOKES(nx_block,ny_block,nblocks_clinic))
+vmix_kpp.F90:   do iblock=1,nblocks_clinic
+vmix_rich.F90:   allocate(UTK(nx_block,ny_block,nblocks_clinic), &
+vmix_rich.F90:            VTK(nx_block,ny_block,nblocks_clinic))

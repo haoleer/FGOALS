@@ -33,6 +33,7 @@ module licom_comp_mct
    use POP_CommMod
    use domain
    use grid
+   use blocks
 
 #include <def-undef.h>
 use param_mod
@@ -41,7 +42,7 @@ use pconst_mod
 use shr_msg_mod
 use shr_sys_mod
 use control_mod
-use constant_mod, only : LATVAP
+use constant_mod, only : LATVAP, DEGtoRAD
 use shr_cal_mod,       only: shr_cal_date2ymd
 
 
@@ -139,7 +140,7 @@ use cforce_mod
   call seq_infodata_GetData( infodata, info_debug=info_dbug)
 
   ! send initial state to drv
-  call seq_infodata_PutData( infodata, ocn_nx=(imt_global-2), ocn_ny=jmt_global)
+  call seq_infodata_PutData( infodata, ocn_nx=imt_global, ocn_ny=jmt_global)
 !  call seq_infodata_PutData( infodata, ocn_prognostic=.true.) !LPF 20120829
   ! lihuimin, 2012.7.25, not use ocnrof_p
   call seq_infodata_PutData( infodata, ocn_prognostic=.true.,ocnrof_prognostic=.true.,rof_present=.true.)
@@ -218,10 +219,11 @@ use cforce_mod
 !---------------------------------------------------------------------
     LOGMSG()
    call init_domain_blocks
-!  call init_grid1
+   call init_grid1
    call init_domain_distribution(KMT_G)
    call init_grid2
-      CALL GRIDS
+   call calc_coeff
+!     CALL GRIDS
       if (mytid == 0) then
       write(111,*)"OK------4"
       close(111)
@@ -235,7 +237,7 @@ use cforce_mod
 !     SET SURFACE FORCING FIELDS (1: Annual mean; 0: Seasonal cycle)
 !---------------------------------------------------------------------
     LOGMSG()
-      CALL RDRIVER
+!     CALL RDRIVER
 #ifdef SHOW_TIME
       call run_time('RDRIVER')
 #endif
@@ -268,60 +270,6 @@ use cforce_mod
 #ifdef SHOW_TIME
       call run_time('INRUN')
 #endif
-
-!----------------------------------------------------------------------
-!    specify the actual grid number in each process
-!    i_num, j_num, i_f_num, j_f_num
-!    lihuimin , 2012.7.15
-!----------------------------------------------------------------------
-
-!   ! i direciton
-!   i_temp = (imt_global-2)/nx_proc
-!   i_comp = (imt_global-2) - i_temp*nx_proc
-!   if (i_comp == 0) then
-!      i_num = i_temp
-!      i_f_num = i_temp
-!   else ! i_comp > 0
-!      i_f_num = i_temp+1
-!      if (ix == nx_proc-1) then
-!         i_num = (imt_global-2) - ix*i_f_num
-!      else
-!         i_num = i_f_num
-!      endif
-!   endif
-!      
-!   ! j direction
-!   j_temp = jmt_global/ny_proc
-!   j_comp = jmt_global - j_temp*ny_proc
-!   if (j_comp == 0) then
-!      j_num = j_temp
-!      j_f_num = j_temp
-!   else
-!      j_f_num = j_temp+1
-!      if (iy == ny_proc-1) then
-!         j_num = jmt_global - iy*j_f_num
-!      else
-!         j_num = j_f_num
-!      endif
-!   endif
-   i_f_num = imt - num_overlap
-   j_f_num = jmt - num_overlap
-   ! i-direction
-   if (ix == nx_proc-1) then
-      i_num = (imt_global-2) - ix*i_f_num
-   else
-      i_num = i_f_num
-   endif
-   ! j-direction
-   if (iy == ny_proc-1) then
-      !j_num = jmt_global - iy*j_f_num
-      j_num = jmt_global - (iy-1)*j_f_num - (j_f_num + (jst_global - 1) + 1)
-   elseif (iy == 0) then
-      j_num = j_f_num + (jst_global - 1) + 1
-    else
-      j_num = j_f_num
-   endif
-
 
 !----------------------------------------------------------------------
 !     Inialize mct attribute vectors
@@ -559,47 +507,35 @@ use cforce_mod
   subroutine licom_import_mct(x2o_o)
     type(mct_aVect)   , intent(inout) :: x2o_o
     ! local
-    integer :: j_begin, j_end
+    integer :: j_begin, j_end, iblock
+    type (block) :: this_block          ! block information for current block
 
      n=0
-      ! lihuimin, 2012.8.7, consider jst_global
-    if (iy == 0) then
-       j_begin = 1+1 - 1 ! no overlap to the north
-       j_end = j_num - (jst_global-1) !+1 !LPF 20120817 ! j_end = jmt - 1, j_num = jmt+1, jst_global = 3 here
-       do j=1,jst_global-1 
-       do i=2,i_num+1 !LPF 20120818 
-          n=n+1
-       enddo
-       enddo
-    else
-       j_begin = 1+1
-       j_end = j_num + 1
-    endif
-
-
-       ! do j=1+1,j_num+1
-        do j=j_begin,j_end
-        do i=1+1,i_num+1 !2,i_num+1 !LPF 20120818  
+    do iblock = 1, nblocks_clinic
+        this_block = get_block(blocks_clinic(iblock),iblock)
+        do j=this_block%je, this_block%jb, -1
+        do i=this_block%ib, this_block%ie
            n=n+1
            !--- states ---
-           ifrac(i,j) = x2o_o%rAttr(index_x2o_Si_ifrac,n) ! ice fraction
-           patm (i,j) = x2o_o%rAttr(index_x2o_Sa_pslv,n)  ! sea level pressure index_x2o_Sa_pslv 
+           ifrac(i,j,iblock) = x2o_o%rAttr(index_x2o_Si_ifrac,n) ! ice fraction
+           patm (i,j,iblock) = x2o_o%rAttr(index_x2o_Sa_pslv,n)  ! sea level pressure index_x2o_Sa_pslv 
            !--- fluxes ---
-           taux (i,j) = x2o_o%rAttr(index_x2o_Foxx_taux,n)  ! surface stress, zonal
-           tauy (i,j) = x2o_o%rAttr(index_x2o_Foxx_tauy,n)  ! surface stress, merid
-           netsw(i,j) = x2o_o%rAttr(index_x2o_Foxx_swnet,n) ! net sw rad
-           sen  (i,j) = x2o_o%rAttr(index_x2o_Foxx_sen,n)   ! sensible
-           lwup (i,j) = x2o_o%rAttr(index_x2o_Foxx_lwup,n)  ! long-wave up
-           lwdn (i,j) = x2o_o%rAttr(index_x2o_Foxx_lwdn,n)  ! long-wave down
-           melth(i,j) = x2o_o%rAttr(index_x2o_Foxx_melth,n) ! melt heat
-           salt (i,j) = x2o_o%rAttr(index_x2o_Foxx_salt,n)  ! salinity flux
-           prec (i,j) = x2o_o%rAttr(index_x2o_Foxx_prec,n)  !index_x2o_Foxx_prec 
-           evap (i,j) = x2o_o%rAttr(index_x2o_Foxx_evap,n)  ! evaporation
-           meltw(i,j) = x2o_o%rAttr(index_x2o_Foxx_meltw,n) ! melt water
-           roff (i,j) = x2o_o%rAttr(index_x2o_Forr_roff,n)  ! runoff
-           duu10n(i,j) = x2o_o%rAttr(index_x2o_So_duu10n,n)  ! 10m wind speed squared
+           taux (i,j,iblock) = x2o_o%rAttr(index_x2o_Foxx_taux,n)  ! surface stress, zonal
+           tauy (i,j,iblock) = x2o_o%rAttr(index_x2o_Foxx_tauy,n)  ! surface stress, merid
+           netsw(i,j,iblock) = x2o_o%rAttr(index_x2o_Foxx_swnet,n) ! net sw rad
+           sen  (i,j,iblock) = x2o_o%rAttr(index_x2o_Foxx_sen,n)   ! sensible
+           lwup (i,j,iblock) = x2o_o%rAttr(index_x2o_Foxx_lwup,n)  ! long-wave up
+           lwdn (i,j,iblock) = x2o_o%rAttr(index_x2o_Foxx_lwdn,n)  ! long-wave down
+           melth(i,j,iblock) = x2o_o%rAttr(index_x2o_Foxx_melth,n) ! melt heat
+           salt (i,j,iblock) = x2o_o%rAttr(index_x2o_Foxx_salt,n)  ! salinity flux
+           prec (i,j,iblock) = x2o_o%rAttr(index_x2o_Foxx_prec,n)  !index_x2o_Foxx_prec 
+           evap (i,j,iblock) = x2o_o%rAttr(index_x2o_Foxx_evap,n)  ! evaporation
+           meltw(i,j,iblock) = x2o_o%rAttr(index_x2o_Foxx_meltw,n) ! melt water
+           roff (i,j,iblock) = x2o_o%rAttr(index_x2o_Forr_roff,n)  ! runoff
+           duu10n(i,j,iblock) = x2o_o%rAttr(index_x2o_So_duu10n,n)  ! 10m wind speed squared
         end do
         end do
+    end do
 
         lat1= LATVAP*evap ! latent (derive from evap)
 !       write(*,*) 'n= import',n
@@ -615,53 +551,29 @@ use cforce_mod
   subroutine licom_export_mct(o2x_o)
     type(mct_aVect)   , intent(inout) :: o2x_o
     ! local
-    integer :: j_begin,j_end
-
-
+    integer :: j_begin,j_end, iblock
+    type (block) :: this_block          ! block information for current block
 
        n=0
 ! lihuimin, 2012.8.7, consider jst_global
-    if (iy == 0) then
-       j_begin = 1+1 - 1 ! no overlap to the north
-       j_end = j_num - (jst_global-1) ! j_end = jmt - 1, j_num = jmt+1, jst_global = 3 here
-       do j=1,jst_global-1
-       do i=1+1,i_num+1 
+  do iblock =1 , nblocks_clinic
+        this_block = get_block(blocks_clinic(iblock),iblock)
+        do j=this_block%je, this_block%jb, -1
+        do i=this_block%ib, this_block%ie
           n=n+1
-          o2x_o%rAttr(index_o2x_So_t,n)    = T_cpl   (i,1) ! temperature
-          o2x_o%rAttr(index_o2x_So_s,n)    = S_cpl   (i,1) ! salinity
-          o2x_o%rAttr(index_o2x_So_u,n)    = U_cpl   (i,1) ! velocity, zonal
-          o2x_o%rAttr(index_o2x_So_v,n)    = V_cpl   (i,1) ! velocity, meridional
-          o2x_o%rAttr(index_o2x_So_dhdx,n) = dhdx(i,1) ! surface slope, zonal
-          o2x_o%rAttr(index_o2x_So_dhdy,n) = dhdy(i,1) ! surface slope, meridional
-          o2x_o%rAttr(index_o2x_Fioo_q,n)    = q   (i,1) ! heat of fusion xor melt pot
+          o2x_o%rAttr(index_o2x_So_t,n)    = T_cpl   (i,j,iblock) ! temperature
+          o2x_o%rAttr(index_o2x_So_s,n)    = S_cpl   (i,j,iblock) ! salinity
+          o2x_o%rAttr(index_o2x_So_u,n)    = U_cpl   (i,j,iblock) ! velocity, zonal
+          o2x_o%rAttr(index_o2x_So_v,n)    = V_cpl   (i,j,iblock) ! velocity, meridional
+          o2x_o%rAttr(index_o2x_So_dhdx,n) = dhdx(i,j,iblock) ! surface slope, zonal
+          o2x_o%rAttr(index_o2x_So_dhdy,n) = dhdy(i,j,iblock) ! surface slope, meridional
+          o2x_o%rAttr(index_o2x_Fioo_q,n)    = q   (i,j,iblock) ! heat of fusion xor melt pot
 #ifdef USE_OCN_CARBON
 !         buffs(n,cpl_fields_o2c_co2)    = co2_cpl(i,j) ! state: air-sea CO2 of ocean  ~ mol
 #endif
        enddo
        enddo
-    else
-       j_begin = 1+1
-       j_end = j_num + 1
-    endif
-
-
-      !do j=1+1,j_num+1
-      do j=j_begin,j_end
-      !do i=1+1,i_num+1
-      do i=2,i_num+1 !LPF 20120819
-         n=n+1
-         o2x_o%rAttr(index_o2x_So_t,n)    = T_cpl   (i,j) ! temperature
-         o2x_o%rAttr(index_o2x_So_s,n)    = S_cpl   (i,j) ! salinity
-         o2x_o%rAttr(index_o2x_So_u,n)    = U_cpl   (i,j) ! velocity, zonal
-         o2x_o%rAttr(index_o2x_So_v,n)    = V_cpl   (i,j) ! velocity, meridional
-         o2x_o%rAttr(index_o2x_So_dhdx,n) = dhdx(i,j) ! surface slope, zonal
-         o2x_o%rAttr(index_o2x_So_dhdy,n) = dhdy(i,j) ! surface slope, meridional
-         o2x_o%rAttr(index_o2x_Fioo_q,n)    = q   (i,j) ! heat of fusion xor melt pot
-#ifdef USE_OCN_CARBON
-!         buffs(n,cpl_fields_o2c_co2)    = co2_cpl(i,j) ! state: air-sea CO2 of ocean  ~ mol
-#endif
-      end do
-      end do
+   end do
 
 !       write(*,*) 'n= export',n
   end subroutine licom_export_mct
@@ -686,37 +598,41 @@ use cforce_mod
       lsize, gsize,   &
       ier
 
+    type (block) :: this_block          ! block information for current block
 
-!    lsize = (imt)*(jmt)
-    lsize = i_num*j_num
-    gsize = (imt_global-2)*jmt_global
+!-----------------------------------------------------------------------
+!  Build the LICOM grid numbering for MCT
+!  NOTE:  Numbering scheme is: West to East and South to North starting
+!  at the south pole.  Should be the same as what's used in SCRIP
+!-----------------------------------------------------------------------
+
+    n = 0
+    do iblock = 1, nblocks_clinic
+       this_block = get_block(blocks_clinic(iblock),iblock)
+       do j=this_block%jb,this_block%je
+       do i=this_block%ib,this_block%ie
+          n=n+1
+       enddo
+       enddo
+    enddo
+    lsize = n
+
+! not correct for padding, use "n" above
+!    lsize = block_size_x*block_size_y*nblocks_clinic
+    gsize = imt_global*jmt_global
     allocate(gindex(lsize),stat=ier)
 
     n = 0
-!    do j=1,j_num
-    do j=j_num,1,-1
-       do i=1,i_num !LPF 20120819
+    do iblock = 1, nblocks_clinic
+       this_block = get_block(blocks_clinic(iblock),iblock)
+       do j=this_block%jb,this_block%je
+       do i=this_block%ib,this_block%ie
           n=n+1
-          ! TODO, use num_overlap
-          ! ix,iy start from 0
-          !gindex(n) = iy*(imt_global-2)*(j_f_num) + (j-1)*(imt_global-2) + ix*(i_f_num) + i
-          if (iy == ny_proc-1) then
-             gindex(n) = (j-1)*(imt_global-num_overlap) + ix*(i_f_num) + i
-          else
-             !gindex(n) = (jmt_global-(ny_proc-1)*(j_f_num))*(imt_global-2) + (ny_proc-iy-1-1)*(imt_global-2)*(j_f_num) + (j-1)*(imt_global-2) + ix*(i_f_num) + i
-             !gindex(n) = (jmt_global - (iy+1)*j_f_num)*(imt_global-num_overlap) + (j-1)*(imt_global-num_overlap) + ix*(i_f_num) + i
-             ! lihuimin, 2012.8.7
-             ! j_num of iy == 0 is jmt+1,  j_num = j_f_num+(jst_global-1)+1=j_f_num+(3-1)+1=jmt-2+3=jmt+1
-             gindex(n) = (jmt_global - iy*j_f_num - (jmt+1))*(imt_global-num_overlap) + (j-1)*(imt_global-num_overlap) + ix*(i_f_num) + i
-          endif
-!          if (iy == ny_proc-1) then
-!             gindex(n) = (j-1)*(imt_global-2) + ix*(i_f_num) + i
-!          else
-!             gindex(n) = (jmt_global - (iy+1)*j_f_num)*(imt_global-2) + (j-1)*(imt_global-2) + ix*(i_f_num) + i
-!          endif
+          gindex(n) = (this_block%j_glob(j)-1)*(imt_global) + this_block%i_glob(i)
+       enddo
        enddo
     enddo
-!    write(*,*)'n=,gsmap',n
+
     call mct_gsMap_init( gsMap_ocn, gindex, mpicom_ocn, OCNID, lsize, gsize )
 
     deallocate(gindex)
@@ -741,10 +657,9 @@ use cforce_mod
     real(r8), pointer :: &
       data(:)
 
-    integer (kind(1)) ::   &
-      i,j, k, n, iblock, &
-      ier
+    integer (kind(1)) ::    i,j, k, n, iblock, ier
 
+    type (block) :: this_block          ! block information for current block
 
 
     call mct_gGrid_init( GGrid=dom_o, CoordChars=trim(seq_flds_dom_coord), &
@@ -771,73 +686,65 @@ use cforce_mod
 
       write(6,*)"domain_mct  special, id =  ", mytid,"   imt=",imt,"   jmt=",jmt,"   nx=",nx,"   ny=",ny,"lsize=",lsize
 
-         ! lihuimin, 2012.8.7
-    if (iy == 0) then
-       j_begin = 0
-       j_end = j_num - 1
-    else
-       j_begin = (iy-1)*j_f_num + (jmt+1)     ! jmt+1 is the j_num of iy==0
-       j_end = (iy-1)*j_f_num + (jmt+1) + j_num - 1
-    endif
+!
+!-------------------------------------------------------------------
+!
+! Fill in correct values for domain components
+!
+!-------------------------------------------------------------------
 
-     n = 0
-!     do j=iy*j_f_num+j_num-1,iy*j_f_num,-1
-      do j=j_begin,j_end
-       do i=ix*i_f_num+1,i_num+ix*i_f_num
+    n=0
+    do iblock = 1, nblocks_clinic
+       this_block = get_block(blocks_clinic(iblock),iblock)
+       do j=this_block%je,this_block%jb, -1
+       do i=this_block%ib,this_block%ie
           n=n+1
-          data(n) = mask(i,jmt_global-j)
+          data(n) = TLON(i,j,iblock)/DEGtoRAD
+       enddo
+       enddo
+    enddo
+    call mct_gGrid_importRattr(dom_o,"lon",data,lsize)
+
+    n=0
+    do iblock = 1, nblocks_clinic
+       this_block = get_block(blocks_clinic(iblock),iblock)
+       do j=this_block%je,this_block%jb, -1
+       do i=this_block%ib,this_block%ie
+          n=n+1
+          data(n) = TLAT(i,j,iblock)/DEGtoRAD
+       enddo
+       enddo
+    enddo
+    call mct_gGrid_importRattr(dom_o,"lat",data,lsize)
+
+    n=0
+    do iblock = 1, nblocks_clinic
+       this_block = get_block(blocks_clinic(iblock),iblock)
+       do j=this_block%je,this_block%jb, -1
+       do i=this_block%ib,this_block%ie
+          n=n+1
+          data(n) = TAREA(i,j,iblock)/(radius*radius)
+       enddo
+       enddo
+    enddo
+    call mct_gGrid_importRattr(dom_o,"area",data,lsize)
+!
+     n=0
+    do iblock = 1, nblocks_clinic
+       this_block = get_block(blocks_clinic(iblock),iblock)
+       do j=this_block%je,this_block%jb, -1
+       do i=this_block%ib,this_block%ie
+          n=n+1
+          data(n) = float(KMT(i,j,iblock))
           if (data(n) > 1.0_r8) data(n) = 1.0_r8
        enddo
-     enddo
-      write(*,*)'n=,mask',n
-
-!      do j=iy*j_f_num,iy*j_f_num+j_num-1
-!       do i=ix*i_f_num+1,i_num+ix*i_f_num
-!          n=n+1
-!          data(n) = mask(i,jmt_global-j)
-!          if (data(n) > 1.0_r8) data(n) = 1.0_r8
-!       enddo
-!     enddo
-     call mct_gGrid_importRattr(dom_o,"mask",data,lsize)
-     call mct_gGrid_importRattr(dom_o,"frac",data,lsize)
-
-
-      n = 0
-     !do j=iy*j_f_num,iy*j_f_num+j_num-1
-     do j=j_begin,j_end
-       do i=ix*i_f_num+1,i_num+ix*i_f_num
-          n=n+1
-          data(n) = area(i,jmt_global-j)
        enddo
-     enddo
-     call mct_gGrid_importRattr(dom_o,"area",data,lsize)
-
-     n = 0
-     !do j=iy*j_f_num,iy*j_f_num+j_num-1
-     do j=j_begin,j_end
-       do i=ix*i_f_num+1,i_num+ix*i_f_num
-          n=n+1
-          data(n) = xc(i,jmt_global-j)
-       enddo
-     enddo
-     call mct_gGrid_importRattr(dom_o,"lon",data,lsize)
-
-     n = 0
-     !do j=iy*j_f_num,iy*j_f_num+j_num-1
-     do j=j_begin,j_end
-       do i=ix*i_f_num+1,i_num+ix*i_f_num
-          n=n+1
-          data(n) = yc(i,jmt_global-j)
-       enddo
-     enddo
-     call mct_gGrid_importRattr(dom_o,"lat",data,lsize)
+    enddo
+    call mct_gGrid_importRattr(dom_o,"mask",data,lsize)
+    call mct_gGrid_importRattr(dom_o,"frac",data,lsize)
 
     deallocate(data)
     deallocate(idata)
-
-    ! lihuimin, 2012.7.22
-    ! allocated in inirun.F90
-    deallocate(xc,yc,xv,yv,mask,area)
 
   end subroutine licom_domain_mct
 
@@ -852,7 +759,7 @@ use cforce_mod
     deallocate(taux, tauy, netsw, lat1, sen, lwup, lwdn, melth, salt, prec, evap, meltw, roff, ifrac, patm, duu10n)
 
     ! allocated in inirun.F90
-    deallocate(h0, u, v, at, hi, itice, alead)
+    deallocate(h0, u, v, at)
 
     ! allocated in rdriver.F90
     deallocate(su3,sv3,psa3,tsa3,qar3,uva3,swv3,cld3,sss3,sst3 ,nswv3,dqdt3,chloro3)

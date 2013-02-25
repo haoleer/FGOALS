@@ -7,28 +7,23 @@ use param_mod
 !     -----------------------------------------------------------
 !     Index Fields
 !     -----------------------------------------------------------
-!#ifdef SPMD
 !YU   real,dimension(:),allocatable:: dyr_global
       integer,dimension(jmt):: j_global
       integer,dimension(imt):: i_global
       integer :: ix,iy
-      real(r8),dimension(:,:,:),allocatable:: vit_global
-      real(r8),dimension(imt_global,jmt_global):: vit_global_surface
-!#endif
-      real(r8),dimension(imt,jmt,km):: vit,viv 
+      real(r8),dimension(imt,jmt,km,max_blocks_clinic):: vit,viv 
       real(r8),dimension(imt_global,jmt,km):: vit_1d,viv_1d
       real(r8),dimension(jmt_global):: ahv_back
       integer,dimension(imt_global,jmt_global):: basin
-      integer,dimension(imt,jmt):: itnu
+      integer,dimension(imt,jmt,max_blocks_clinic):: itnu
 !lhl1204
-      integer,dimension(imt,jmt):: na
+      integer,dimension(imt,jmt,max_blocks_clinic):: na
       real(r8) :: dfricmx,dwndmix
       ! lihuimin, 2012.7.15
       integer :: i_num   ! actual grid number in i direction in this process
       integer :: j_num   ! actual grid number in j direction in this process
       integer :: i_f_num ! formal grid number in i dircetion 
-      integer :: j_f_num ! formal grid number in j direction 
-!lhl1204
+      integer :: j_f_num ! formal grid number in j direction !lhl1204
 !
 !
 !     -----------------------------------------------------------
@@ -49,12 +44,12 @@ use param_mod
 
 
       real(r4),dimension(jmt)::DYR_IN
+      real(r8),dimension(imt,jmt,max_blocks_clinic):: EBEA,EBEB,EBLA,EBLB,EPEA,EPEB,EPLA,EPLB
       real(r8),dimension(jmt)::OUY,OTX,OUX,SOTX,SOUX, &
                     FF,CV1,CV2,SNLAT,SINT, &
                     SINU,DYT,DYR,DXDYU,DXDYT, &
                     R1A,R1B,R2A,R2B,R1C, &
-                    R1D,R2C,R2D,EBEA,EBEB, &
-                    EBLA,EBLB,EPEA,EPEB,EPLA,EPLB
+                    R1D,R2C,R2D
 !lhl060506
       real(r8),dimension(jmt):: FF1,RRD1,RRD2
 !lhl060506
@@ -66,12 +61,6 @@ use param_mod
 !XC
 
 #ifdef SPMD
-!YU   real,dimension(:),allocatable::OUY_global,OTX_global,OUX_global,SOTX_global,SOUX_global, &
-!YU                 FF_global,CV1_global,CV2_global,SNLAT_global,SINT_global, &
-!YU                 SINU_global,DYT_global,DYR_global,DXDYU_global,DXDYT_global, &
-!YU                 R1A_global,R1B_global,R2A_global,R2B_global,R1C_global, &
-!YU                 R1D_global,R2C_global,R2D_global,EBEA_global,EBEB_global, &
-!YU                 EBLA_global,EBLB_global,EPEA_global,EPEB_global,EPLA_global,EPLB_global
       real(r4),dimension(jmt_global)::DYR_IN_global
       real(r8),dimension(jmt_global)::OUY_global,OTX_global,OUX_global,SOTX_global,SOUX_global, &
                     FF_global,CV1_global,CV2_global,SNLAT_global,SINT_global, &
@@ -106,7 +95,7 @@ use param_mod
 
 !Yu
 
-      real(r8),dimension(imt,jmt)::ohbt,ohbu,dzph,hbx,hby
+      real(r8),dimension(imt,jmt,max_blocks_clinic)::ohbt,ohbu,dzph,hbx,hby
       real(r8),dimension(jmt):: COSU,COST
 #ifdef SPMD
        real(r8),dimension(:),allocatable::COSU_global,COST_global
@@ -138,13 +127,13 @@ use param_mod
 !     -----------------------------------------------------------
       real(r8)::amv,ahv,ahice
 !lhl1204
-      real(r8),dimension(imt,jmt,km)::akmu,akmt
-      real(r8),dimension(imt,jmt,km,NTRA)::akt
+      real(r8),dimension(imt,jmt,km,max_blocks_clinic)::akmu,akmt
+      real(r8),dimension(imt,jmt,km,NTRA,max_blocks_clinic)::akt
 !lhl1204
       real(r8),dimension(jmt)::AM,AH
-      real(r8),dimension(imt,jmt,km)::am3,ah3
+      real(r8),dimension(imt,jmt,km,max_blocks_clinic)::am3,ah3
 !lhl
-      real(r8),dimension(imt,jmt,km)::amx,amy
+      real(r8),dimension(imt,jmt,km,max_blocks_clinic)::amx,amy
 !lhl
       real(r8)::gamma
 #if ( defined SMAG)
@@ -170,4 +159,6 @@ use param_mod
       integer :: klv
 !
       REAL(r8):: PI,RADIUS,TORAD
+!
+      character (len=80) :: adv_momentum, adv_tracer
 end module pconst_mod

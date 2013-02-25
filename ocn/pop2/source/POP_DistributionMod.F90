@@ -17,8 +17,7 @@
 
 ! !USES:
 
-   use POP_KindsMod
-!  use POP_ErrorMod
+   use precision_mod
    use POP_CommMod
    use POP_BlocksMod
    
@@ -33,13 +32,13 @@
    type, public :: POP_distrb  ! distribution data type
       private
 
-      integer (POP_i4) ::   &
+      integer (i4) ::   &
          numProcs          ,&! number of processors in this dist
          communicator      ,&! communicator to use in this dist
          numLocalBlocks      ! number of blocks distributed to this
                              !   local processor
 
-      integer (POP_i4), dimension(:), pointer :: &
+      integer (i4), dimension(:), pointer :: &
          blockLocation     ,&! processor location for all blocks
          blockLocalID      ,&! local  block id for all blocks
          blockGlobalID       ! global block id for each local block
@@ -57,7 +56,7 @@
 ! !DEFINED PARAMETERS:
 
    ! supported methods for block distribution
-   integer (POP_i4), parameter, public ::  &
+   integer (i4), parameter, public ::  &
       POP_distribMethodNone      = 0, &
       POP_distribMethodCartesian = 1, &
       POP_distribMethodRake      = 2, &
@@ -92,16 +91,16 @@
 
 ! !INPUT PARAMETERS:
 
-   integer (POP_i4), intent(in) :: &
+   integer (i4), intent(in) :: &
       numProcs,            &! number of processors in this distribution
       distrbMethod          ! method for distributing blocks
 
-   integer (POP_i4), dimension(:), intent(in) :: &
+   integer (i4), dimension(:), intent(in) :: &
       workPerBlock          ! estimated amount of work per block
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode             ! returned error code
 
    type (POP_distrb) :: &
@@ -111,8 +110,8 @@
 !EOP
 !BOC
 
-   integer (POP_i4) :: maxWork
-   integer (POP_i4),allocatable :: work_per_block(:)
+   integer (i4) :: maxWork
+   integer (i4),allocatable :: work_per_block(:)
 !----------------------------------------------------------------------
 !
 !  select the appropriate distribution type
@@ -213,7 +212,7 @@
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode             ! returned error code
 
 !EOP
@@ -224,7 +223,7 @@
 !
 !----------------------------------------------------------------------
 
-   integer (POP_i4) :: istat  ! status flag for deallocate
+   integer (i4) :: istat  ! status flag for deallocate
 
 !----------------------------------------------------------------------
 !
@@ -303,16 +302,16 @@
 
 ! !OUTPUT PARAMETERS:
 
-      integer (POP_i4), intent(out) ::   &
+      integer (i4), intent(out) ::   &
          errorCode           ! returned error code
 
-      integer (POP_i4), intent(out), optional ::   &
+      integer (i4), intent(out), optional ::   &
          numProcs          ,&! number of processors in this dist
          communicator      ,&! communicator to use in this dist
          numLocalBlocks      ! number of blocks distributed to this
                              !   local processor
 
-      integer (POP_i4), dimension(:), pointer, optional :: &
+      integer (i4), dimension(:), pointer, optional :: &
          blockLocation     ,&! processor location for all blocks
          blockLocalID      ,&! local  block id for all blocks
          blockGlobalID       ! global block id for each local block
@@ -391,15 +390,15 @@
       distribution           ! input distribution for which information
                              !  is requested
 
-   integer (POP_i4), intent(in) :: &
+   integer (i4), intent(in) :: &
       blockID                ! global block id for which location requested
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) ::  &
+   integer (i4), intent(out) ::  &
       errorCode              ! returned error code
 
-   integer (POP_i4), intent(out) ::  &
+   integer (i4), intent(out) ::  &
       processor,            &! processor on which block resides
       localID                ! local index for this block on this proc
 
@@ -456,15 +455,15 @@
       distribution           ! input distribution for which information
                              !  is requested
 
-   integer (POP_i4), intent(in) :: &
+   integer (i4), intent(in) :: &
       iGlobal, jGlobal       ! global (i,j) for which location requested
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) ::  &
+   integer (i4), intent(out) ::  &
       errorCode              ! returned error code
 
-   integer (POP_i4), intent(out) ::  &
+   integer (i4), intent(out) ::  &
       processor,            &! processor on which point resides
       iLocal, jLocal,       &! local i,j indices for this point
       localBlock             ! local block index for this point
@@ -477,7 +476,7 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i,j,             &! horizontal indices
       iblock,          &! block loop index
       blockID           ! block id for found block
@@ -577,15 +576,15 @@
       distribution           ! input distribution for which information
                              !  is requested
 
-   integer (POP_i4), intent(in) ::  &
+   integer (i4), intent(in) ::  &
       localID                ! local index for this block on this proc
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       blockID                ! global block id for this local block
 
-   integer (POP_i4), intent(out) ::  &
+   integer (i4), intent(out) ::  &
       errorCode              ! returned error code
 
 !EOP
@@ -634,15 +633,15 @@
 
 ! !INPUT PARAMETERS:
 
-   integer (POP_i4), intent(in) :: &
+   integer (i4), intent(in) :: &
       numProcs            ! number of processors in this distribution
 
-   integer (POP_i4), dimension(:), intent(in) :: &
+   integer (i4), dimension(:), intent(in) :: &
       workPerBlock        ! amount of work per block
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode           ! returned error code
 
    type (POP_distrb) :: &
@@ -657,7 +656,7 @@
 !
 !----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i, j,                  &! dummy loop indices
       istat,                 &! status flag for allocation
       iblock, jblock,        &!
@@ -823,15 +822,15 @@
 
 ! !INPUT PARAMETERS:
 
-   integer (POP_i4), intent(in) :: &
+   integer (i4), intent(in) :: &
       numProcs                ! number of processors in this distribution
 
-   integer (POP_i4), dimension(:), intent(in) :: &
+   integer (i4), dimension(:), intent(in) :: &
       workPerBlock        ! amount of work per block
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode           ! returned error code
 
    type (POP_distrb) :: &
@@ -845,7 +844,7 @@
 !
 !----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i,j,k,n              ,&! dummy loop indices
       pid                  ,&! dummy for processor id
       local_block          ,&! local block position on processor
@@ -853,25 +852,25 @@
       numProcsX             ,&! num of procs in x for global domain
       numProcsY               ! num of procs in y for global domain
 
-   integer (POP_i4), dimension(:),allocatable :: &
+   integer (i4), dimension(:),allocatable :: &
         idxT_i,idxT_j
 
-   integer (POP_i4), dimension(:,:),allocatable :: Mesh, Mesh2, Mesh3 
-   integer (POP_i4) :: nblocksL,nblocks,ii,extra,i2,j2,tmp1,s1,ig
+   integer (i4), dimension(:,:),allocatable :: Mesh, Mesh2, Mesh3 
+   integer (i4) :: nblocksL,nblocks,ii,extra,i2,j2,tmp1,s1,ig
 
-   integer (POP_i4) :: ierr
+   integer (i4) :: ierr
    logical, parameter :: Debug = .FALSE.
 
-   integer (POP_i4), dimension(:), allocatable :: &
+   integer (i4), dimension(:), allocatable :: &
       priority           ,&! priority for moving blocks
       work_tmp           ,&! work per row or column for rake algrthm
       proc_tmp           ,&! temp processor id for rake algrthm
       block_count          ! counter to determine local block indx
 
    type (factor_t) :: xdim,ydim 
-   integer (POP_i4) :: it,jj
-   integer (POP_i4) :: curveSize,sb_x,sb_y,itmp,numfac
-   integer (POP_i4) :: subNum, sfcNum
+   integer (i4) :: it,jj
+   integer (i4) :: curveSize,sb_x,sb_y,itmp,numfac
+   integer (i4) :: subNum, sfcNum
    logical          :: foundX  
 
 !----------------------------------------------------------------------
@@ -1106,15 +1105,15 @@
 
 ! !INPUT PARAMETERS:
 
-   integer (POP_i4), intent(in) :: &
+   integer (i4), intent(in) :: &
       numProcs                ! number of processors in this distribution
 
-   integer (POP_i4), dimension(:), intent(in) :: &
+   integer (i4), dimension(:), intent(in) :: &
       workPerBlock        ! amount of work per block
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode           ! returned error code
 
    type (POP_distrb) :: &
@@ -1129,7 +1128,7 @@
 !
 !----------------------------------------------------------------------
 
-   integer (POP_i4) ::    &
+   integer (i4) ::    &
       i,j,n              ,&! dummy loop indices
       pid                ,&! dummy for processor id
       istat              ,&! status flag for allocates
@@ -1139,7 +1138,7 @@
       numProcsX          ,&! num of procs in x for global domain
       numProcsY            ! num of procs in y for global domain
 
-   integer (POP_i4), dimension(:), allocatable :: &
+   integer (i4), dimension(:), allocatable :: &
       priority           ,&! priority for moving blocks
       workTmp            ,&! work per row or column for rake algrthm
       procTmp              ! temp processor id for rake algrthm
@@ -1486,12 +1485,12 @@
 
 ! !INPUT PARAMETERS:
 
-   integer (POP_i4), intent(in) :: &
+   integer (i4), intent(in) :: &
       numProcs                       ! total number or processors
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       numProcsX, numProcsY,         &! number of procs in each dimension
       errorCode                      ! returned error code
 
@@ -1503,10 +1502,10 @@
 !
 !----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       iguess, jguess               ! guesses for numProcsX,Y
 
-   real (POP_r8) :: &
+   real (r8) :: &
       squareRootN                  ! square root of numProcs
 
 !----------------------------------------------------------------------
@@ -1620,13 +1619,13 @@
 
 ! !INPUT PARAMETERS:
 
-   integer (POP_i4), intent(in), dimension(:) :: &
+   integer (i4), intent(in), dimension(:) :: &
       blockWork          ,&! amount of work per block
       procID               ! global processor number
 
 ! !INPUT/OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(inout), dimension(:) :: &
+   integer (i4), intent(inout), dimension(:) :: &
       procWork           ,&! amount of work per processor
       priority             ! priority for moving a given block
 
@@ -1635,7 +1634,7 @@
 
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
+   integer (i4), intent(out) :: &
       errorCode            ! returned error code
 !EOP
 !BOC
@@ -1645,7 +1644,7 @@
 !
 !----------------------------------------------------------------------
 
-   integer (POP_i4) :: &
+   integer (i4) :: &
       i, n,                  &! dummy loop indices
       np1,                   &! n+1 corrected for cyclical wrap
       iproc, inext,          &! processor ids for current and next 

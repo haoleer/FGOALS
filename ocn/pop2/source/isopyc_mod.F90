@@ -3,6 +3,7 @@ module isopyc_mod
 #include <def-undef.h>
 use precision_mod
 use param_mod
+use domain
 !     isopycnal diffusion variables:
 !
 !     ahisop = isopycnal tracer diffusivity (cm**2/sec) 
@@ -97,18 +98,18 @@ use param_mod
 !
 
       real(r8):: ahisop, athkdf, dptlim(nrpl+1), fzisop(km), slmxr
-      real(r8),dimension(:,:,:,:),allocatable:: e,rhoi
-      real(r8),dimension(:,:,:,:),allocatable:: K1,K2,K3
-      real(r8),dimension(:,:,:),allocatable:: adv_vetiso,adv_vntiso,adv_vbtiso
+      real(r8),dimension(:,:,:,:,:),allocatable:: e,rhoi
+      real(r8),dimension(:,:,:,:,:),allocatable:: K1,K2,K3
+      real(r8),dimension(:,:,:,:),allocatable:: adv_vetiso,adv_vntiso,adv_vbtiso
 #ifdef isopycmixspatialvar
-      real(r4) :: dciso1(imt,km,jmt), dciso2(imt,km,jmt) &
+      real(r4) :: dciso1(imt,km,jmt,max_blocks_clinic), dciso2(imt,km,jmt,max_blocks_clinic) &
               , dslope, slopec
 #endif
 !
       real(r8):: kisrpl(km) 
       integer:: krplin(nrpl)
       real(r8)::  zt(km),dzw(0:km),dzwr(0:km),dzr(km),dytr(jmt),&
-                      cstrdytr(jmt),dyur(jmt),tmask(imt,km,jmt)
+                      cstrdytr(jmt),dyur(jmt),tmask(imt,km,jmt,max_blocks_clinic)
       REAL(r8) , dimension(JMT) :: F3
 #endif
 end module isopyc_mod

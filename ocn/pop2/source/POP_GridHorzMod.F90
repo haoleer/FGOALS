@@ -15,11 +15,6 @@
 !  2007-02-09: Phil Jones
 !              Initial implementation with some basic types
 
-! !USES:
-
-   use POP_KindsMod
-   use LICOM_Error_mod
-
    implicit none
    private
    save
@@ -59,34 +54,6 @@
    character ( 8), parameter, public :: POP_gridHorzLocSEcorner = 'SECorner'
    character ( 8), parameter, public :: POP_gridHorzLocSWcorner = 'SWCorner'
    character ( 8), parameter, public :: POP_gridHorzLocNoUpdate = 'NoUpdate'
-
-!EOP
-!BOC
-!EOC
-!***********************************************************************
-
- !contains
-
-!***********************************************************************
-!BOP
-! !IROUTINE: 
-! !INTERFACE:
-
-
-! !DESCRIPTION:
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INPUT PARAMETERS:
-
-! !OUTPUT PARAMETERS:
-
-!EOP
-!BOC
-!-----------------------------------------------------------------------
-!-----------------------------------------------------------------------
-!EOC
 
 !***********************************************************************
 

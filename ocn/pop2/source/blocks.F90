@@ -46,15 +46,6 @@
              get_block           ,&
              get_block_parameter
 
-! !DEFINED PARAMETERS:
-
-   integer (int_kind), parameter, public :: &
-      nghost = 2       ! number of ghost cells around each block
-
-   integer (int_kind), parameter, public :: &! size of block domain in
-      nx_block = licom_BlockSizeX + 2*nghost,   &!  x,y dir including ghost
-      ny_block = licom_BlockSizeY + 2*nghost     !  cells 
-
 ! !PUBLIC DATA MEMBERS:
 
    integer (int_kind), public :: &
@@ -176,7 +167,7 @@ contains
             j_global(j,n) = js - nghost + j - 1
 
 
-            !*** southern ghost cells
+            !*** northern ghost cells
 
             if (j_global(j,n) < 1) then
                select case (ns_boundary_type)
@@ -185,7 +176,7 @@ contains
                case ('closed')
                   j_global(j,n) = 0
                case ('tripole')
-                  j_global(j,n) = 0
+                  j_global(j,n) = -j_global(j,n) - 1
                case default
                   call exit_LICOM(sigAbort, &
                                 'create_blocks: unknown n-s bndy type')
@@ -197,7 +188,7 @@ contains
             if (j_global(j,n) > ny_global + nghost) then
                j_global(j,n) = 0   ! padding
 
-            !*** northern ghost cells
+            !*** southern ghost cells
 
             else if (j_global(j,n) > ny_global) then
                select case (ns_boundary_type)
@@ -206,7 +197,7 @@ contains
                case ('closed')
                   j_global(j,n) = 0
                case ('tripole')
-                  j_global(j,n) = -j_global(j,n)
+                  j_global(j,n) = 0
                case default
                   call exit_LICOM(sigAbort, &
                                 'create_blocks: unknown n-s bndy type')
