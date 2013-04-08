@@ -19,7 +19,9 @@
    use precision_mod
    use param_mod
    use pconst_mod
-   use LICOM_ErrorSet
+   use constant_mod
+   use grid
+   use LICOM_Error_mod
 
    implicit none
    private
@@ -31,6 +33,8 @@
 
 !EOP
 !BOC
+
+    contains
 
 !-----------------------------------------------------------------------
 !EOC
@@ -63,14 +67,14 @@
         do k = 1,km
         do j= 3,jmt-2
         do i= 3,imt-2
-           adv_uu(i,j,k) =  -u_eface(i  ,j,k)*(uuu(i  ,j,k)-uuu(i-1,j,k))*r1a_u(i,j,k)  &
-                            -u_eface(i+1,j,k)*(uuu(i+1,j,k)-uuu(i  ,j,k))*r1b_u(i,j,k)  &
-                            -v_nface(i,j  ,k)*(uuu(i,  j,k)-uuu(i,j-1,k))*r2a_u(i,j,k)  &
-                            -v_nface(i,j+1,k)*(uuu(i,j+1,k)-uuu(i,  j,k))*r2b_u(i,j,k)  
-           adv_vv(i,j,k) =  -u_eface(i  ,j,k)*(vvv(i  ,j,k)-vvv(i-1,j,k))*r1a_u(i,j,k)  &
-                            -u_eface(i+1,j,k)*(vvv(i+1,j,k)-vvv(i  ,j,k))*r1b_u(i,j,k)  &
-                            -v_nface(i,j  ,k)*(vvv(i,  j,k)-vvv(i,j-1,k))*r2a_u(i,j,k)  &
-                            -v_nface(i,j+1,k)*(vvv(i,j+1,k)-vvv(i,  j,k))*r2b_u(i,j,k)  
+           adv_uu(i,j,k) =  -u_eface(i  ,j,k)*(uuu(i  ,j,k)-uuu(i-1,j,k))*dxu(i,j,iblock)  &
+                            -u_eface(i+1,j,k)*(uuu(i+1,j,k)-uuu(i  ,j,k))*dxu(i,j,iblock)  &
+                            -v_nface(i,j  ,k)*(uuu(i,  j,k)-uuu(i,j-1,k))*dyu(i,j,iblock)  &
+                            -v_nface(i,j+1,k)*(uuu(i,j+1,k)-uuu(i,  j,k))*dyu(i,j,iblock)  
+           adv_vv(i,j,k) =  -u_eface(i  ,j,k)*(vvv(i  ,j,k)-vvv(i-1,j,k))*dxu(i,j,iblock)  &
+                            -u_eface(i+1,j,k)*(vvv(i+1,j,k)-vvv(i  ,j,k))*dxu(i,j,iblock)  &
+                            -v_nface(i,j  ,k)*(vvv(i,  j,k)-vvv(i,j-1,k))*dyu(i,j,iblock)  &
+                            -v_nface(i,j+1,k)*(vvv(i,j+1,k)-vvv(i,  j,k))*dyu(i,j,iblock)  
 !
            if (k==1 )then
                adv_z1=0.0D0
@@ -87,8 +91,8 @@
                 adv_z2=www(I,J,K+1)*(uuu(I,J,K ) - uuu(I,J,K+1))
                 adv_z4=www(I,J,K+1)*(vvv(I,J,K ) - vvv(I,J,K+1))
            end if
-           adv_uu(i,j,k) = adv_uu(i,j,k) - P5*ODZP(K)* (adv_z1+adv_z2)
-           adv_vv(i,j,k) = adv_vv(i,j,k) - P5*ODZP(K)* (adv_z3+adv_z4)
+           adv_uu(i,j,k) = P5*adv_uu(i,j,k) - P5*ODZP(K)* (adv_z1+adv_z2)
+           adv_vv(i,j,k) = P5*adv_vv(i,j,k) - P5*ODZP(K)* (adv_z3+adv_z4)
         end do
         end do
         end do
@@ -99,13 +103,14 @@
            adv_uu(i,j,k) = (-u_eface(i  ,j,k)*(uuu(i  ,j,k)+uuu(i-1,j,k))    &
                             +u_eface(i+1,j,k)*(uuu(i+1,j,k)+uuu(i  ,j,k))    &
                             -v_nface(i,j  ,k)*(uuu(i,  j,k)+uuu(i,j-1,k))    &
-                            +v_nface(i,j+1,k)*(uuu(i,j+1,k)+uuu(i,  j,k)))*uarea_r(i,j,iblock)*P5 &
-           adv_vv(i,j,k) = (-u_eface(i  ,j,k)*(vvv(i  ,j,k)+vvv(i-1,j,k))    &
+                            +v_nface(i,j+1,k)*(uuu(i,j+1,k)+uuu(i,  j,k)))*uarea_r(i,j,iblock)*P5 
+!
+           adv_vv(i,j,k) = (-u_eface(i  ,j,k)*(vvv(i,j  ,k)+vvv(i-1,j,k))    &
                             +u_eface(i+1,j,k)*(vvv(i+1,j,k)+vvv(i  ,j,k))    &
                             -v_nface(i,j  ,k)*(vvv(i,  j,k)+vvv(i,j-1,k))    &
                             +v_nface(i,j+1,k)*(vvv(i,j+1,k)+vvv(i,  j,k)))*uarea_r(i,j,iblock)*P5 
 !
-           if (k==1 )then
+           if (k ==1 ) then
                adv_z1=0.0D0
                adv_z3=0.0D0
            else
@@ -113,7 +118,7 @@
                adv_z3=www (I,J,K)* (vvv(I,J,K -1) + vvv(I,J,K))*P5
            end if
 !
-           if (k==km )then
+           if (k == km ) then
                 adv_z2=0.0D0
                 adv_z4=0.0D0
            else
@@ -126,7 +131,8 @@
         end do
         end do
       else
-         call exit_LICOM
+        write(6,*) "adv_momentum =", adv_momentum
+        call exit_licom(sigAbort,'The false advection option for momentum')
       end if
 !
       end subroutine advection_momentum
@@ -161,10 +167,10 @@
         do k = 1,km
         do j= 3,jmt-2
         do i= 3,imt-2
-           adv_tt(i,j,k) =  -u_eface(i  ,j,k)*(ttt(i  ,j,k)-ttt(i-1,j,k))*r1a_t(i,j,k)  &
-                            -u_eface(i+1,j,k)*(ttt(i+1,j,k)-ttt(i  ,j,k))*r1b_t(i,j,k)  &
-                            -v_nface(i,j  ,k)*(ttt(i,  j,k)-ttt(i,j-1,k))*r2a_t(i,j,k)  &
-                            -v_nface(i,j+1,k)*(ttt(i,j+1,k)-ttt(i,  j,k))*r2b_t(i,j,k)
+           adv_tt(i,j,k) =  -u_eface(i  ,j,k)*(ttt(i  ,j,k)-ttt(i-1,j,k))*dxt(i,j,iblock)  &
+                            -u_eface(i+1,j,k)*(ttt(i+1,j,k)-ttt(i  ,j,k))*dxt(i,j,iblock)  &
+                            -v_nface(i,j  ,k)*(ttt(i,  j,k)-ttt(i,j-1,k))*dyt(i,j,iblock)  &
+                            -v_nface(i,j+1,k)*(ttt(i,j+1,k)-ttt(i,  j,k))*dyt(i,j,iblock)
 !
            if (k==1 )then
                adv_z1=0.0D0
@@ -178,7 +184,7 @@
                 adv_z2=www(I,J,K+1)*(ttt(I,J,K ) - ttt(I,J,K+1))
            end if
 !
-           adv_tt(i,j,k) = adv_tt(i,j,k) - P5*ODZP(K)* (adv_z1+adv_z2)
+           adv_tt(i,j,k) = P5*adv_tt(i,j,k) - P5*ODZP(K)* (adv_z1+adv_z2)
         end do
         end do
         end do
@@ -208,11 +214,8 @@
         end do
         end do
         end do
-        end do
-        end do
-        end do
       else
-         call exit_LICOM
+        call exit_licom(sigAbort,'The false advection option for tracer')
       end if
 
       end subroutine advection_tracer

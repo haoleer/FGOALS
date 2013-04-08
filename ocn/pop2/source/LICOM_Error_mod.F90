@@ -61,7 +61,7 @@
 
 
 
- subroutine exit_LICOM(exit_mode, exit_message, out_unit)
+ subroutine exit_LICOM(exit_mode, exit_message)
 
 
 ! !PUBLIC MEMBER FUNCTIONS:
@@ -71,9 +71,6 @@
 
    integer (int_kind), intent(in) :: &
      exit_mode    ! method for exiting (normal exit or abort)
-
-   integer (int_kind), optional, intent(in) :: &
-     out_unit    ! optional output unit specifier
 
    character (*), intent(in) :: &
      exit_message ! message to print before stopping

@@ -24,10 +24,13 @@ use domain
 use grid
 use blocks
 use POP_HaloMod
+use POP_GridHorzMod
+
+
 !
       implicit none
       real(r8),dimension(:,:,:),allocatable::tmp_su,tmp_sv
-      integer :: iblock
+      integer :: iblock, ErrorCode
 !
     type (block) :: this_block          ! block information for current block
 
@@ -64,17 +67,17 @@ use POP_HaloMod
 !!      Update boundary here !!!!
 !!
        call POP_HaloUpdate(tsf(:,:,:) , POP_haloClinic, POP_gridHorzLocCenter,&
-                       POP_fieldKindScalar, errorCode, fillValue = 0_r8)
+                       POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
        call POP_HaloUpdate(swv(:,:,:) , POP_haloClinic, POP_gridHorzLocCenter,&
-                       POP_fieldKindScalar, errorCode, fillValue = 0_r8)
+                       POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
        call POP_HaloUpdate(nswv(:,:,:) , POP_haloClinic, POP_gridHorzLocCenter,&
-                       POP_fieldKindScalar, errorCode, fillValue = 0_r8)
+                       POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
        call POP_HaloUpdate(ssf(:,:,:) , POP_haloClinic, POP_gridHorzLocCenter,&
-                       POP_fieldKindScalar, errorCode, fillValue = 0_r8)
+                       POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
        call POP_HaloUpdate(tmp_su(:,:,:) , POP_haloClinic, POP_gridHorzLocCenter,&
-                       POP_fieldKindVector, errorCode, fillValue = 0_r8)
+                       POP_fieldKindVector, errorCode, fillValue = 0.0_r8)
        call POP_HaloUpdate(tmp_sv(:,:,:) , POP_haloClinic, POP_gridHorzLocCenter,&
-                       POP_fieldKindVector, errorCode, fillValue = 0_r8)
+                       POP_fieldKindVector, errorCode, fillValue = 0.0_r8)
 !!
             lthf = lat1 !latent flux
             sshf = sen !sensible flux
@@ -103,9 +106,9 @@ use POP_HaloMod
 !
 !      Update boundary here !!!!
        call POP_HaloUpdate(su(:,:,:) , POP_haloClinic, POP_gridHorzLocSwcorner,&
-                       POP_fieldKindVector, errorCode, fillValue = 0_r8)
+                       POP_fieldKindVector, errorCode, fillValue = 0.0_r8)
        call POP_HaloUpdate(sv(:,:,:) , POP_haloClinic, POP_gridHorzLocSwcorner,&
-                       POP_fieldKindVector, errorCode, fillValue = 0_r8)
+                       POP_fieldKindVector, errorCode, fillValue = 0.0_r8)
 !
 
         ! lihuimin, 2012.7.23, ft. lpf

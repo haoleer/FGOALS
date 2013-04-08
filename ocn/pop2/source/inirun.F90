@@ -20,7 +20,11 @@ use control_mod
 use domain
 use constant_mod
 use gather_scatter
-
+use POP_HaloMod
+use POP_GridHorzMod
+use operators
+use hmix_del2
+use hmix_del4
 
       IMPLICIT NONE
 
@@ -31,6 +35,7 @@ use gather_scatter
   integer            :: rcode  ! nc return code
   integer            :: ntim   ! temporary
   integer            :: iblock   ! temporary
+  integer            :: ErrorCode   ! temporary
  
 #include <netcdf.inc>
 !
@@ -39,12 +44,13 @@ use gather_scatter
       integer*4,  dimension(4) :: start(4)
       integer*4,  dimension(4) :: count(4)
       character (len=18) :: fname
-
       INTEGER :: NMFF
+!     integer :: mmm(imt_global,jmt_global)
 
       allocate(h0(imt,jmt,max_blocks_clinic),u(imt,jmt,km,max_blocks_clinic),v(imt,jmt,km,max_blocks_clinic), &
                at(imt,jmt,km,ntra,max_blocks_clinic))
       allocate(buffer(imt_global,jmt_global))
+!     allocate( mask_g(imt_global,jmt_global),mask_r(imt,jmt,max_blocks_clinic) )
 
 
       if (mytid==0)then
@@ -82,6 +88,22 @@ use gather_scatter
   allocate (duu10n(imt,jmt,max_blocks_clinic))
 
 #endif
+
+! if (mytid==0 ) then
+!    call wrap_open ('domain_licom.nc', NF_NOWRITE, fid)
+
+!    write(6,*) 'read domain data...'
+!    call shr_sys_flush(6)
+!    call wrap_inq_varid(fid, 'mask', vid)
+!    call wrap_get_var_int(fid,vid,mask_g)
+!    do j=1,jmt_global
+!    do i=1,imt_global
+!       mmm(i,j) = mask_g(i,jmt_global+1-j)
+!    end do
+!    end do
+! end if
+! call scatter_global(mask_r, mmm, master_task, distrb_clinic, &
+!                         field_loc_center, field_type_scalar)
 
      ub = 0.0D0
      vb = 0.0D0
@@ -164,9 +186,9 @@ use gather_scatter
        end do !km
  
        call POP_HaloUpdate(at(:,:,:,1,:) , POP_haloClinic, POP_gridHorzLocCenter,&
-                       POP_fieldKindScalar, errorCode, fillValue = 0_r8)
+                       POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
        call POP_HaloUpdate(at(:,:,:,2,:) , POP_haloClinic, POP_gridHorzLocCenter,&
-                       POP_fieldKindScalar, errorCode, fillValue = 0_r8)
+                       POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
 !----------------------------------------------------
 !   assign 0 to land grids of TSinital
 !----------------------------------------------------
@@ -276,7 +298,7 @@ use gather_scatter
          call scatter_global(h0,buffer, master_task, distrb_clinic, &
                           field_loc_center, field_type_scalar)
          call POP_HaloUpdate(h0 , POP_haloClinic, POP_gridHorzLocCenter,&
-                       POP_fieldKindScalar, errorCode, fillValue = 0_r8)
+                       POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
 !
          do k=1,km
          if (mytid==0) then
@@ -286,7 +308,7 @@ use gather_scatter
                           field_loc_swcorner, field_type_vector)
          end do
          call POP_HaloUpdate(u , POP_haloClinic, POP_gridHorzLocSWcorner , &
-                       POP_fieldKindVector, errorCode, fillValue = 0_r8)
+                       POP_fieldKindVector, errorCode, fillValue = 0.0_r8)
 !
          do k=1,km
          if (mytid==0) then
@@ -296,7 +318,7 @@ use gather_scatter
                           field_loc_swcorner, field_type_vector)
          end do
          call POP_HaloUpdate(v , POP_haloClinic, POP_gridHorzLocSWcorner , &
-                       POP_fieldKindVector, errorCode, fillValue = 0_r8)
+                       POP_fieldKindVector, errorCode, fillValue = 0.0_r8)
 !
          do k=1,km
          if (mytid==0) then
@@ -306,7 +328,7 @@ use gather_scatter
                           field_loc_center, field_type_scalar)
          end do
          call POP_HaloUpdate(at(:,:,:,1,:) , POP_haloClinic, POP_gridHorzLocCenter , &
-                       POP_fieldKindScalar, errorCode, fillValue = 0_r8)
+                       POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
 !
          do k=1,km
          if (mytid==0) then
@@ -316,7 +338,7 @@ use gather_scatter
                           field_loc_center, field_type_scalar)
          end do
          call POP_HaloUpdate(at(:,:,:,2,:) , POP_haloClinic, POP_gridHorzLocCenter , &
-                       POP_fieldKindScalar, errorCode, fillValue = 0_r8)
+                       POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
 !lhl20110728 for ws
          do k=1,km
          if (mytid==0) READ (22)buffer
@@ -453,8 +475,20 @@ use gather_scatter
       call init_del4t
       call init_del4u
 #else
+      if (mytid == 0 ) then
+         write(112,*) "OK-----1"
+         close(112)
+      end if
       call init_del2t
+      if (mytid == 0 ) then
+         write(112,*) "OK-----2"
+         close(112)
+      end if
       call init_del2u
+      if (mytid == 0 ) then
+         write(112,*) "OK-----3"
+         close(112)
+      end if
 #endif
 !
       if (mytid==0)then
@@ -465,6 +499,7 @@ use gather_scatter
       endif 
 
       deallocate(buffer)
+!     deallocate(mask_g)
 
       RETURN
 

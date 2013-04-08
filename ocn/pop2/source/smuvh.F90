@@ -1,4 +1,21 @@
 #define LOGMSG()
+      module smuvh
+
+#include <def-undef.h>
+use precision_mod
+use param_mod
+use msg_mod
+use pconst_mod, only: sinu, sint
+use domain
+use constant_mod
+
+      IMPLICIT NONE
+!
+      public :: smuv, smts, smz0
+
+
+      contains
+
 !write(mytid+600,'(a,3i4)')"SMUV",__LINE__,k,j
 !  CVS: $Id: smuvh.F90,v 1.1.1.1 2004/04/29 06:22:39 lhl Exp $
 !     ========================
@@ -6,14 +23,7 @@
 !     ========================
 !     1-D zonal smoother
 
-#include <def-undef.h>
-use precision_mod
-use param_mod
-use msg_mod
-use pconst_mod, only: sinu,pi,torad
-use domain
 
-      IMPLICIT NONE
       INTEGER :: JFS1,JFS2,JFN1,JFN2,KK, NCY
       REAL(r8)    :: fil_lat
       REAL(r8)    :: X (IMT,JMT,KK,max_blocks_clinic),XS (IMT),Z (IMT,JMT,KM,max_blocks_clinic)
@@ -23,8 +33,8 @@ use domain
 !
       MAX_NN = 0
       do j =jst,jmt
-         if (sinu(j).le.cos(fil_lat*torad)) then
-            NN(j) = int(cos(fil_lat*torad)/sinu(j)*1.2D0)
+         if (sinu(j).le.cos(fil_lat*DEGtoRAD)) then
+            NN(j) = int(cos(fil_lat*DEGtoRAD)/sinu(j)*1.2D0)
             if (NN(j) .gt. MAX_NN) MAX_NN = NN(J)
          else 
             NN(j) = 0
@@ -62,13 +72,6 @@ use domain
 !     ========================
 !     1-D zonal smoother
 
-#include <def-undef.h>
-use precision_mod
-use param_mod
-use msg_mod
-use pconst_mod,only: sint,PI,torad
-use domain
-      IMPLICIT NONE
 
       INTEGER :: JFS1,JFS2,JFN1,JFN2,KK, NCY
       REAL(r8)    :: fil_lat
@@ -82,8 +85,8 @@ use domain
 
       MAX_NN = 0
       do j =jst,jmt
-         if (sint(j).le.cos(fil_lat*torad)) then
-            NN(j) = int(cos(fil_lat*torad)/sint(j)*1.2D0)
+         if (sint(j).le.cos(fil_lat*DEGtoRAD)) then
+            NN(j) = int(cos(fil_lat*DEGtoRAD)/sint(j)*1.2D0)
             if (NN(j) .gt. MAX_NN) MAX_NN = NN(J)
          else
             NN(j) = 0
@@ -130,13 +133,6 @@ use domain
 !     ========================
 !     1-D zonal smoother
 
-#include <def-undef.h>
-use precision_mod
-use param_mod
-use msg_mod
-use domain
-use pconst_mod,only:sint,pi,torad
-      IMPLICIT NONE
 
       INTEGER :: JFS1,JFS2,JFN1,JFN2,NCY
       REAL(r8)    :: fil_lat
@@ -149,8 +145,8 @@ use pconst_mod,only:sint,pi,torad
          
       MAX_NN = 0
       do j =jst,jmt
-         if (sint(j).le.cos(fil_lat*torad)) then
-            NN(j) = int(cos(fil_lat*torad)/sint(j)*1.2D0)
+         if (sint(j).le.cos(fil_lat*DEGtoRAD)) then
+            NN(j) = int(cos(fil_lat*DEGtoRAD)/sint(j)*1.2D0)
             if (NN(j) .gt. MAX_NN) MAX_NN = NN(J)
          else
             NN(j) = 0
@@ -184,3 +180,6 @@ use pconst_mod,only:sint,pi,torad
    RETURN
    END SUBROUTINE SMZ0
 
+!
+
+    end module smuvh

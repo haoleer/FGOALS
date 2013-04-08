@@ -9,16 +9,18 @@ use work_mod
 use msg_mod
 use domain
 use grid
-use block
-use hmix_mod
+use blocks
+use hmix_del2
+use hmix_del4
 use operators
+use smuvh
       IMPLICIT NONE
 
       INTEGER :: IEB,NC,IEB_LOOP
       real(r8)    :: gstar ,am_viv,fil_lat1,fil_lat2
       integer :: iblock
       real(r8):: hduk(imt,jmt) , hdvk(imt,jmt), gradx(imt,jmt),grady(imt,jmt), div_out(imt,jmt)
-      type(blcok):: this_block
+      type(block):: this_block
 !
 !---------------------------------------------------------------------
 !      Define the threthold latitute for zonal smoother
@@ -164,10 +166,10 @@ use operators
          DO J = 3, jmt-2
             DO I = 3, imt-2
                WKA (I,J,1,IBLOCK)= VIV (I,J,1,IBLOCK)* ( WKA (I,J,1,IBLOCK) + DLUB (I,J,IBLOCK)     &
-                              - FCOR(I,J)* VBP (I,J,IBLOCK) + &
+                              - FCOR(I,J,Iblock)* VBP (I,J,IBLOCK) + &
                PAX (I,J,IBLOCK) + PXB (I,J,IBLOCK) - WORK (I,J,IBLOCK)* WHX (I,J,IBLOCK) )
                WKA (I,J,2,IBLOCK)= VIV (I,J,1,IBLOCK)* ( WKA (I,J,2,IBLOCK) + DLVB (I,J,IBLOCK)     &
-                              + FCOR(I,J)* UBP (I,J,IBLOCK) + &
+                              + FCOR(I,J,Iblock)* UBP (I,J,IBLOCK) + &
                PAY (I,J,IBLOCK) + PYB (I,J,IBLOCK) - WORK (I,J,IBLOCK)* WHY (I,J,IBLOCK) )
             END DO
          END DO
@@ -192,8 +194,8 @@ use operators
      DO IBLOCK = 1, NBLOCKS_CLINIC
             DO J = JSM,JEM
                DO I = 2,IMM
-                  WKA (I,J,3,IBLOCK)= EBLA (J)* WKA (I,J,1,IBLOCK) - EBLB (J)* WKA (I,J,2,IBLOCK)
-                  WKA (I,J,4,IBLOCK)= EBLA (J)* WKA (I,J,2,IBLOCK) + EBLB (J)* WKA (I,J,1,IBLOCK)
+                  WKA (I,J,3,IBLOCK)= EBLA (I,J,Iblock)* WKA (I,J,1,IBLOCK) - EBLB (I,J,Iblock)* WKA (I,J,2,IBLOCK)
+                  WKA (I,J,4,IBLOCK)= EBLA (I,J,Iblock)* WKA (I,J,2,IBLOCK) + EBLB (I,J,Iblock)* WKA (I,J,1,IBLOCK)
                END DO
             END DO
      END DO

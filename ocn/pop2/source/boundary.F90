@@ -13,7 +13,6 @@ use dyn_mod, only : buffer
 use domain
 use POP_HaloMod
 use POP_GridHorzMod
-use POP_FieldMod
 use grid, only : kmt, kmu
       IMPLICIT NONE
     integer :: iblock, errorCode

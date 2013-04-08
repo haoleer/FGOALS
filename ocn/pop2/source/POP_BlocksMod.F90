@@ -26,7 +26,7 @@
 
    use param_mod
    use precision_mod
-
+   use LICOM_Error_mod
    implicit none
    private
    save
@@ -620,7 +620,7 @@ end subroutine POP_BlocksCreate
    case (POP_blocksNorthEast)
 
       inbr = iBlock + 1
-      jnbr = jBlock + 1
+      jnbr = jBlock - 1
       if (inbr > POP_numBlocksX) then
          select case(iBoundary)
          case ('closed')
@@ -632,7 +632,7 @@ end subroutine POP_BlocksCreate
                'POP_BlocksGetNbrID: unknown east boundary')
          end select
       endif
-      if (jnbr > POP_numBlocksY) then
+      if (jnbr < 1) then
          select case(jBoundary)
          case ('closed')
             jnbr = 0
@@ -657,7 +657,7 @@ end subroutine POP_BlocksCreate
    case (POP_blocksNorthWest)
 
       inbr = iBlock - 1
-      jnbr = jBlock + 1
+      jnbr = jBlock - 1
       if (inbr < 1) then
          select case(iBoundary)
          case ('closed')
@@ -669,7 +669,7 @@ end subroutine POP_BlocksCreate
                'POP_BlocksGetNbrID: unknown west boundary')
          end select
       endif
-      if (jnbr > POP_numBlocksY ) then
+      if (jnbr < 1 ) then
          select case(jBoundary)
          case ('closed')
             jnbr = 0
@@ -694,7 +694,7 @@ end subroutine POP_BlocksCreate
    case (POP_blocksSouthEast )
 
       inbr = iBlock + 1
-      jnbr = jBlock - 1
+      jnbr = jBlock + 1
       if (inbr > POP_numBlocksX) then
          select case(iBoundary)
          case ('closed')
@@ -706,7 +706,7 @@ end subroutine POP_BlocksCreate
                'POP_BlocksGetNbrID: unknown east boundary')
          end select
       endif
-      if (jnbr < 1) then
+      if (jnbr > POP_numBlocksY) then
          select case(jBoundary)
          case ('closed')
             jnbr = 0

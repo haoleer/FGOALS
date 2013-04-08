@@ -21,6 +21,7 @@ use pconst_mod
 use isopyc_mod
 use msg_mod
 use domain
+use constant_mod
  
       IMPLICIT NONE
       REAL(r8)    :: zdzk,t1,t2,dptmid,xx
@@ -73,26 +74,8 @@ use domain
  
 !$OMP PARALLEL DO PRIVATE (j)
       DO j = 1,jmt
-         if (dyt(j) > 0 ) then
-            dytr (j)= 1.0D0/ DYR (j)
-         else
-            dytr (j)= 0.0D0
-         end if
-      END DO
- 
-!$OMP PARALLEL DO PRIVATE (j)
-      DO j = 1,jmt
-         if (dyr(j) > 0 ) then
-            dyur (j)= 1.0D0/ DYR (j)
-         else
-            dyur (j)= 0.0D0
-         end if
-      END DO
- 
-!$OMP PARALLEL DO PRIVATE (j)
-      DO j = 1,jmt
          if (sint(j) > 0 ) then
-            cstrdytr (j)= 1.0D0/ (SINT (j)* DYT (j))
+!           cstrdytr (j)= 1.0D0/ (SINT (j)* DYT (i,j,iblock))   ! !!
          else
             cstrdytr (j)= 0.0D0
          end if
@@ -154,6 +137,10 @@ use domain
 
          IF (kisrpl (k) < 1 .OR. kisrpl (k) > nrpl) THEN
             WRITE (6,*) kisrpl (k), k,zt,zkt
+            if (mytid == 0 ) then
+                write(114,*) kisrpl(k), k, zt, zkt
+                close(114)
+            end if
             STOP 9100
          END IF
       END DO

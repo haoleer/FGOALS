@@ -13,7 +13,8 @@ use isopyc_mod
 use forc_mod
 use pmix_mod
 use msg_mod
- 
+use smuvh
+use advection
       IMPLICIT NONE
  
       integer     :: n2, iblock
@@ -187,7 +188,7 @@ use msg_mod
 
    do iblock = 1, nblocks_clinic
       adv_tt = 0.0_r8
-      call advection_tracer(wkd,wkb,ws(:,:,1:km),at(:,:,:,n,iblock),adv_tt,iblock)
+      call advection_tracer(wkd(:,:,:,iblock),wkb(:,:,:,iblock),ws(:,:,1:km,iblock),at(:,:,:,n,iblock),adv_tt,iblock)
       do k=1, km
       do j =3, jmt-2
       do i =3, imt-2

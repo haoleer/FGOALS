@@ -1,4 +1,4 @@
-i     =================
+!     =================
       SUBROUTINE READYC
 !     =================
 !     PREPARATION OF BAROTROPIC AND BAROCLINIC INTEGRATION
@@ -16,6 +16,11 @@ use pmix_mod
 use forc_mod, only: su,sv,USTAR,BUOYTUR, BUOYSOL
 use domain
 use grid
+use blocks
+use advection
+use operators
+use hmix_del2
+use hmix_del4
  
       IMPLICIT NONE
 !      REAL(r8)  :: WKP (KMP1)
@@ -30,7 +35,7 @@ use grid
       REAL(r8)  :: adv_x1,adv_x2,adv_x,adv_y1,adv_y2,adv_z,diff_u1,diff_u2,diff_v1,diff_v2
       REAL(r8)  :: dlux,dlvx,dluy,dlvy,dluz,dlvz,adv_z1,adv_z2,adv_z3,adv_z4
       REAL(r6)  :: xxx, c0
-      real(r8)  :: hdvk(imt,jmt), hduk(imt,jmt)
+      real(r8)  :: hdvk(imt,jmt), hduk(imt,jmt), adv_uu(imt,jmt,km), adv_vv(imt,jmt,km)
 !
       type (block) :: this_block          ! block information for current block
        
@@ -81,8 +86,8 @@ use grid
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM
-         call ugrid_to_tgrid(wp12(:,:,,k,iblock),up(:,:,k,iblock),iblock)
-         call ugrid_to_tgrid(wp13(:,:,,k,iblock),vp(:,:,k,iblock),iblock)
+         call ugrid_to_tgrid(wp12(:,:,k,iblock),up(:,:,k,iblock),iblock)
+         call ugrid_to_tgrid(wp13(:,:,k,iblock),vp(:,:,k,iblock),iblock)
       END DO
    END DO
 !
@@ -215,7 +220,7 @@ use grid
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
    do iblock = 1, nblocks_clinic
       DO K = 1,KMM1
-         call tgrid_to_ugrid(amku(:,:,k,iblock), amkt(:,:,k,iblock),iblock)
+         call tgrid_to_ugrid(akmu(:,:,k,iblock), akmt(:,:,k,iblock),iblock)
       END DO
    end do
 !lhl241204

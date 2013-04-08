@@ -24,19 +24,17 @@
 
    use precision_mod
    use LICOM_Error_mod
+   use POP_GridHorzMod
    use POP_CommMod
    use POP_BlocksMod
    use POP_ReductionsMod
    use POP_DistributionMod
-   use POP_FieldMod
-   use POP_GridHorzMod
 
    implicit none
    private
    save
 
-   include 'mpif.h'
-
+!|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 ! !PUBLIC TYPES:
 
    type, public :: POP_halo
@@ -1752,7 +1750,7 @@ contains
    do nmsg=1,halo%numMsgRecv
 
       msgSize = halo%sizeRecv(nmsg)
-      call MPI_IRECV(bufRecvR8(1:msgSize,nmsg), msgSize, POP_mpiR8, &
+      call MPI_IRECV(bufRecvR8(1:msgSize,nmsg), msgSize, mpi_dbl, &
                      halo%recvTask(nmsg),                           &
                      POP_mpitagHalo + halo%recvTask(nmsg),          &
                      halo%communicator, rcvRequest(nmsg), ierr)
@@ -1763,7 +1761,7 @@ contains
 !  fill send buffer and post sends
 !
 !-----------------------------------------------------------------------
-
+!
    do nmsg=1,halo%numMsgSend
 
       do n=1,halo%sizeSend(nmsg)
@@ -1778,7 +1776,7 @@ contains
       end do
 
       msgSize = halo%sizeSend(nmsg)
-      call MPI_ISEND(bufSendR8(1:msgSize,nmsg), msgSize, POP_mpiR8, &
+      call MPI_ISEND(bufSendR8(1:msgSize,nmsg), msgSize, mpi_dbl, &
                      halo%sendTask(nmsg),                           &
                      POP_mpitagHalo + POP_myTask,                   &
                      halo%communicator, sndRequest(nmsg), ierr)
@@ -2098,7 +2096,7 @@ contains
    do nmsg=1,halo%numMsgRecv
 
       msgSize = halo%sizeRecv(nmsg)
-      call MPI_IRECV(bufRecvR4(1:msgSize,nmsg), msgSize, POP_mpiR4, &
+      call MPI_IRECV(bufRecvR4(1:msgSize,nmsg), msgSize, mpi_real, &
                      halo%recvTask(nmsg),                           &
                      POP_mpitagHalo + halo%recvTask(nmsg),          &
                      halo%communicator, rcvRequest(nmsg), ierr)
@@ -2124,7 +2122,7 @@ contains
       end do
 
       msgSize = halo%sizeSend(nmsg)
-      call MPI_ISEND(bufSendR4(1:msgSize,nmsg), msgSize, POP_mpiR4, &
+      call MPI_ISEND(bufSendR4(1:msgSize,nmsg), msgSize, mpi_real, &
                      halo%sendTask(nmsg),                           &
                      POP_mpitagHalo + POP_myTask,                   &
                      halo%communicator, sndRequest(nmsg), ierr)
@@ -2820,7 +2818,7 @@ contains
    do nmsg=1,halo%numMsgRecv
 
       msgSize = nz*halo%sizeRecv(nmsg)
-      call MPI_IRECV(bufRecv(1:msgSize,nmsg), msgSize, POP_mpiR8,   &
+      call MPI_IRECV(bufRecv(1:msgSize,nmsg), msgSize, mpi_dbl,   &
                      halo%recvTask(nmsg),                           &
                      POP_mpitagHalo + halo%recvTask(nmsg),          &
                      halo%communicator, rcvRequest(nmsg), ierr)
@@ -2855,7 +2853,7 @@ contains
    do nmsg=1,halo%numMsgSend
 
       msgSize = nz*halo%sizeSend(nmsg)
-      call MPI_ISEND(bufSend(1:msgSize,nmsg), msgSize, POP_mpiR8, &
+      call MPI_ISEND(bufSend(1:msgSize,nmsg), msgSize, mpi_dbl, &
                      halo%sendTask(nmsg),                         &
                      POP_mpitagHalo + POP_myTask,                 &
                      halo%communicator, sndRequest(nmsg), ierr)
@@ -3238,7 +3236,7 @@ contains
    do nmsg=1,halo%numMsgRecv
 
       msgSize = nz*halo%sizeRecv(nmsg)
-      call MPI_IRECV(bufRecv(1:msgSize,nmsg), msgSize, POP_mpiR4,   &
+      call MPI_IRECV(bufRecv(1:msgSize,nmsg), msgSize, mpi_real,   &
                      halo%recvTask(nmsg),                           &
                      POP_mpitagHalo + halo%recvTask(nmsg),          &
                      halo%communicator, rcvRequest(nmsg), ierr)
@@ -3268,7 +3266,7 @@ contains
       end do
 
       msgSize = nz*halo%sizeSend(nmsg)
-      call MPI_ISEND(bufSend(1:msgSize,nmsg), msgSize, POP_mpiR4, &
+      call MPI_ISEND(bufSend(1:msgSize,nmsg), msgSize, mpi_real, &
                      halo%sendTask(nmsg),                         &
                      POP_mpitagHalo + POP_myTask,                 &
                      halo%communicator, sndRequest(nmsg), ierr)
@@ -4061,7 +4059,7 @@ contains
    do nmsg=1,halo%numMsgRecv
 
       msgSize = nz*nt*halo%sizeRecv(nmsg)
-      call MPI_IRECV(bufRecv(1:msgSize,nmsg), msgSize, POP_mpiR8, &
+      call MPI_IRECV(bufRecv(1:msgSize,nmsg), msgSize, mpi_dbl, &
                      halo%recvTask(nmsg),                         &
                      POP_mpitagHalo + halo%recvTask(nmsg),        &
                      halo%communicator, rcvRequest(nmsg), ierr)
@@ -4094,7 +4092,7 @@ contains
       end do
 
       msgSize = nz*nt*halo%sizeSend(nmsg)
-      call MPI_ISEND(bufSend(1:msgSize,nmsg), msgSize, POP_mpiR8, &
+      call MPI_ISEND(bufSend(1:msgSize,nmsg), msgSize, mpi_dbl, &
                      halo%sendTask(nmsg),                         &
                      POP_mpitagHalo + POP_myTask,                 &
                      halo%communicator, sndRequest(nmsg), ierr)
@@ -4492,7 +4490,7 @@ contains
    do nmsg=1,halo%numMsgRecv
 
       msgSize = nz*nt*halo%sizeRecv(nmsg)
-      call MPI_IRECV(bufRecv(1:msgSize,nmsg), msgSize, POP_mpiR4, &
+      call MPI_IRECV(bufRecv(1:msgSize,nmsg), msgSize, mpi_real, &
                      halo%recvTask(nmsg),                         &
                      POP_mpitagHalo + halo%recvTask(nmsg),        &
                      halo%communicator, rcvRequest(nmsg), ierr)
@@ -4525,7 +4523,7 @@ contains
       end do
 
       msgSize = nz*nt*halo%sizeSend(nmsg)
-      call MPI_ISEND(bufSend(1:msgSize,nmsg), msgSize, POP_mpiR4, &
+      call MPI_ISEND(bufSend(1:msgSize,nmsg), msgSize, mpi_real, &
                      halo%sendTask(nmsg),                         &
                      POP_mpitagHalo + POP_myTask,                 &
                      halo%communicator, sndRequest(nmsg), ierr)

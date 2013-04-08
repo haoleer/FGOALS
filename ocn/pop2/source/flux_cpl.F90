@@ -73,8 +73,8 @@ contains
     do iblock = 1, nblocks_clinic
         do j= 2, jmt-1
         do i= 2, imt-1
-           dhdx (i,j,iblock)  =   (h0(i+1,j,iblock)-h0(i-1,j,iblock)) /(hun(i,j)+hun(i+1,j))
-           dhdy (i,j,iblock)  =   (h0(i,j+1,iblock)-h0(i,j-1,iblock)) /(hue(i,j)+hue(i,j-1))
+           dhdx (i,j,iblock)  =   (h0(i+1,j,iblock)-h0(i-1,j,iblock)) /(hun(i,j,iblock)+hun(i+1,j,iblock))
+           dhdy (i,j,iblock)  =   (h0(i,j+1,iblock)-h0(i,j-1,iblock)) /(hue(i,j,iblock)+hue(i,j-1,iblock))
         end do
         end do
      end do

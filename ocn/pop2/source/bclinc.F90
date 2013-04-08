@@ -12,10 +12,16 @@ use dyn_mod
 use work_mod
 use forc_mod, only: psa,su,sv
 use domain
-use gird
+use grid
+use blocks
+use smuvh
+use operators
+
       IMPLICIT NONE
       REAL(r8)    :: AA,GGU,WK1,WK2,fil_lat1,fil_lat2
       integer     :: iblock
+      REAL(r8)    :: gradx(imt,jmt), grady(imt,jmt)
+      type (block) :: this_block
 
 !lhl0711
 #ifdef CANUTO
@@ -58,8 +64,8 @@ use gird
       DO K = 1,KM
          DO J = JSM,JEM
             DO I = 2,IMM
-               DLU (I,J,K,IBLOCK) = DLU (I,J,K,IBLOCK) - FCOR(I,J) * VP (I,J,K,IBLOCK)
-               DLV (I,J,K,IBLOCK) = DLV (I,J,K,IBLOCK) + FCOR(I,J) * UP (I,J,K,IBLOCK)
+               DLU (I,J,K,IBLOCK) = DLU (I,J,K,IBLOCK) - FCOR(I,J,IBLOCK) * VP (I,J,K,IBLOCK)
+               DLV (I,J,K,IBLOCK) = DLV (I,J,K,IBLOCK) + FCOR(I,J,IBLOCK) * UP (I,J,K,IBLOCK)
             END DO
          END DO
       END DO
@@ -110,6 +116,7 @@ use gird
  
 !$OMP PARALLEL DO PRIVATE (K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
+      this_block = get_block(blocks_clinic(iblock),iblock)
       DO K = 1,KM
          call grad(k, GRADX, GRADY, wka, this_block)
          DO J = JSM,JEM

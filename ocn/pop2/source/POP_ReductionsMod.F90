@@ -24,7 +24,6 @@
    private
    save
 
-   include 'mpif.h'
 
 ! !PUBLIC MEMBER FUNCTIONS:
 
@@ -309,13 +308,13 @@
 #ifdef REPRODUCIBLE
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(localSum, globalSumTmp, 1, &
-                         POP_mpiR16, MPI_SUM, communicator, ierr)
+                         mpi_real16, MPI_SUM, communicator, ierr)
       globalSum = globalSumTmp
    endif
 #else
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(localSum, globalSum, 1, &
-                         POP_mpiR8, MPI_SUM, communicator, ierr)
+                         mpi_real8, MPI_SUM, communicator, ierr)
    endif
 #endif
 
@@ -524,13 +523,13 @@
 #ifdef REPRODUCIBLE
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(localSum, globalSumTmp, 1, &
-                         POP_mpiR8, MPI_SUM, communicator, ierr)
+                         mpi_real8, MPI_SUM, communicator, ierr)
       globalSum = globalSumTmp
    endif
 #else
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(localSum, globalSum, 1, &
-                         POP_mpiR4, MPI_SUM, communicator, ierr)
+                         mpi_real4, MPI_SUM, communicator, ierr)
    endif
 #endif
 
@@ -948,13 +947,13 @@
 #ifdef REPRODUCIBLE
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(localSum, globalSumTmp, numFields, &
-                         POP_mpiR16, MPI_SUM, communicator, ierr)
+                         mpi_real16, MPI_SUM, communicator, ierr)
       globalSum = globalSumTmp 
    endif
 #else
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(localSum, globalSum, numFields, &
-                         POP_mpiR8, MPI_SUM, communicator, ierr)
+                         mpi_real8, MPI_SUM, communicator, ierr)
    endif
 #endif
 
@@ -1045,13 +1044,13 @@
    if (POP_myTask < numProcs) then
       scalarTmp = scalar
       call MPI_ALLREDUCE(scalarTmp, globalSumTmp, 1, &
-                         POP_mpiR16, MPI_SUM, communicator, ierr)
+                         mpi_real16, MPI_SUM, communicator, ierr)
       globalSum = globalSumTmp
    endif
 #else
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(scalar, globalSum, 1, &
-                         POP_mpiR8, MPI_SUM, communicator, ierr)
+                         mpi_real8, MPI_SUM, communicator, ierr)
    endif
 #endif
 
@@ -1140,13 +1139,13 @@
    if (POP_myTask < numProcs) then
       scalarTmp = scalar
       call MPI_ALLREDUCE(scalarTmp, globalSumTmp, 1, &
-                         POP_mpiR8, MPI_SUM, communicator, ierr)
+                         mpi_real8, MPI_SUM, communicator, ierr)
       globalSum = globalSumTmp
    endif
 #else
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(scalar, globalSum, 1, &
-                         POP_mpiR4, MPI_SUM, communicator, ierr)
+                         mpi_real4, MPI_SUM, communicator, ierr)
    endif
 #endif
 
@@ -1442,13 +1441,13 @@
 #ifdef REPRODUCIBLE
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(localSum, globalSumTmp, 1, &
-                         POP_mpiR16, MPI_SUM, communicator, ierr)
+                         mpi_real16, MPI_SUM, communicator, ierr)
       globalSum = globalSumTmp
    endif
 #else
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(localSum, globalSum, 1, &
-                         POP_mpiR8, MPI_SUM, communicator, ierr)
+                         mpi_real8, MPI_SUM, communicator, ierr)
    endif
 #endif
 
@@ -1662,13 +1661,13 @@
 #ifdef REPRODUCIBLE
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(localSum, globalSumTmp, 1, &
-                         POP_mpiR8, MPI_SUM, communicator, ierr)
+                         mpi_real8, MPI_SUM, communicator, ierr)
       globalSum = globalSumTmp
    endif
 #else
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(localSum, globalSum, 1, &
-                         POP_mpiR4, MPI_SUM, communicator, ierr)
+                         mpi_real4, MPI_SUM, communicator, ierr)
    endif
 #endif
 
@@ -2614,7 +2613,7 @@
 
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(localMaxval, globalMaxval, 1, &
-                         POP_mpiR8, MPI_MAX, communicator, ierr)
+                         mpi_real8, MPI_MAX, communicator, ierr)
    endif
 
 !-----------------------------------------------------------------------
@@ -2754,7 +2753,7 @@
 
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(localMaxval, globalMaxval, 1, &
-                         POP_mpiR4, MPI_MAX, communicator, ierr)
+                         mpi_real4, MPI_MAX, communicator, ierr)
    endif
 
 !-----------------------------------------------------------------------
@@ -3034,7 +3033,7 @@
 
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(localMinval, globalMinval, 1, &
-                         POP_mpiR8, MPI_MIN, communicator, ierr)
+                         mpi_real8, MPI_MIN, communicator, ierr)
    endif
 
 !-----------------------------------------------------------------------
@@ -3174,7 +3173,7 @@
 
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(localMinval, globalMinval, 1, &
-                         POP_mpiR4, MPI_MIN, communicator, ierr)
+                         mpi_real4, MPI_MIN, communicator, ierr)
    endif
 
 !-----------------------------------------------------------------------
@@ -3396,7 +3395,7 @@
 
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(scalar, globalMaxval, 1, &
-                         POP_mpiR8, MPI_MAX, communicator, ierr)
+                         mpi_real8, MPI_MAX, communicator, ierr)
    endif
 
 !-----------------------------------------------------------------------
@@ -3478,7 +3477,7 @@
 
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(scalar, globalMaxval, 1, &
-                         POP_mpiR4, MPI_MAX, communicator, ierr)
+                         mpi_real4, MPI_MAX, communicator, ierr)
    endif
 
 !-----------------------------------------------------------------------
@@ -3642,7 +3641,7 @@
 
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(scalar, globalMinval, 1, &
-                         POP_mpiR8, MPI_MIN, communicator, ierr)
+                         mpi_real8, MPI_MIN, communicator, ierr)
    endif
 
 !-----------------------------------------------------------------------
@@ -3724,7 +3723,7 @@
 
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(scalar, globalMinval, 1, &
-                         POP_mpiR4, MPI_MIN, communicator, ierr)
+                         mpi_real4, MPI_MIN, communicator, ierr)
    endif
 
 !-----------------------------------------------------------------------
@@ -3959,7 +3958,7 @@
 
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(localMaxval, maxValue, 1, &
-                         POP_mpiR8, MPI_MAX, communicator, ierr)
+                         mpi_real8, MPI_MAX, communicator, ierr)
 
       if (localMaxval /= maxValue) then
          localMaxAddr(:) = 0
@@ -4122,7 +4121,7 @@
 
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(localMaxval, maxValue, 1, &
-                         POP_mpiR4, MPI_MAX, communicator, ierr)
+                         mpi_real4, MPI_MAX, communicator, ierr)
 
       if (localMaxval /= maxValue) then
          localMaxAddr(:) = 0
@@ -4448,7 +4447,7 @@
 
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(localMinval, minValue, 1, &
-                         POP_mpiR8, MPI_MIN, communicator, ierr)
+                         mpi_real8, MPI_MIN, communicator, ierr)
 
       if (localMinval /= minValue) then
          localMinAddr(:) = 0
@@ -4611,7 +4610,7 @@
 
    if (POP_myTask < numProcs) then
       call MPI_ALLREDUCE(localMinval, minValue, 1, &
-                         POP_mpiR4, MPI_MIN, communicator, ierr)
+                         mpi_real4, MPI_MIN, communicator, ierr)
 
       if (localMinval /= minValue) then
          localMinAddr(:) = 0

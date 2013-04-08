@@ -108,8 +108,8 @@ use domain
 !
       real(r8):: kisrpl(km) 
       integer:: krplin(nrpl)
-      real(r8)::  zt(km),dzw(0:km),dzwr(0:km),dzr(km),dytr(jmt),&
-                      cstrdytr(jmt),dyur(jmt),tmask(imt,km,jmt,max_blocks_clinic)
+      real(r8)::  zt(km),dzw(0:km),dzwr(0:km),dzr(km),&
+                      cstrdytr(jmt),tmask(imt,km,jmt,max_blocks_clinic)
       REAL(r8) , dimension(JMT) :: F3
 #endif
 end module isopyc_mod

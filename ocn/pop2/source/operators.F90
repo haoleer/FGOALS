@@ -21,7 +21,7 @@
    use blocks
    use param_mod
    use domain
-   use constants_mod
+   use constant_mod
    use grid
 
    implicit none

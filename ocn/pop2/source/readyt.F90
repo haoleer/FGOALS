@@ -16,14 +16,20 @@ use msg_mod
 use forc_mod, only: psa,USTAR,BUOYTUR, BUOYSOL,NSWV,SWV
 use domain
 use grid
+use blocks
+use constant_mod
+use operators
+
 !
       IMPLICIT NONE
       REAL(r8)   :: ABCD,TUP,SUP,TLO,SLO,RHOUP,RHOLO
       REAL(r8)   :: DENS
       real(r8),dimension(imt,jmt,km,max_blocks_clinic)::ALPHA,BETA,pp
       real(r8),dimension(imt,jmt,km,max_blocks_clinic)::ppa,ppb,ppc
+      real(r8),dimension(imt,jmt,km):: adv_tt
       integer :: iblock
       EXTERNAL DENS
+      type (block) :: this_block          ! block information for current block
  
  
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
@@ -95,7 +101,7 @@ use grid
 !
 ! ric locate at integer level from 2
 !
-!$OMP PARALLEL DO PRIVATE (IBLOCK,J,I,TUP,SUP,TLO,SLO,RHOUP,RHOLO), shared(k,to,so,at,rict,OD0,G)
+!$OMP PARALLEL DO PRIVATE (IBLOCK,J,I,TUP,SUP,TLO,SLO,RHOUP,RHOLO)
    DO IBLOCK = 1,NBLOCKS_CLINIC
       DO K = 1,KMM1
          DO J = 1,JMT
@@ -226,6 +232,7 @@ use grid
  
 !$OMP PARALLEL DO PRIVATE (K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
+      this_block = get_block(blocks_clinic(iblock),iblock)
       DO K = 1,KM
          call grad(k, dlu(:,:,k,iblock), dlv(:,:,k,iblock), PP(:,:,k,iblock), this_block)
       END DO
@@ -274,13 +281,17 @@ use grid
    DO IBLOCK = 1, NBLOCKS_CLINIC
       call tgrid_to_ugrid(wgp(:,:,iblock), dlv(:,:,1,iblock),iblock)
       call tgrid_to_ugrid(work(:,:,iblock), dlv(:,:,2,iblock),iblock)
-      whx(:,:,iblock) = hbx(:,:,iblock)*work(:,:,iblock)*viv(:,:,iblock)
-      why(:,:,iblock) = hby(:,:,iblock)*work(:,:,iblock)*viv(:,:,iblock)
+      whx(:,:,iblock) = hbx(:,:,iblock)*work(:,:,iblock)*viv(:,:,1,iblock)
+      why(:,:,iblock) = hby(:,:,iblock)*work(:,:,iblock)*viv(:,:,1,iblock)
   END DO
 
-      call grad(k, work1(:,:,iblock), work2(:,:,iblock), psa , this_block)
+!$OMP PARALLEL DO PRIVATE (IBLOCK)
+   DO IBLOCK = 1, NBLOCKS_CLINIC
+      this_block = get_block(blocks_clinic(iblock),iblock)
+      call grad(1, work1(:,:,iblock), work2(:,:,iblock), psa , this_block)
       pay = -OD0*work2
       pax = -OD0*work1
+   END DO
 
       RETURN
       END SUBROUTINE READYT

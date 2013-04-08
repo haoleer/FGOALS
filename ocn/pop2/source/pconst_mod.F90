@@ -47,7 +47,7 @@ use param_mod
       real(r8),dimension(imt,jmt,max_blocks_clinic):: EBEA,EBEB,EBLA,EBLB,EPEA,EPEB,EPLA,EPLB
       real(r8),dimension(jmt)::OUY,OTX,OUX,SOTX,SOUX, &
                     FF,CV1,CV2,SNLAT,SINT, &
-                    SINU,DYT,DYR,DXDYU,DXDYT, &
+                    SINU,DYR,DXDYU,DXDYT, &
                     R1A,R1B,R2A,R2B,R1C, &
                     R1D,R2C,R2D
 !lhl060506
@@ -107,10 +107,8 @@ use param_mod
 !     -----------------------------------------------------------
 !     Reference T S & coefficients for calculation of d(density)
 !     -----------------------------------------------------------
-!YU
-      REAL(r8):: TO(KM),SO(KM),C(KM,9),&
-!lhl1204
-                 PO(KM)
+
+      REAL(r8):: TO(KM),SO(KM),C(KM,9),PO(KM)
 !lhl1204
 
 !YU
@@ -137,10 +135,10 @@ use param_mod
 !lhl
       real(r8)::gamma
 #if ( defined SMAG)
-      real(r8):: D0,CP,G,C0F,TBICE,OD0,SAG,CAG,OD0CP,ASEA, &
+      real(r8):: D0,CP,C0F,TBICE,OD0,SAG,CAG,OD0CP,ASEA, &
                     VSEA,AFB1,AFB2,AFC1,AFC2,AFT1,AFT2,KARMAN,RR
 #else
-      real(r8)::  D0,CP,G,C0F,TBICE,OD0,SAG,CAG,OD0CP,ASEA, &
+      real(r8)::  D0,CP,C0F,TBICE,OD0,SAG,CAG,OD0CP,ASEA, &
                     VSEA,AFB1,AFB2,AFC1,AFC2,AFT1,AFT2
 #endif
 !
@@ -158,7 +156,7 @@ use param_mod
       INTEGER :: NUMBER,NSTART,IY0,IYFM,MON0,MEND,IMD,IDAY,II,JJ,IO_HIST,IO_REST,rest_freq,hist_freq,REFDATE
       integer :: klv
 !
-      REAL(r8):: PI,RADIUS,TORAD
+      REAL(r8):: RADIUS
 !
       character (len=80) :: adv_momentum, adv_tracer
 end module pconst_mod

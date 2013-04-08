@@ -20,7 +20,7 @@
    use precision_mod
    use POP_CommMod
    use POP_BlocksMod
-   
+   use LICOM_Error_Mod   
    use POP_SpaceCurveMod
 
    implicit none

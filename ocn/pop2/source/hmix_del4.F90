@@ -16,16 +16,14 @@
 
    use precision_mod
    use param_mod
-   use LICOM_ErrorMod
-   use POP_GridHorzMod
-   use POP_HaloMod
-   use POP_ReductionsMod
+   use LICOM_Error_Mod
 
    use blocks
-   use msg_mode
+   use msg_mod
    use distribution
-   use constants_mod
+   use constant_mod, only : c0, c1, c2, p5
    use grid
+   use domain
    use broadcast
    use tracer_mod, only : atb
 
@@ -98,8 +96,7 @@
 !
 ! !OUTPUT PARAMETER:
 
-   integer (POP_i4), intent(out) :: &
-      errorCode             ! returned error code
+   integer (i4) :: errorCode             ! returned error code
 
 !EOP
 !BOC
@@ -123,7 +120,6 @@
       lauto_hmix,          &! flag to internally compute mixing coeff
       lvariable_hmix        ! flag to enable spatially varying mixing
 
-   namelist /hmix_del4u_nml/ lauto_hmix, lvariable_hmix, am
 
    real (r8) ::            &
       amfmin, amfmax         ! min max mixing for varible mixing
@@ -190,16 +186,16 @@
 !
 !-----------------------------------------------------------------------
 
-      WORK1 = HUS(:,:,iblock)/HTE(:,:,iblock)
+      WORK1 = HUN(:,:,iblock)/HTW(:,:,iblock)
 
-      DUS(:,:,iblock) = WORK1*UAREA_R(:,:,iblock)
-      DUN(:,:,iblock) = eoshift(WORK1,dim=2,shift=1)*UAREA_R(:,:,iblock)
+      DUN(:,:,iblock) = WORK1*UAREA_R(:,:,iblock)
+      DUS(:,:,iblock) = eoshift(WORK1,dim=2,shift=1)*UAREA_R(:,:,iblock)
       !*** DUN invalid now in northernmost ghost cell
 
-      WORK1 = HUW(:,:,iblock)/HTN(:,:,iblock)
+      WORK1 = HUE(:,:,iblock)/HTS(:,:,iblock)
 
-      DUW(:,:,iblock) = WORK1*UAREA_R(:,:,iblock)
-      DUE(:,:,iblock) = eoshift(WORK1,dim=1,shift=1)*UAREA_R(:,:,iblock)
+      DUE(:,:,iblock) = WORK1*UAREA_R(:,:,iblock)
+      DUW(:,:,iblock) = eoshift(WORK1,dim=1,shift=-1)*UAREA_R(:,:,iblock)
       !*** DUE invalid now in easternmost ghost cell
 
 !-----------------------------------------------------------------------
@@ -209,15 +205,15 @@
 !
 !-----------------------------------------------------------------------
 
-      KXU = (eoshift(HUW(:,:,iblock),dim=1,shift=1) - &
-             HUW(:,:,iblock))*UAREA_R(:,:,iblock)
+      KXU = (eoshift(HUE(:,:,iblock),dim=1,shift=1) - &
+             HUE(:,:,iblock))*UAREA_R(:,:,iblock)
       !*** KXU invalid in easternmost ghost cell
-      KYU = (eoshift(HUS(:,:,iblock),dim=2,shift=1) - &
-             HUS(:,:,iblock))*UAREA_R(:,:,iblock)
+      KYU = (eoshift(HUN(:,:,iblock),dim=2,shift=1) - &
+             HUN(:,:,iblock))*UAREA_R(:,:,iblock)
       !*** KYU invalid in northernmost ghost cell
 
-      WORK1 = (HTE(:,:,iblock) -                         &
-               eoshift(HTE(:,:,iblock),dim=1,shift=-1))* &
+      WORK1 = (HTW(:,:,iblock) -                         &
+               eoshift(HTW(:,:,iblock),dim=1,shift=-1))* &
                TAREA_R(:,:,iblock)  ! KXT
       !*** WORK1 invalid in westernmost ghost cell
       WORK2 = eoshift(WORK1,dim=1,shift=1) - WORK1
@@ -233,8 +229,8 @@
       DYKX = p5*(WORK2 + eoshift(WORK2,dim=1,shift=1))*DYUR(:,:,iblock)
       !*** DYKX invalid in east/west/northernmost ghost cells
 
-      WORK1 = (HTN(:,:,iblock) -                         &
-               eoshift(HTN(:,:,iblock),dim=2,shift=-1))* &
+      WORK1 = (HTS(:,:,iblock) -                         &
+               eoshift(HTS(:,:,iblock),dim=2,shift=-1))* &
               TAREA_R(:,:,iblock)  ! KYT
       !*** WORK1 invalid in southernmost ghost cell
       WORK2 = eoshift(WORK1,dim=2,shift=1) - WORK1
@@ -259,10 +255,10 @@
 !
 !-----------------------------------------------------------------------
 
-      DME(:,:,iblock) =  c2*KYU/(HTN(:,:,iblock) + &
-                                 eoshift(HTN(:,:,iblock),dim=1,shift=1))
-      DMN(:,:,iblock) = -c2*KXU/(HTE(:,:,iblock) + &
-                                 eoshift(HTE(:,:,iblock),dim=2,shift=1))
+      DME(:,:,iblock) =  c2*KYU/(HTS(:,:,iblock) + &
+                                 eoshift(HTS(:,:,iblock),dim=1,shift=1))
+      DMN(:,:,iblock) = -c2*KXU/(HTW(:,:,iblock) + &
+                                 eoshift(HTW(:,:,iblock),dim=2,shift=1))
 
    end do
 
@@ -304,8 +300,7 @@
 !
 ! !OUTPUT PARAMETERS:
 
-   integer (POP_i4), intent(out) :: &
-      errorCode         ! returned error code
+   integer (i4) :: errorCode         ! returned error code
 
 !EOP
 !BOC
@@ -327,7 +322,6 @@
       lauto_hmix,        &! true to automatically determine mixing coeff
       lvariable_hmix      ! true for spatially varying mixing
 
-   namelist /hmix_del4t_nml/ lauto_hmix, lvariable_hmix, ah
 
    real (r8) ::          &
       ahfmin, ahfmax      ! min max mixing for varible mixing
@@ -374,16 +368,16 @@
 
    do iblock=1,nblocks_clinic
 
-      WORK1 = HTN(:,:,iblock)/HUW(:,:,iblock)
+      WORK1 = HTS(:,:,iblock)/HUE(:,:,iblock)
 
-      DTN(:,:,iblock) = WORK1*TAREA_R(:,:,iblock)
-      DTS(:,:,iblock) = eoshift(WORK1,dim=2,shift=-1)* &
+      DTS(:,:,iblock) = WORK1*TAREA_R(:,:,iblock)
+      DTN(:,:,iblock) = eoshift(WORK1,dim=2,shift=-1)* &
                         TAREA_R(:,:,iblock)
 
-      WORK1 = HTE(:,:,iblock)/HUS(:,:,iblock)
+      WORK1 = HTW(:,:,iblock)/HUN(:,:,iblock)
 
-      DTE(:,:,iblock) = WORK1*TAREA_R(:,:,iblock)
-      DTW(:,:,iblock) = eoshift(WORK1,dim=1,shift=-1)* &
+      DTW(:,:,iblock) = WORK1*TAREA_R(:,:,iblock)
+      DTE(:,:,iblock) = eoshift(WORK1,dim=1,shift=1)* &
                         TAREA_R(:,:,iblock)
 
    end do
@@ -615,9 +609,6 @@
 
    integer (int_kind), intent(in) :: k  , ntracer
 
-   integer (int_kind), dimension(nt), intent(in) :: &
-      tavg_HDIFE_TRACER, &! tavg id for east face diffusive flux of tracer
-      tavg_HDIFN_TRACER   ! tavg id for north face diffusive flux of tracer
 
    type (block), intent(in) :: &
       this_block             ! block info for this sub block
@@ -636,7 +627,7 @@
 !-----------------------------------------------------------------------
 
    integer (int_kind) :: &
-      i,j,n,             &! dummy loop indices
+      i,j,n, iblock,              &! dummy loop indices
       bid                 ! local block address
 
    real (r8), dimension(nx_block,ny_block) :: &
@@ -684,11 +675,11 @@
          do i=this_block%ib-1,this_block%ie+1
 
             D2TK(i,j) = AHF(i,j,bid)*                    &
-                       (CC(i,j)*ATB(i  ,j  ,k,ntracer) +      &
-                        CN(i,j)*ATB(i  ,j+1,k,ntracer) +      &
-                        CS(i,j)*ATB(i  ,j-1,k,ntracer) +      &
-                        CE(i,j)*ATB(i+1,j  ,k,ntracer) +      &
-                        CW(i,j)*ATB(i-1,j  ,k,ntracer))
+                       (CC(i,j)*ATB(i  ,j  ,k,ntracer,iblock) +      &
+                        CN(i,j)*ATB(i  ,j+1,k,ntracer,iblock) +      &
+                        CS(i,j)*ATB(i  ,j-1,k,ntracer,iblock) +      &
+                        CE(i,j)*ATB(i+1,j  ,k,ntracer,iblock) +      &
+                        CW(i,j)*ATB(i-1,j  ,k,ntracer,iblock))
 
          end do
          end do

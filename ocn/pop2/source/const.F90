@@ -1,3 +1,94 @@
+
+  module constant_mod
+
+#include <def-undef.h>
+use precision_mod
+use param_mod
+use pconst_mod
+use diag_mod
+use pmix_mod
+use msg_mod, only: tag_1d,tag_2d,tag_3d,tag_4d,nproc,status,mpi_comm_ocn
+use shr_sys_mod
+use shr_msg_mod 
+use shr_kind_mod 
+use shr_const_mod
+use netcdf
+
+  implicit none
+
+  !----- constants -----
+  real(SHR_KIND_R8), parameter ::  latvap   = SHR_CONST_LATVAP ! latent heat of evap   ~ J/kg
+  real(SHR_KIND_R8), parameter ::  Tzro     = SHR_CONST_TKFRZ  ! 0 degrees C                       ~ kelvin
+  real(SHR_KIND_R8), parameter ::  Tfrz     = Tzro   - 1.8     ! temp of saltwater freezing ~ kelvin
+  real(SHR_KIND_R8), parameter ::  pi       = SHR_CONST_PI     ! a famous math constant
+  real(SHR_KIND_R8), parameter ::  omega    = SHR_CONST_OMEGA  ! earth's rotation  ~ rad/sec
+  real(SHR_KIND_R8), parameter ::  g        = SHR_CONST_G      ! gravity ~ m/s^2
+  real(SHR_KIND_R8), parameter ::  DEGtoRAD = PI/180.0         ! PI/180
+
+
+   real (r8), parameter, public :: &
+      c0     =    0.0_r8   ,&
+      c1     =    1.0_r8   ,&
+      c2     =    2.0_r8   ,&
+      c3     =    3.0_r8   ,&
+      c4     =    4.0_r8   ,&
+      c5     =    5.0_r8   ,&
+      c8     =    8.0_r8   ,&
+      c10    =   10.0_r8   ,&
+      c16    =   16.0_r8   ,&
+      c1000  = 1000.0_r8   ,&
+      c10000 =10000.0_r8   ,&
+      c1p5   =    1.5_r8   ,&
+      p33    = c1/c3       ,&
+      p5     = 0.500_r8    ,&
+      p25    = 0.250_r8    ,&
+      p125   = 0.125_r8    ,&
+      p001   = 0.001_r8    ,&
+      eps    = 1.0e-10_r8  ,&
+      eps2   = 1.0e-20_r8  ,&
+      bignum = 1.0e+30_r8  ,&
+      pi2 = c2*pi
+
+
+   real (r4), parameter, public ::         &
+      undefined_nf_r4  = NF90_FILL_FLOAT,  &
+      undefined        = -12345._r4
+
+   real (r8), parameter, public ::         &
+      undefined_nf_r8  = NF90_FILL_DOUBLE
+
+   real (r8), public ::  &
+      undefined_nf = NF90_FILL_DOUBLE
+
+   integer (int_kind), parameter, public ::   &
+      undefined_nf_int = NF90_FILL_INT
+
+   !*** location of fields for staggered grids
+
+   integer (int_kind), parameter, public ::   &
+      field_loc_unknown  =  0, &
+      field_loc_noupdate = -1, &
+      field_loc_center   =  1, &
+      field_loc_SWcorner =  2, &
+      field_loc_Sface    =  3, &
+      field_loc_Wface    =  4
+
+   !*** field type attribute - necessary for handling
+   !*** changes of direction across tripole boundary
+
+   integer (int_kind), parameter, public ::   &
+      field_type_unknown  =  0, &
+      field_type_noupdate = -1, &
+      field_type_scalar   =  1, &
+      field_type_vector   =  2, &
+      field_type_angle    =  3
+!
+  character (5), parameter, public :: &
+      blank_fmt = "(' ')"
+
+      public  :: const
+!
+      contains 
 !  CVS: $Id: const.F90,v 1.1.1.1 2004/04/29 06:22:39 lhl Exp $
 !     ================
       SUBROUTINE CONST
@@ -11,20 +102,7 @@
 !
 !-----------------------------------------------------------------------
 
-#include <def-undef.h>
-use precision_mod
-use param_mod
-use pconst_mod
-use diag_mod
-use pmix_mod
-use msg_mod, only: tag_1d,tag_2d,tag_3d,tag_4d,nproc,status,mpi_comm_ocn
-use shr_sys_mod
-use shr_msg_mod 
-
-
-      IMPLICIT NONE
 !lhl090729
-#include <netcdf.inc>
       integer :: ncid,iret
       real(r8) :: tmpy(s_jmt)
 !lhl090729
@@ -32,7 +110,7 @@ use shr_msg_mod
       REAL(r8)    :: AG,ALFA
 
       namelist /namctl/ AFB1,AFC1,AFT1,IDTB,IDTC,IDTS,AMV,AHV,NUMBER, &
-                        NSTART,IO_HIST,IO_REST,klv,DLAM,AM_TRO,AM_EXT,&
+                        NSTART,IO_HIST,IO_REST,klv,AM_TRO,AM_EXT,&
                         diag_msf,diag_bsf,diag_budget,diag_mth,rest_freq, &
                         hist_freq,out_dir,adv_tracer,adv_momentum
 !-------------------------------------------------------
@@ -58,7 +136,6 @@ use shr_msg_mod
 !-------------------------------------------------------
 !     PHYSICAL CONSTANTS
 !-------------------------------------------------------
-!     G     Acceleration of gravity in m/sec**2
 !     CP    Specific heat capacity of sea water in J/kg/K
 !     D0    Density of sea water in kg/m**3
 !     AG    Ekman bias angle
@@ -66,8 +143,6 @@ use shr_msg_mod
 !     TBICE the frozen point of seawater in C
 !     KARMAN the Karman number for Smagrinsky horizontal voscosity
 !            diffusion
-
-      G = 9.806D0
 
       CP = 3996.0D0
       D0 = 1026.0D0
@@ -98,7 +173,6 @@ use shr_msg_mod
 !YU
 !     AM_TRO  = 2.0E+3
 !     AM_EXT  = 2.0E+5
-!     DLAM    = 1.0
 !YU
       AMV = 1.0D-3
 !lhl  AH  = 2.0D+3
@@ -128,11 +202,12 @@ use shr_msg_mod
       call mpi_bcast(io_hist,1,mpi_integer,0,mpi_comm_ocn,ierr)
       call mpi_bcast(io_rest,1,mpi_integer,0,mpi_comm_ocn,ierr)
       call mpi_bcast(klv,1,mpi_integer,0,mpi_comm_ocn,ierr)
-      call mpi_bcast(dlam,1,MPI_PR,0,mpi_comm_ocn,ierr)
       call mpi_bcast(am_tro,1,MPI_PR,0,mpi_comm_ocn,ierr)
       call mpi_bcast(am_ext,1,MPI_PR,0,mpi_comm_ocn,ierr)
       call mpi_bcast(hist_freq,1,mpi_integer,0,mpi_comm_ocn,ierr)
       call mpi_bcast(rest_freq,1,mpi_integer,0,mpi_comm_ocn,ierr)
+      call mpi_bcast(adv_tracer,80,mpi_integer,0,mpi_comm_ocn,ierr)
+      call mpi_bcast(adv_momentum,80,mpi_character,0,mpi_comm_ocn,ierr)
 !      call mpi_barrier(mpi_comm_ocn,ierr)
 
       AHICE = AHV
@@ -236,6 +311,7 @@ use shr_msg_mod
       read(33,*)
       read(33,*)to
       read(33,*)
+      read(33,*)so
 !lhl1204   add a arry to read reference potential density
 !
       read(33,*)
@@ -268,19 +344,11 @@ use shr_msg_mod
       END DO
 
 !YU
-      if ((imt_global-2)/=nint(360./DLAM)) then
-
-!lhl0711      if ((imt-2)>=nint(360./DLAM)) then
-         write(6,*)"Error in DLAM ! (Const)"
-         write(6,*)imt-2,nint(360./DLAM)
-         stop
-      end if
       if (mytid ==0 ) then
       write(6,*)"AM_EXT,AM_TRO",AM_EXT,AM_TRO
       endif
 !YU
       RETURN
       END SUBROUTINE CONST
-
-
-
+!
+     end module constant_mod

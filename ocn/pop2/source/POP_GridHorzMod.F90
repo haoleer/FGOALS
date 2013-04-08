@@ -15,6 +15,9 @@
 !  2007-02-09: Phil Jones
 !              Initial implementation with some basic types
 
+! !USES:
+
+   use precision_mod
    implicit none
    private
    save
@@ -24,6 +27,13 @@
 ! !PUBLIC DATA TYPES:
 
 ! !DEFINED PARAMETERS:
+
+
+   character (7), parameter, public :: POP_fieldKindUnknown  = 'unknown'
+   character (6), parameter, public :: POP_fieldKindScalar   = 'scalar'
+   character (6), parameter, public :: POP_fieldKindVector   = 'vector'
+   character (5), parameter, public :: POP_fieldKindAngle    = 'angle'
+   character (8), parameter, public :: POP_fieldKindNoUpdate = 'noUpdate'
 
    !*** identifiers for commonly-used POP grids
 
@@ -54,6 +64,33 @@
    character ( 8), parameter, public :: POP_gridHorzLocSEcorner = 'SECorner'
    character ( 8), parameter, public :: POP_gridHorzLocSWcorner = 'SWCorner'
    character ( 8), parameter, public :: POP_gridHorzLocNoUpdate = 'NoUpdate'
+!EOP
+!BOC
+!EOC
+!***********************************************************************
+
+ !contains
+
+!***********************************************************************
+!BOP
+! !IROUTINE: 
+! !INTERFACE:
+
+
+! !DESCRIPTION:
+!
+! !REVISION HISTORY:
+!  same as module
+
+! !INPUT PARAMETERS:
+
+! !OUTPUT PARAMETERS:
+
+!EOP
+!BOC
+!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
+!EOC
 
 !***********************************************************************
 

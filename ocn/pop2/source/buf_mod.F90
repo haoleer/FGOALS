@@ -26,7 +26,7 @@ module buf_mod
   integer               ::   nv        ! corners
   ! end modi
   real(SHR_KIND_R8), allocatable ::   area(:,:) ! grid cell area            ~ rad^2
-  integer ,save, allocatable ::   mask(:,:) ! domain mask: 0 <=> cell NOT in domain
+! integer ,save, allocatable ::   mask_g(:,:), mask_r(:,:,:) ! domain mask: 0 <=> cell NOT in domain
 
   !----- states sent to coupler -----
   real(SHR_KIND_R8), allocatable ::   T_cpl(:,:,:)   ! temperature               ~ Kelvin

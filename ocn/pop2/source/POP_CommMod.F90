@@ -21,14 +21,12 @@
 !
 ! !USES:
 
-   use precison_mod
+   use precision_mod
    use msg_mod, only : mpi_comm_ocn
 
    implicit none
    private
    save
-
-   include 'mpif.h'
 
 ! !PUBLIC MEMBER FUNCTIONS:
 
@@ -40,9 +38,6 @@
 
    integer (i4), public :: &
       POP_communicator,         &! MPI communicator for ocn comms
-      POP_mpiR16,               &! MPI type for r16
-      POP_mpiR8,                &! MPI type for r8
-      POP_mpiR4,                &! MPI type for r4
       POP_myTask,               &! MPI task number for this task
       POP_masterTask             ! MPI task number for master task
 

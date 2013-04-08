@@ -17,10 +17,8 @@
    use precision_mod
    use param_mod
    use LICOM_Error_mod
-   use POP_FieldMod
-   use POP_GridHorzMod
    use POP_HaloMod
-
+   use POP_GridHorzMod
    use blocks
    use distribution
    use domain
@@ -80,6 +78,9 @@
       KMT_G            ! k index of deepest grid cell on global T grid
                        ! for use in performing work distribution
 
+   real (r8), dimension(imt,jmt,max_blocks_clinic), public :: &
+         R1A_u, R1B_u, R2A_u, R2B_u, R1A_t, R1B_t, R2A_t, R2B_t
+
 !-----------------------------------------------------------------------
 !
 !  grid information for all local blocks
@@ -87,20 +88,6 @@
 !
 !-----------------------------------------------------------------------
 
-   !*** dimension(1:km)
-
-   real (r8), dimension(km), public :: &
-      dz                ,&! thickness of layer k
-      c2dz              ,&! 2*dz
-      dzr, dz2r         ,&! reciprocals of dz, c2dz
-      zt                ,&! vert dist from sfc to midpoint of layer
-      zw                  ! vert dist from sfc to bottom of layer
-
-   !*** dimension(0:km)
-
-   real (r8), dimension(0:km), public :: &
-      dzw, dzwr          ! midpoint of k to midpoint of k+1
-                         !   and its reciprocal
 
    !*** geometric 2d arrays
 
@@ -243,7 +230,6 @@
       horiz_grid_file,      &! input file for reading horiz grid info
       vert_grid_file,       &! input file for reading horiz grid info
       topography_file,      &! input file for reading horiz grid info
-      bathymetry_file,      &! input file for reading horiz grid info
       region_mask_file,     &! input file for region mask
       region_info_file,     &! input file with region identification
       bottom_cell_file,     &! input file for thickness of pbc
@@ -277,12 +263,7 @@
 !
 !-----------------------------------------------------------------------
 
-   namelist /grid_nml/horiz_grid_opt, vert_grid_opt, topography_opt,   &
-                      horiz_grid_file, vert_grid_file, topography_file,&
-		      topography_outfile,bathymetry_file,             &
-                      n_topo_smooth, flat_bottom, lremove_points,      &
-                      region_mask_file, region_info_file,sfc_layer_opt,&
-                      partial_bottom_cells, bottom_cell_file, kmt_kmin
+   namelist /grid_nml/ horiz_grid_file, vert_grid_file, topography_file
 
    integer (i4) :: &
       nml_error           ! namelist i/o error flag
@@ -298,6 +279,22 @@
 !  get global ULAT,ULON
 !
 !-----------------------------------------------------------------------
+   if (my_task == master_task) then
+      open (11, file='ocn.parm', status='old',iostat=nml_error)
+      if (nml_error /= 0) then
+         nml_error = -1
+      else
+         nml_error =  1
+      endif
+      do while (nml_error > 0)
+         read(11, nml=grid_nml,iostat=nml_error)
+      end do
+      if (nml_error == 0) close(11)
+      write(6,*) " horiz_grid_file, vert_grid_file, topography_file"
+      write(6,*) horiz_grid_file, vert_grid_file, topography_file
+      call flush(6)
+   endif
+
 
       call broadcast_scalar(horiz_grid_file, master_task)
       call read_horiz_grid(horiz_grid_file,.true.)
@@ -497,7 +494,7 @@
    ANGLET = c0
 
 
-   !$OMP PARALLEL DO PRIVATE (n,i,j,angle_0,angle_w,angle_s,angle_sw, &
+   !$OMP PARALLEL DO PRIVATE (n,i,j,angle_0,angle_e,angle_n,angle_ne, &
    !$OMP                      this_block)
 
    do n=1,nblocks_clinic
@@ -521,9 +518,9 @@
             endif
 
             ANGLE(i,j,n) =  angle_0 *AU0 (i,j,n) + &
-                             angle_e *AUE (i,j,n) + &
-                             angle_n *AUN (i,j,n) + &
-                             angle_ne*AUNE(i,j,n)
+                             angle_e *AUW (i,j,n) + &
+                             angle_n *AUS (i,j,n) + &
+                             angle_ne*AUSW(i,j,n)
 
          enddo
 
@@ -565,33 +562,6 @@
 !  !*** calculate other vertical grid quantities
 !  !***
 
-   dzw(0)  = p5*dz(1)
-   dzw(km) = p5*dz(km)
-   dzwr(0) = c1/dzw(0)
-   zw(1) = dz(1)
-   zt(1) = dzw(0)
-
-   do k = 1,km-1
-      dzw(k) = p5*(dz(k) + dz(k+1))
-      zw(k+1) = zw(k) + dz(k+1)
-      zt(k+1) = zt(k) + dzw(k)
-   enddo
-
-   do k = 1,km
-      c2dz(k) = c2*dz(k)
-      dzr(k)  = c1/dz(k)
-      dz2r(k) = c1/c2dz(k)
-      dzwr(k) = c1/dzw(k)
-   enddo
-
-   if (my_task == master_task) then
-      write(stdout,'(a15)') ' Vertical grid:'
-      do k=1,km
-         write(stdout,vgrid_fmt3) k,dz(k),zt(k)
-      end do
-      write(stdout,blank_fmt)
-   endif
-
 !-----------------------------------------------------------------------
 !
 !  set up topography
@@ -608,6 +578,24 @@
 !  landmasks
 !
 !-----------------------------------------------------------------------
+      do n=1,nblocks_clinic
+         HT (:,:,n) = c0
+         HU (:,:,n) = c0
+         HUR(:,:,n) = c0
+
+         do k=1,km
+            do j=1,ny_block
+            do i=1,nx_block
+               if (k == KMT(i,j,n)) HT(i,j,n) = -zkp(k+1)
+               if (k == KMU(i,j,n)) then
+                  HU (i,j,n) = -zkp(k+1)
+                  HUR(i,j,n) = -c1/zkp(k+1)
+               endif
+            enddo
+            enddo
+         enddo
+      enddo
+
 
    call landmasks
 
@@ -624,12 +612,12 @@
    WORK = UAREA*HU
    volume_u = global_sum(WORK, distrb_clinic, field_loc_SWcorner, RCALCU)
    area_t_k(1) = area_t
-   volume_t_k(1) = global_sum(TAREA*dz(1), distrb_clinic, &
+   volume_t_k(1) = global_sum(TAREA*dzp(1), distrb_clinic, &
                               field_loc_center, RCALCT)
    do k=2,km
       WORK = merge(TAREA, c0, k <= KMT)
       area_t_k(k) = global_sum(WORK, distrb_clinic, field_loc_center)
-      WORK = merge(TAREA*dz(k), c0, k <= KMT)
+      WORK = merge(TAREA*dzp(k), c0, k <= KMT)
       volume_t_k(k) = global_sum(WORK, distrb_clinic, field_loc_center)
    end do
 
@@ -707,24 +695,66 @@
 !
 !-----------------------------------------------------------------------
 
-
+   if (latlon_only) then
+   
       allocate (TLAT_G(imt_global,jmt_global), &
-                TLON_G(imt_global,jmt_global))
-
-
-
+                TLON_G(imt_global,jmt_global)) 
+                
+      INQUIRE(iolength=reclength) TLAT_G
       if (my_task == master_task) then
-         read(nu,rec=1,iostat=ioerr) TLAT_G
-         read(nu,rec=2,iostat=ioerr) TLON_G
+         open(25,file=trim(horiz_grid_file),status='old', &
+              form='unformatted', access='direct', recl=reclength, &
+              iostat=ioerr)
+      endif   
+      
+      call broadcast_scalar(ioerr, master_task)
+      if (ioerr /= 0) call exit_licom(sigAbort, &
+                                    'Error opening horiz_grid_file')
+                                    
+      if (my_task == master_task) then
+         read(25,rec=1,iostat=ioerr) TLAT_G
+         read(25,rec=2,iostat=ioerr) TLON_G
+         close(25)
+      endif
+      
+      call broadcast_scalar(ioerr, master_task)
+      if (ioerr /= 0) call exit_LICOM(sigAbort, &
+                                    'Error reading horiz_grid_file')
+                                    
+      call broadcast_array(TLAT_G, master_task)
+      call broadcast_array(TLON_G, master_task)
+
+!-----------------------------------------------------------------------
+!
+!  otherwise, read everything else
+!  compute some derived fields here to preserve information that is
+!    lost once land blocks are dropped
+!
+!-----------------------------------------------------------------------
+
+   else
+
+      if (.not. allocated(TLAT_G)) then
+         allocate (TLAT_G(imt_global,jmt_global), &
+                   TLON_G(imt_global,jmt_global))
       endif
 
-      call scatter_global(ULAT, TLAT_G, master_task, distrb_clinic, &
+      INQUIRE(iolength=reclength) TLAT_G
+
+      if (my_task == master_task) then
+         open(25,file=trim(horiz_grid_file),status='old', &
+              form='unformatted', access='direct', recl=reclength,iostat=ioerr)
+         read(25,rec=1,iostat=ioerr) TLAT_G
+         read(25,rec=2,iostat=ioerr) TLON_G
+      endif
+
+      call scatter_global(TLAT, TLAT_G, master_task, distrb_clinic, &
                           field_loc_SWcorner, field_type_scalar)
-      call scatter_global(ULON, TLON_G, master_task, distrb_clinic, &
+      call scatter_global(TLON, TLON_G, master_task, distrb_clinic, &
                           field_loc_SWcorner, field_type_scalar)
 
       if (my_task == master_task) then
-         read(nu,rec=3,iostat=ioerr) TLAT_G  ! holds HTS
+         read(25,rec=3,iostat=ioerr) TLAT_G  ! holds HTS
       endif
 
       call scatter_global(HTS, TLAT_G, master_task, distrb_clinic, &
@@ -767,7 +797,7 @@
                           field_loc_center, field_type_scalar)
 
       if (my_task == master_task) then
-         read(nu,rec=4,iostat=ioerr) TLAT_G  ! holds HTW
+         read(25,rec=4,iostat=ioerr) TLAT_G  ! holds HTW
       endif
 
       call scatter_global(HTW, TLAT_G, master_task, distrb_clinic, &
@@ -800,8 +830,8 @@
                           field_loc_SWcorner, field_type_scalar)
 
       if (my_task == master_task) then
-         read(nu,rec=5,iostat=ioerr) TLAT_G
-         read(nu,rec=6,iostat=ioerr) TLON_G
+         read(25,rec=5,iostat=ioerr) TLAT_G
+         read(25,rec=6,iostat=ioerr) TLON_G
       endif
 
       call scatter_global(HUN, TLAT_G, master_task, distrb_clinic, &
@@ -810,8 +840,8 @@
                           field_loc_Sface, field_type_scalar)
 
       if (my_task == master_task) then
-         read(nu,rec=7,iostat=ioerr) TLAT_G
-         close(nu)
+         read(25,rec=7,iostat=ioerr) TLAT_G
+         close(25)
       endif
 
       call scatter_global(ANGLET, TLAT_G, master_task, distrb_clinic, &
@@ -826,6 +856,7 @@
       where (DYU <= c0) DYU = c1
       where (DXT <= c0) DXT = c1
       where (DYT <= c0) DYT = c1
+   end if
 
 !-----------------------------------------------------------------------
 !EOC
@@ -934,13 +965,11 @@
 !     ODZT   1/DZT
 
    if (my_task == master_task) then
-      if (ioerr == 0) then ! successful open
-         open (25, file='vertical.grid',form='formatted')
-         grid_read: do k = 1,km
-            read(25,*) zkp(k)
-         end do grid_read
-         close(nu)
-      endif
+      open (25, file=trim(vert_grid_file),form='formatted')
+      do k = 1,km+1
+         read(25,*) zkp(k)
+      end do 
+      close(25)
    endif
 
 
@@ -961,6 +990,12 @@
       DO K = 2,KM
          ODZT (K)= 1.0D0/ (ZKT (K -1) - ZKT (K))
       END DO
+
+      if (mytid == 1) then
+          write(115,*) zkp
+          write(115,*) zkt
+          close(115)
+      end if
 
 
 !-----------------------------------------------------------------------
@@ -1009,11 +1044,25 @@
 
       allocate(KMT_G(imt_global,jmt_global))
 
+      INQUIRE(iolength=reclength) KMT_G
+      if (my_task == master_task) then
+         open(25, file=topography_file,status='old',form='unformatted', &
+                  access='direct', recl=reclength, iostat=ioerr)
+      endif
+
+      call broadcast_scalar(ioerr, master_task)
+      if (ioerr /= 0) call exit_LICOM(sigAbort, &
+                                 'Error opening topography_file')
 
       if (my_task == master_task) then
-         read(nu, rec=1, iostat=ioerr) KMT_G
-         close(nu)
+         read(25, rec=1, iostat=ioerr) KMT_G
+         close(25)
       endif
+
+      call broadcast_scalar(ioerr, master_task)
+      if (ioerr /= 0) call exit_LICOM(sigAbort, &
+                                 'Error reading topography_file')
+
       call broadcast_array(KMT_G, master_task)
 
 !-----------------------------------------------------------------------
@@ -1027,7 +1076,7 @@
                           field_loc_center, field_type_scalar)
       deallocate(KMT_G)
 !
-      call boundary(KMT)
+      call boundary
 !
    endif
 
@@ -1462,7 +1511,7 @@
 !
 !-----------------------------------------------------------------------
 
-   !$OMP PARALLEL DO PRIVATE(n,i,j,this_block,xne,yne,zne,xe,ye,ze,xn,yn,zn,xc,yc,zc, &
+   !$OMP PARALLEL DO PRIVATE(n,i,j,this_block,xsw,ysw,zsw,xw,yw,zw,xs,ys,zs,xc,yc,zc, &
    !$OMP                     tx,ty,tz,da)
 
    do n=1,nblocks_clinic
@@ -1486,19 +1535,19 @@
 !        !***
 
          zsw = cos(TLAT(i-1,j+1,n))
-         xsw = cos(TLON(i-1,j+1,n))*zne
-         ysw = sin(TLON(i-1,j+1,n))*zne
+         xsw = cos(TLON(i-1,j+1,n))*zsw
+         ysw = sin(TLON(i-1,j+1,n))*zsw
          zsw = sin(TLAT(i-1,j+1,n))
 
          zs  = cos(TLAT(i  ,j+1,n))
-         xs  = cos(TLON(i  ,j+1,n))*zn
-         ys  = sin(TLON(i  ,j+1,n))*zn
+         xs  = cos(TLON(i  ,j+1,n))*zs
+         ys  = sin(TLON(i  ,j+1,n))*zs
          zs  = sin(TLAT(i  ,j+1,n))
 
-         ze  = cos(TLAT(i-1,j  ,n))
-         xe  = cos(TLON(i-1,j  ,n))*ze
-         ye  = sin(TLON(i-1,j  ,n))*ze
-         ze  = sin(TLAT(i-1,j  ,n))
+         zw  = cos(TLAT(i-1,j  ,n))
+         xw  = cos(TLON(i-1,j  ,n))*zw
+         yw  = sin(TLON(i-1,j  ,n))*zw
+         zw  = sin(TLAT(i-1,j  ,n))
 
          zc  = cos(TLAT(i  ,j  ,n))
          xc  = cos(TLON(i  ,j  ,n))*zc
@@ -1509,9 +1558,9 @@
 !        !*** straight 4-point average to T-cell Cartesian coords
 !        !***
 
-         tx = p25*(xc + xn + xe + xne)
-         ty = p25*(yc + yn + ye + yne)
-         tz = p25*(zc + zn + ze + zne)
+         tx = p25*(xc + xs + xw + xsw)
+         ty = p25*(yc + ys + yw + ysw)
+         tz = p25*(zc + zs + zw + zsw)
 
 !        !***
 !        !*** convert to lat/lon in radians
@@ -1557,6 +1606,7 @@
 !
 !-----------------------------------------------------------------------
 
+   
    call POP_HaloUpdate(ULAT, POP_haloClinic, POP_gridHorzLocSWcorner, & 
                        POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
 
@@ -1713,24 +1763,24 @@
  subroutine calc_coeff
 !
       real(r8) eps, abcd
-      integer :: iblock
+      integer :: iblock, ErrorCode
 !
       do iblock = 1, nblocks_clinic
 !
       do j = 1,jmt
       do i=  1,imt
          EPS = 0.5D0* FCOR(I,J,IBLOCK)* DTC
-         EPEA_global(I,J,IBLOCK) = 1.0D0/ (1.0D0+ EPS * EPS)
-         EPEB_global(I,J,IBLOCK) = EPS / (1.0D0+ EPS * EPS)
+         EPEA(I,J,IBLOCK) = 1.0D0/ (1.0D0+ EPS * EPS)
+         EPEB(I,J,IBLOCK) = EPS / (1.0D0+ EPS * EPS)
          EPS = FCOR(I,J,IBLOCK)* DTC
-         EPLA_global(I,J,IBLOCK) = 1.0D0/ (1.0D0+ EPS * EPS)
-         EPLB_global(I,J,IBLOCK) = EPS / (1.0D0+ EPS * EPS)
+         EPLA(I,J,IBLOCK) = 1.0D0/ (1.0D0+ EPS * EPS)
+         EPLB(I,J,IBLOCK) = EPS / (1.0D0+ EPS * EPS)
          EPS = 0.5D0* FCOR(I,J,IBLOCK)* DTB
-         EBEA_global(I,J,IBLOCK) = 1.0D0/ (1.0D0+ EPS * EPS)
-         EBEB_global(I,J,IBLOCK) = EPS / (1.0D0+ EPS * EPS)
-         EPS = FF_global(I,J,IBLOCK)* DTB
-         EBLA_global(I,J,IBLOCK) = 1.0D0/ (1.0D0+ EPS * EPS)
-         EBLB_global(I,J,IBLOCK) = EPS / (1.0D0+ EPS * EPS)
+         EBEA(I,J,IBLOCK) = 1.0D0/ (1.0D0+ EPS * EPS)
+         EBEB(I,J,IBLOCK) = EPS / (1.0D0+ EPS * EPS)
+         EPS = FCOR(I,J,IBLOCK)* DTB
+         EBLA(I,J,IBLOCK) = 1.0D0/ (1.0D0+ EPS * EPS)
+         EBLB(I,J,IBLOCK) = EPS / (1.0D0+ EPS * EPS)
       end do
       end do
 !
@@ -1776,22 +1826,23 @@
       end do
 !
    call POP_HaloUpdate(r1a_u, POP_haloClinic, POP_gridHorzLocSface, &
-                       POP_fieldKindScaler, errorCode,fillValue = 0.0_r8)
+                       POP_fieldKindScalar, errorCode,fillValue = 0.0_r8)
    call POP_HaloUpdate(r1b_u, POP_haloClinic, POP_gridHorzLocSface, &
-                       POP_fieldKindScaler, errorCode,fillValue = 0.0_r8)
+                       POP_fieldKindScalar, errorCode,fillValue = 0.0_r8)
    call POP_HaloUpdate(r2a_u, POP_haloClinic, POP_gridHorzLocWface, &
-                       POP_fieldKindScaler, errorCode,fillValue = 0.0_r8)
+                       POP_fieldKindScalar, errorCode,fillValue = 0.0_r8)
    call POP_HaloUpdate(r2b_u, POP_haloClinic, POP_gridHorzLocWface, &
-                       POP_fieldKindScaler, errorCode,fillValue = 0.0_r8)
+                       POP_fieldKindScalar, errorCode,fillValue = 0.0_r8)
    call POP_HaloUpdate(r1a_t, POP_haloClinic, POP_gridHorzLocWface, &
-                       POP_fieldKindScaler, errorCode,fillValue = 0.0_r8)
+                       POP_fieldKindScalar, errorCode,fillValue = 0.0_r8)
    call POP_HaloUpdate(r1b_t, POP_haloClinic, POP_gridHorzLocEface, &
-                       POP_fieldKindScaler, errorCode,fillValue = 0.0_r8)
+                       POP_fieldKindScalar, errorCode,fillValue = 0.0_r8)
    call POP_HaloUpdate(r2a_t, POP_haloClinic, POP_gridHorzLocNface, &
-                       POP_fieldKindScaler, errorCode,fillValue = 0.0_r8)
+                       POP_fieldKindScalar, errorCode,fillValue = 0.0_r8)
    call POP_HaloUpdate(r2b_t, POP_haloClinic, POP_gridHorzLocSface, &
-                       POP_fieldKindScaler, errorCode,fillValue = 0.0_r8)
+                       POP_fieldKindScalar, errorCode,fillValue = 0.0_r8)
 !
+
  end subroutine calc_coeff
 
  end module grid

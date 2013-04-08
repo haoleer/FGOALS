@@ -13,6 +13,7 @@ use param_mod
 use isopyc_mod
 use pconst_mod
 use domain
+use grid
       IMPLICIT NONE
  
       REAL(r8):: c1e10,eps,p5,c0,c1,p25,fxd,fxe,fxc,fxa,fxb,chkslp,olmask,xx
@@ -121,7 +122,7 @@ use domain
                e (i,k,j,1,iblock) = p25* OUX (j)* c1e10* ( &
                rhoi (i +1,k,j +1,m,iblock) - rhoi (i -1,k,j +1,m,iblock) &
                              + rhoi (i +1,k,j,m,iblock) - rhoi (i -1,k,j,m,iblock)) 
-               e (i,k,j,2,iblock) = tmask (i,k,j,iblock)* tmask (i,k,j +1,iblock)* dyur (j)  &
+               e (i,k,j,2,iblock) = tmask (i,k,j,iblock)* tmask (i,k,j +1,iblock)* dyur (i,j,iblock)  &
                             * c1e10 &
                              * (rhoi (i,k,j +1,m,iblock) - rhoi (i,k,j,m,iblock))  
             END DO

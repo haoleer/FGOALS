@@ -15,11 +15,13 @@ use isopyc_mod
 use work_mod
 use msg_mod
 use domain
+use grid
+use constant_mod
  
       IMPLICIT NONE
  
       INTEGER :: mtrace, iblock
-      REAL(r8):: p5,p25,c1,c0,fxa,fxb,fxc,fxe
+      REAL(r8):: fxa,fxb,fxc,fxe
  
       allocate (work_1(imt,jmt,km,max_blocks_clinic),work_2(imt,jmt,km,max_blocks_clinic))
       allocate (temp(imt,jmt,km,max_blocks_clinic))
@@ -27,12 +29,6 @@ use domain
 !-----------------------------------------------------------------------
 !     set local constants
 !-----------------------------------------------------------------------
-      p5 = 0.5D0
- 
-      c0 = 0.0D0
-      c1 = 1.0D0
-      p25 = 0.25D0
- 
       m = mtrace
  
 !-----------------------------------------------------------------------
@@ -112,7 +108,7 @@ use domain
       DO k = 1,km
          DO j = 2,jmm
             DO i = 1,imt
-               work_1 (i,j,k,iblock)= ( ahisop * dyur (j)* (atb (i,j +1,k,m,iblock)- atb (i,j,k,m,iblock)) + &
+               work_1 (i,j,k,iblock)= ( ahisop * dyur (i,j,iblock)* (atb (i,j +1,k,m,iblock)- atb (i,j,k,m,iblock)) + &
                ahisop * K2 (i,k,j,3,iblock)* temp (i,j,k,iblock) )* &
                SINU (j)* vit (i,j,k,iblock)* vit (i,j +1,k,iblock) 
 !
@@ -224,7 +220,7 @@ use domain
                + vit (i +1,j,k ,iblock)* (atb (i +1,j,k,m,iblock) - atb (i,j,k,m,iblock)) &
                + vit (i +1,j,k -1,iblock)* (atb (i +1,j,k -1,m,iblock) - atb (i,j,    &
                                   k -1,m,iblock))) + &
-               dytr (j)* K3 (i,k -1,j,2,iblock)* &
+               dytr (i,j,iblock)* K3 (i,k -1,j,2,iblock)* &
                (vit (i,j -1,k ,iblock)* (atb (i,j,k,m,iblock) - atb (i,j -1,k,m,iblock)) &
                + vit (i,j -1,k -1,iblock)* (atb (i,j,k -1,m,iblock) - atb (i,j -1,k -1,m,iblock)) &
                + vit (i,j +1,k ,iblock)* (atb (i,j +1,k,m,iblock) - atb (i,j,k,m,iblock)) &

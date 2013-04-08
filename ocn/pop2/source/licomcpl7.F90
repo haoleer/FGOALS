@@ -38,20 +38,16 @@ module licom_comp_mct
 #include <def-undef.h>
 use param_mod
 use pconst_mod
-
 use shr_msg_mod
 use shr_sys_mod
 use control_mod
-use constant_mod, only : LATVAP, DEGtoRAD
+use constant_mod
 use shr_cal_mod,       only: shr_cal_date2ymd
-
-
-#if ( defined SPMD ) || ( defined COUP)
 use msg_mod, only: tag_1d,tag_2d,tag_3d,tag_4d,nproc,status,mpi_comm_ocn
-#endif
 use tracer_mod
 use pmix_mod
 use forc_mod
+!
 #ifdef USE_OCN_CARBON
 use carbon_mod
 use cforce_mod
@@ -190,6 +186,8 @@ use cforce_mod
     LOGMSG()
       CALL CONST
     LOGMSG()
+      write(120+mytid,*) adv_momentum, adv_tracer
+      close(120+mytid)
       if (mytid == 0) then
       write(111,*)"OK------3"
       close(111)
@@ -223,7 +221,7 @@ use cforce_mod
    call init_domain_distribution(KMT_G)
    call init_grid2
    call calc_coeff
-!     CALL GRIDS
+     CALL GRIDS
       if (mytid == 0) then
       write(111,*)"OK------4"
       close(111)
@@ -278,10 +276,13 @@ use cforce_mod
 !----------------------------------------------------------------------
 
    call licom_SetGSMap_mct(mpi_comm_ocn, OCNID, GSMap_o)
+      if (mytid == 0) then
+      write(111,*)"OK------6.0"
+      close(111)
+      end if
 
    lsize = mct_gsMap_lsize(gsMap_o, mpi_comm_ocn)
    write(6,*) "mct_gsMap_lsize = ",lsize
-   write(6,*) "ID=",mytid,"i_num=",i_num,"j_num=",j_num
 
    call licom_domain_mct(lsize, gsMap_o, dom_o)
 
@@ -291,6 +292,10 @@ use cforce_mod
 
    call mct_aVect_init(o2x_o, rList=seq_flds_o2x_fields, lsize=lsize)
    call mct_aVect_zero(o2x_o)
+      if (mytid == 0) then
+      write(111,*)"OK------7.0"
+      close(111)
+      end if
 
 
 
@@ -323,6 +328,10 @@ use cforce_mod
          call shr_sys_flush(6)
 #endif
 
+      if (mytid == 0) then
+      write(111,*)"OK------8.0"
+      close(111)
+      end if
 
   end subroutine licom_init_mct
 
@@ -382,11 +391,23 @@ use cforce_mod
 !   call msg_pass('recv')
 !----------------------------------------------------------------------
     LOGMSG()
+      if (mytid == 0) then
+      write(111,*)"OK------9.0"
+      close(111)
+      end if
     call licom_import_mct(x2o_o)
+      if (mytid == 0) then
+      write(111,*)"OK------10.0"
+      close(111)
+      end if
 
     LOGMSG()
     call post_cpl
 
+      if (mytid == 0) then
+      write(111,*)"OK------11.0"
+      close(111)
+      end if
 !---------------------------------------------------------------------
 !     THERMAL CYCLE
 !---------------------------------------------------------------------
@@ -396,7 +417,15 @@ use cforce_mod
 
 !     COMPUTE DENSITY, BAROCLINIC PRESSURE AND THE RELAVANT VARIABLES
     LOGMSG()
+      if (mytid == 0) then
+      write(111,*)"OK------12.0"
+      close(111)
+      end if
             CALL READYT
+      if (mytid == 0) then
+      write(111,*)"OK------13.0"
+      close(111)
+      end if
 
 !----------------------------------------------------
 !     BAROCLINIC & BAROTROPIC CYCLE
@@ -407,15 +436,27 @@ use cforce_mod
 !     COMPUTE MOMENTUM ADVECTION, DIFFUSION & THEIR VERTICAL INTEGRALS
     LOGMSG()
                CALL READYC
+      if (mytid == 0) then
+      write(111,*)"OK------14.0"
+      close(111)
+      end if
 
 !     PREDICTION OF BAROTROPIC MODE
     LOGMSG()
                CALL BAROTR
+      if (mytid == 0) then
+      write(111,*)"OK------15.0"
+      close(111)
+      end if
 
 
 !     PREDICTION OF BAROCLINIC MODE
     LOGMSG()
                CALL BCLINC
+      if (mytid == 0) then
+      write(111,*)"OK------16.0"
+      close(111)
+      end if
 
 
 
@@ -426,11 +467,23 @@ use cforce_mod
 !*******************************************************************
 
     LOGMSG()
+      if (mytid == 0) then
+      write(111,*)"OK------17.0"
+      close(111)
+      end if
             CALL TRACER
+      if (mytid == 0) then
+      write(111,*)"OK------18.0"
+      close(111)
+      end if
 
     LOGMSG()
             CALL ICESNOW
 
+      if (mytid == 0) then
+      write(111,*)"OK------19.0"
+      close(111)
+      end if
 
 !***********************************************************************
 !     PERFORM CONVECTIVE ADJUSTMENT IF UNSTABLE STRATIFICATION OCCURS
@@ -440,17 +493,33 @@ use cforce_mod
     LOGMSG()
             CALL CONVADJ
 !#endif
+      if (mytid == 0) then
+      write(111,*)"OK------20.0"
+      close(111)
+      end if
 
 !*************************************************************************
 !
          END DO
     LOGMSG()
+      if (mytid == 0) then
+      write(111,*)"OK------21.0"
+      close(111)
+      end if
          CALL ENERGY
 
+      if (mytid == 0) then
+      write(111,*)"OK------22.0"
+      close(111)
+      end if
 !     COMPENSATE THE LOSS OF GROSS MASS
 
     LOGMSG()
          CALL ADDPS
+      if (mytid == 0) then
+      write(111,*)"OK------23.0"
+      close(111)
+      end if
 
 
 !
@@ -470,17 +539,33 @@ use cforce_mod
     LOGMSG()
          call flux_cpl
 #endif
+      if (mytid == 0) then
+      write(111,*)"OK------24.0"
+      close(111)
+      end if
 
     LOGMSG()
     CALL SSAVEINS
+      if (mytid == 0) then
+      write(111,*)"OK------25.0"
+      close(111)
+      end if
 
 !     ACCUMULATE SOME VARIABLES FOR MONTHLY OUTPUT
 
     CALL ACCUMM
+      if (mytid == 0) then
+      write(111,*)"OK------26.0"
+      close(111)
+      end if
 
     if (iday==imd) then
       CALL SSAVEMON
     endif
+      if (mytid == 0) then
+      write(111,*)"OK------27.0"
+      close(111)
+      end if
 !----------------------------------------------------------------------
 !   call msg_pass('send')
 !----------------------------------------------------------------------
@@ -488,6 +573,10 @@ use cforce_mod
     call licom_export_mct(o2x_o)
 
     LOGMSG()
+      if (mytid == 0) then
+      write(111,*)"OK------28.0"
+      close(111)
+      end if
 
   end subroutine licom_run_mct
 
@@ -513,7 +602,7 @@ use cforce_mod
      n=0
     do iblock = 1, nblocks_clinic
         this_block = get_block(blocks_clinic(iblock),iblock)
-        do j=this_block%je, this_block%jb, -1
+        do j=this_block%jb, this_block%je
         do i=this_block%ib, this_block%ie
            n=n+1
            !--- states ---
@@ -558,7 +647,7 @@ use cforce_mod
 ! lihuimin, 2012.8.7, consider jst_global
   do iblock =1 , nblocks_clinic
         this_block = get_block(blocks_clinic(iblock),iblock)
-        do j=this_block%je, this_block%jb, -1
+        do j=this_block%jb, this_block%je
         do i=this_block%ib, this_block%ie
           n=n+1
           o2x_o%rAttr(index_o2x_So_t,n)    = T_cpl   (i,j,iblock) ! temperature
@@ -628,10 +717,11 @@ use cforce_mod
        do j=this_block%jb,this_block%je
        do i=this_block%ib,this_block%ie
           n=n+1
-          gindex(n) = (this_block%j_glob(j)-1)*(imt_global) + this_block%i_glob(i)
+          gindex(n) = (jmt_global- this_block%j_glob(j))*(imt_global) + this_block%i_glob(i)
        enddo
        enddo
     enddo
+
 
     call mct_gsMap_init( gsMap_ocn, gindex, mpicom_ocn, OCNID, lsize, gsize )
 
@@ -696,7 +786,7 @@ use cforce_mod
     n=0
     do iblock = 1, nblocks_clinic
        this_block = get_block(blocks_clinic(iblock),iblock)
-       do j=this_block%je,this_block%jb, -1
+       do j=this_block%jb,this_block%je
        do i=this_block%ib,this_block%ie
           n=n+1
           data(n) = TLON(i,j,iblock)/DEGtoRAD
@@ -708,7 +798,7 @@ use cforce_mod
     n=0
     do iblock = 1, nblocks_clinic
        this_block = get_block(blocks_clinic(iblock),iblock)
-       do j=this_block%je,this_block%jb, -1
+       do j=this_block%jb,this_block%je
        do i=this_block%ib,this_block%ie
           n=n+1
           data(n) = TLAT(i,j,iblock)/DEGtoRAD
@@ -720,7 +810,7 @@ use cforce_mod
     n=0
     do iblock = 1, nblocks_clinic
        this_block = get_block(blocks_clinic(iblock),iblock)
-       do j=this_block%je,this_block%jb, -1
+       do j=this_block%jb,this_block%je
        do i=this_block%ib,this_block%ie
           n=n+1
           data(n) = TAREA(i,j,iblock)/(radius*radius)
@@ -732,9 +822,10 @@ use cforce_mod
      n=0
     do iblock = 1, nblocks_clinic
        this_block = get_block(blocks_clinic(iblock),iblock)
-       do j=this_block%je,this_block%jb, -1
+       do j=this_block%jb,this_block%je
        do i=this_block%ib,this_block%ie
           n=n+1
+!         data(n) = float(mask_r(i,j,iblock))
           data(n) = float(KMT(i,j,iblock))
           if (data(n) > 1.0_r8) data(n) = 1.0_r8
        enddo
@@ -745,6 +836,7 @@ use cforce_mod
 
     deallocate(data)
     deallocate(idata)
+!   deallocate(mask_r)
 
   end subroutine licom_domain_mct
 

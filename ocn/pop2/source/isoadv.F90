@@ -92,7 +92,7 @@ use domain
  
       jstrt = 2
  
-!$OMP PARALLEL DO PRIVATE (block,j,k,fxa,i)
+!$OMP PARALLEL DO PRIVATE (iblock,j,k,fxa,i)
    do iblock = 1, nblocks_clinic
       DO j = jstrt,jmm
          DO k = 2,km -1

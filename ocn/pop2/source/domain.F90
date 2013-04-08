@@ -23,13 +23,12 @@
    use POP_BlocksMod
    use POP_DistributionMod
    use POP_HaloMod
+   use POP_GridHorzMod
    use control_mod
    use LICOM_Error_mod
-!  use constants
    use broadcast
    use blocks
    use distribution
-!  use io_types
 
    implicit none
    private

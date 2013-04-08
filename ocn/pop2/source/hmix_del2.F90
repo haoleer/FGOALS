@@ -15,11 +15,7 @@
 ! !USES:
 
    use precision_mod
-   use LICOM_ErrorMod
-   use POP_FieldMod
-   use POP_GridHorzMod
-   use POP_HaloMod
-   use POP_ReductionsMod
+   use LICOM_Error_Mod
 
    use param_mod
    use blocks
@@ -27,9 +23,9 @@
    use distribution
    use domain
    use broadcast
-   use constants_mod
-   use io
+   use constant_mod, only : c0, c1, c2, p5
    use grid
+   use tracer_mod, only : atb
 
    implicit none
    private
@@ -136,6 +132,7 @@
 !
 !-----------------------------------------------------------------------
 
+      allocate(AMF(nx_block,ny_block,nblocks_clinic))
       AMF = c1
 
 !-----------------------------------------------------------------------
@@ -174,17 +171,17 @@
 !
 !-----------------------------------------------------------------------
 
-      WORK1 = (HUS(:,:,iblock)/HTE(:,:,iblock))*p5*(AMF(:,:,iblock) + &
+      WORK1 = (HUN(:,:,iblock)/HTW(:,:,iblock))*p5*(AMF(:,:,iblock) + &
                             eoshift(AMF(:,:,iblock),dim=2,shift=-1))
 
-      DUS(:,:,iblock) = WORK1*UAREA_R(:,:,iblock)
-      DUN(:,:,iblock) = eoshift(WORK1,dim=2,shift=1)*UAREA_R(:,:,iblock)
+      DUN(:,:,iblock) = WORK1*UAREA_R(:,:,iblock)
+      DUS(:,:,iblock) = eoshift(WORK1,dim=2,shift=1)*UAREA_R(:,:,iblock)
 
-      WORK1 = (HUW(:,:,iblock)/HTN(:,:,iblock))*p5*(AMF(:,:,iblock) + &
-                            eoshift(AMF(:,:,iblock),dim=1,shift=-1))
+      WORK1 = (HUE(:,:,iblock)/HTS(:,:,iblock))*p5*(AMF(:,:,iblock) + &
+                            eoshift(AMF(:,:,iblock),dim=1,shift=1))
 
-      DUW(:,:,iblock) = WORK1*UAREA_R(:,:,iblock)
-      DUE(:,:,iblock) = eoshift(WORK1,dim=1,shift=1)*UAREA_R(:,:,iblock)
+      DUE(:,:,iblock) = WORK1*UAREA_R(:,:,iblock)
+      DUW(:,:,iblock) = eoshift(WORK1,dim=1,shift=-1)*UAREA_R(:,:,iblock)
 
 !-----------------------------------------------------------------------
 !
@@ -193,32 +190,31 @@
 !
 !-----------------------------------------------------------------------
 
-      KXU = (eoshift(HUW(:,:,iblock),dim=1,shift=1) - HUW(:,:,iblock))*&
+      KXU = (HUE(:,:,iblock) - eoshift(HUE(:,:,iblock),dim=1,shift=1))*&
             UAREA_R(:,:,iblock)
-      KYU = (eoshift(HUS(:,:,iblock),dim=2,shift=1) - HUS(:,:,iblock))*&
+      KYU = (eoshift(HUN(:,:,iblock),dim=2,shift=1) - HUN(:,:,iblock))*&
             UAREA_R(:,:,iblock)
 
-      WORK1 = (HTE(:,:,iblock) -                         &
-               eoshift(HTE(:,:,iblock),dim=1,shift=-1))* &
+      WORK1 = (eoshift(HTW(:,:,iblock),dim=1,shift=1)-HTW(:,:,iblock))* &
               TAREA_R(:,:,iblock)  ! KXT
 
       WORK2 = p5*(WORK1 + eoshift(WORK1,dim=2,shift=1))*    &
-              p5*(eoshift(AMF(:,:,iblock),dim=1,shift=-1) + &
+              p5*(eoshift(AMF(:,:,iblock),dim=1,shift=1) + &
                   AMF(:,:,iblock))
 
-      DXKX = (eoshift(WORK2,dim=1,shift=1) - WORK2)*DXUR(:,:,iblock)
+      DXKX = (WORK2 - eoshift(WORK2,dim=1,shift=-1))*DXUR(:,:,iblock)
 
-      WORK2 = p5*(WORK1 + eoshift(WORK1,dim=1,shift=1))*    &
+      WORK2 = p5*(WORK1 + eoshift(WORK1,dim=1,shift=-1))*    &
               p5*(eoshift(AMF(:,:,iblock),dim=2,shift=-1) + &
                   AMF(:,:,iblock))
 
       DYKX = (eoshift(WORK2,dim=2,shift=1) - WORK2)*DYUR(:,:,iblock)
 
-      WORK1 = (HTN(:,:,iblock) -                         &
-               eoshift(HTN(:,:,iblock),dim=2,shift=-1))* &
+      WORK1 = (HTS(:,:,iblock) -                         &
+               eoshift(HTS(:,:,iblock),dim=2,shift=-1))* &
               TAREA_R(:,:,iblock)  ! KYT
 
-      WORK2 = p5*(WORK1 + eoshift(WORK1,dim=1,shift=1))*    &
+      WORK2 = p5*(WORK1 + eoshift(WORK1,dim=1,shift=-1))*    &
               p5*(eoshift(AMF(:,:,iblock),dim=2,shift=-1) + &
                   AMF(:,:,iblock))
 
@@ -228,7 +224,7 @@
               p5*(eoshift(AMF(:,:,iblock),dim=1,shift=-1) + &
                   AMF(:,:,iblock))
 
-      DXKY = (eoshift(WORK2,dim=1,shift=1) - WORK2)*DXUR(:,:,iblock)
+      DXKY = (WORK2 - eoshift(WORK2,dim=1,shift=-1))*DXUR(:,:,iblock)
 
       DUM(:,:,iblock) = -(DXKX + DYKY + &
                         c2*AMF(:,:,iblock)*(KXU**2 + KYU**2))
@@ -243,19 +239,19 @@
 
       WORK1 = (eoshift(AMF(:,:,iblock),dim=2,shift= 1) -    &
                eoshift(AMF(:,:,iblock),dim=2,shift=-1))/    &
-              (HTE(:,:,iblock) + eoshift(HTE(:,:,iblock),dim=2,shift=1))
+              (HTW(:,:,iblock) + eoshift(HTW(:,:,iblock),dim=2,shift=1))
 
       DME(:,:,iblock) =  (c2*AMF(:,:,iblock)*KYU + WORK1)/  &
-                         (HTN(:,:,iblock) +                 &
-                          eoshift(HTN(:,:,iblock),dim=1,shift=1))
+                         (HTS(:,:,iblock) +                 &
+                          eoshift(HTS(:,:,iblock),dim=1,shift=-1))
 
       WORK1 = (eoshift(AMF(:,:,iblock),dim=1,shift= 1) -    &
                eoshift(AMF(:,:,iblock),dim=1,shift=-1))/    &
-              (HTN(:,:,iblock) + eoshift(HTN(:,:,iblock),dim=1,shift=1))
+              (HTS(:,:,iblock) + eoshift(HTS(:,:,iblock),dim=1,shift=-1))
 
       DMN(:,:,iblock) = -(c2*AMF(:,:,iblock)*KXU + WORK1)/  &
-                         (HTE(:,:,iblock) +                 &
-                          eoshift(HTE(:,:,iblock),dim=2,shift=1))
+                         (HTW(:,:,iblock) +                 &
+                          eoshift(HTW(:,:,iblock),dim=2,shift=1))
 
    end do
 
@@ -321,7 +317,10 @@
 
    real (r8) ::           &
       ahfmin, ahfmax       ! min max mixing for varible mixing
+      
 
+
+      allocate(AHF(nx_block,ny_block,nblocks_clinic))
       AHF = c1
 
 !-----------------------------------------------------------------------
@@ -332,31 +331,47 @@
 !
 !-----------------------------------------------------------------------
 
+   if (mytid == 0) then
+       write(113,*) "OK______1"
+       close(113)
+   end if
    allocate(DTN(nx_block,ny_block,nblocks_clinic), &
             DTS(nx_block,ny_block,nblocks_clinic), &
             DTE(nx_block,ny_block,nblocks_clinic), &
             DTW(nx_block,ny_block,nblocks_clinic))
+   if (mytid == 0) then
+       write(113,*) "OK______2"
+       close(113)
+   end if
 
    allocate(WORK1 (nx_block,ny_block), &
             WORK2 (nx_block,ny_block))
+   if (mytid == 0) then
+       write(113,*) "OK______3"
+       close(113)
+   end if
 
    do iblock=1,nblocks_clinic
-      WORK1 = (HTN(:,:,iblock)/HUW(:,:,iblock))*p5*(AHF(:,:,iblock) + &
+      WORK1 = (HTS(:,:,iblock)/HUE(:,:,iblock))*p5*(AHF(:,:,iblock) + &
                             eoshift(AHF(:,:,iblock),dim=2,shift=1))
 
-      DTN(:,:,iblock) = WORK1*TAREA_R(:,:,iblock)
-      DTS(:,:,iblock) = eoshift(WORK1,dim=2,shift=-1)* &
+      DTS(:,:,iblock) = WORK1*TAREA_R(:,:,iblock)
+      DTN(:,:,iblock) = eoshift(WORK1,dim=2,shift=-1)* &
                         TAREA_R(:,:,iblock)
 
-      WORK1 = (HTE(:,:,iblock)/HUS(:,:,iblock))*p5*(AHF(:,:,iblock) + &
-                            eoshift(AHF(:,:,iblock),dim=1,shift=1))
+      WORK1 = (HTW(:,:,iblock)/HUN(:,:,iblock))*p5*(AHF(:,:,iblock) + &
+                            eoshift(AHF(:,:,iblock),dim=1,shift=-1))
 
-      DTE(:,:,iblock) = WORK1*TAREA_R(:,:,iblock)
-      DTW(:,:,iblock) = eoshift(WORK1,dim=1,shift=-1)* &
+      DTW(:,:,iblock) = WORK1*TAREA_R(:,:,iblock)
+      DTE(:,:,iblock) = eoshift(WORK1,dim=1,shift=1)* &
                         TAREA_R(:,:,iblock)
 
    end do
 
+   if (mytid == 0) then
+       write(113,*) "OK______4"
+       close(113)
+   end if
 
 !-----------------------------------------------------------------------
 !
@@ -365,8 +380,10 @@
 !-----------------------------------------------------------------------
 
    deallocate(WORK1, WORK2)
-
-   if (.not. lvariable_hmixt) deallocate(AHF)
+   if (mytid == 0) then
+       write(113,*) "OK______5"
+       close(113)
+   end if
 
 !-----------------------------------------------------------------------
 !EOC
@@ -551,7 +568,6 @@
 
    integer (int_kind), intent(in) :: k, ntracer
 
-      tavg_HDIFN_TRACER   ! tavg id for north face diffusive flux of tracer
 
    type (block), intent(in) :: &
       this_block          ! block information for this subblock
@@ -570,7 +586,7 @@
 !-----------------------------------------------------------------------
 
    integer (int_kind) ::  &
-      i,j,n,              &! dummy tracer index
+      i,j,n, iblock,      &! dummy tracer index
       bid                  ! local block address
 
    real (r8), dimension(nx_block,ny_block) :: CC,CN,CS,CE,CW     ! coeff of 5pt stencil for Del**2
@@ -608,11 +624,11 @@
 
    do j=this_block%jb,this_block%je
    do i=this_block%ib,this_block%ie
-      HDTK(i,j) = ah*(CC(i,j)*ATB(i  ,j  ,k,ntracer) + &
-                      CN(i,j)*ATB(i  ,j+1,k,ntracer) + &
-                      CS(i,j)*ATB(i  ,j-1,k,ntracer) + &
-                      CE(i,j)*ATB(i+1,j  ,k,ntracer) + &
-                      CW(i,j)*ATB(i-1,j  ,k,ntracer))
+      HDTK(i,j) = ah*(CC(i,j)*ATB(i  ,j  ,k,ntracer,iblock) + &
+                      CN(i,j)*ATB(i  ,j+1,k,ntracer,iblock) + &
+                      CS(i,j)*ATB(i  ,j-1,k,ntracer,iblock) + &
+                      CE(i,j)*ATB(i+1,j  ,k,ntracer,iblock) + &
+                      CW(i,j)*ATB(i-1,j  ,k,ntracer,iblock))
    enddo
    enddo
 
