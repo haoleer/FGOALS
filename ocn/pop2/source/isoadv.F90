@@ -82,7 +82,7 @@ use domain
    END DO
 
 #ifdef SPMD
-      call exchange_3d_iso(adv_vntiso,km,1,1)
+!     call exchange_3d_iso(adv_vntiso,km,1,1)
 #endif 
  
 !-----------------------------------------------------------------------
@@ -137,7 +137,7 @@ use domain
   END DO
  
  
-      call exchange_3d_iso(adv_vntiso,km,1,1)
+!     call exchange_3d_iso(adv_vntiso,km,1,1)
  
 !----------------------------------------------------------------------
 !     compute the vertical component of the isopycnal mixing velocity
@@ -184,7 +184,7 @@ use domain
    END DO
  
  
-      call exchange_3d_iso(adv_vntiso,km,1,0)
+!     call exchange_3d_iso(adv_vntiso,km,1,0)
 
       RETURN
       END SUBROUTINE ISOADV

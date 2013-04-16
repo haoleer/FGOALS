@@ -21,7 +21,7 @@ use advection
 use operators
 use hmix_del2
 use hmix_del4
- 
+use msg_mod 
       IMPLICIT NONE
 !      REAL(r8)  :: WKP (KMP1)
       INTEGER   :: IWK,n2, iblock
@@ -240,11 +240,12 @@ use hmix_del4
      dlv = c0
      wka = c0
 
-!$OMP PARALLEL DO PRIVATE (K,J,I)
+!$OMP PARALLEL DO PRIVATE (IBLOCK,K)
+   do iblock = 1, nblocks_clinic
        DO K = 1,KM
           call tgrid_to_ugrid(wka(:,:,k,iblock),ws(:,:,k,iblock), iblock)
        END DO
- 
+   end do
 
 !---------------------------------------------------------------------
 !     COMPUTE THE ADVECTIVE TERMS
@@ -373,80 +374,15 @@ use hmix_del4
 !     COMPUTE THE HORIZONTAL VISCOSITY
 !---------------------------------------------------------------------
 #if ( defined SMAG)
-
-!$OMP PARALLEL DO PRIVATE (IBLOCK)
-    DO IBLOCK =1 , NBLOCKS_CLINIC
- 
-      DO K = 1,KM
-         DO J = 1,JMT
-            DO I = 1,IMT
-               WKA (I,J,11,IBLOCK)= UP (I,J,K,IBLOCK)
-               WKA (I,J,12,IBLOCK)= VP (I,J,K,IBLOCK)
-            END DO
-         END DO
 !
          CALL SMAG2 (K)
 !
 #if (defined SMAG_FZ )
-         DO J = 2, JMT-1
-            DO I = 2,IMT-1
-               WKA (I,J,16,IBLOCK)= (0.5D0* OUX(J)*(WKA(I +1,J,7,IBLOCK)-WKA(I-1,J,7,IBLOCK)) &
-               -0.5D0* R2E (J)* WKA (I,J,8,IBLOCK) +0.5D0* R2F (J)* WKA (I,J -1,8,IBLOCK) &
-                            -0.5D0* R2E (J +1)* WKA (I,J +1,8,IBLOCK) +0.5D0* R2F (&
-                             J +1)* WKA (I,J,8,IBLOCK))* VIV (I,J,K,IBLOCK)
-               WKA (I,J,17,IBLOCK)= (0.5D0* OUX (J)*(WKA(I+1,J,9,IBLOCK)-WKA(I-1,J,9,IBLOCK)) &
-               -0.5D0* R3E (J)* WKA (I,J,10,IBLOCK) +0.5D0* R3F (J)* WKA (I,J -1,10,IBLOCK) &
-               -0.5D0* R3E (J +1)* WKA (I,J +1,10,IBLOCK) +0.5D0* R3F (J +1)* WKA (I,J,10,IBLOCK) &
-               + R4E (J)* WKA (I,J,7,IBLOCK))* VIV (I,J,K,IBLOCK)         
-            END DO
-         END DO
  
 #else
-         DO J = 2, JMT-1
-            DO I = 2,IMT-1
-               WKA (I,J,16,IBLOCK)= (0.5D0* OUX (J)* (WKA (I +1,J,7,IBLOCK) - WKA (I -1,J,7,IBLOCK)) &
-               - R2E (J)* WKA (I,J +1,8,IBLOCK) + R2F (J)* WKA (I,J -1,8,IBLOCK))     &
-                * VIV (I,J,K)  
-               WKA (I,J,17,IBLOCK)= (0.5D0* OUX (J)* (WKA (I +1,J,9,IBLOCK) - WKA (I -1, J,9,IBLOCK)) &
-               - R3E (J)* WKA (I,J +1,10,IBLOCK) + R3F (J)* WKA (I,J -1,10,IBLOCK) &
-               + R4E (J)* WKA (I,J,7,IBLOCK))* VIV (I,J,K,IBLOCK)   
-            END DO
-         END DO
- 
-#endif
- 
-         DO J = 2, JMT-1
-            DO I = 2,IMT-1
-               DLU (I,J,K,IBLOCK)= DLU (I,J,K,IBLOCK) + WKA (I,J,16,IBLOCK)
-               DLV (I,J,K,IBLOCK)= DLV (I,J,K,IBLOCK) + WKA (I,J,17,IBLOCK)
-            END DO
-         END DO
-      END DO
-    END DO
 !
-!!!!!!!
-!$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
-   DO IBLOCK = 1, NBLOCKS_CLINIC
-      DO K = 1,KM
-         DO J = 2, JMT-1
-            DO I = 2,IMT-1
-               DLV (I,J,K,IBLOCK)= DLV (I,J,K,IBLOCK) + 0.2D0*AM (J)* &
-               (R1D (J)* (VP (I,J +1,K,IBLOCK) - VP (I,J,K,IBLOCK)) &
-               - R1C (J)* (VP (I,J,K,IBLOCK) - VP (I,J -1,K,IBLOCK)) &
-               + SOUX (J)* (VP (I +1,J,K,IBLOCK) -2.0D0* VP (I,J,K,IBLOCK) + VP (I -1,J,K,IBLOCK)) &
-               + CV1 (J)* VP (I,J,K,IBLOCK) &
-               - CV2 (J)* (UP (I +1,J,K,IBLOCK) - UP (I -1,J,K,IBLOCK)))     
-               DLU (I,J,K)= DLU (I,J,K,IBLOCK) + 0.2D0*AM (J)* &
-               (R1D (J)* (UP (I,J +1,K,IBLOCK) - UP (I,J,K,IBLOCK)) &
-               - R1C (J)* (UP (I,J,K,IBLOCK) - UP (I,J -1,K,IBLOCK)) &
-               + SOUX (J)* (UP (I +1,J,K,IBLOCK) -2.0D0* UP (I,J,K) + UP (I -1,J,K,IBLOCK)) &
-               + CV1 (J)* UP (I,J,K,IBLOCK) &
-               + CV2 (J)* (VP (I +1,J,K,IBLOCK) - VP (I -1,J,K,IBLOCK)))    
-            END DO
-         END DO
-       END DO
-   END DO
-!!!!!!!
+#endif
+!
 #else
       
 #if (defined BIHAR)
@@ -498,7 +434,7 @@ use hmix_del4
 !Yu      write(6,*)'allocation error---tmp1,tmp2'
 !Yu      stop
 !Yu   end if
-
+  call mpi_barrier(mpi_comm_ocn,ierr)
 
       RETURN
       END SUBROUTINE READYC

@@ -300,6 +300,8 @@ end subroutine create_blocks
 !----------------------------------------------------------------------
 
    if (block_id < 1 .or. block_id > nblocks_tot) then
+      write(300+mytid,*) "mytid, block_id =", mytid,block_id, nblocks_tot
+      close(300+mytid)
       call exit_LICOM(sigAbort,'get_block: invalid block_id')
    endif
 

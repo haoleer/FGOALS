@@ -8,9 +8,14 @@ use msg_mod
 use pconst_mod, only: sinu, sint
 use domain
 use constant_mod
+use grid
+use POP_GridHorzMod
+use POP_HaloMod
 
       IMPLICIT NONE
 !
+      integer            :: ErrorCode   ! temporary
+
       public :: smuv, smts, smz0
 
 
@@ -32,8 +37,8 @@ use constant_mod
 !lhl      fil_lat=55.D0
 !
       MAX_NN = 0
-      do j =jst,jmt
-         if (sinu(j).le.cos(fil_lat*DEGtoRAD)) then
+      do j =3, jmt-2
+         if (cos(ulat(1,j,1)).le.cos(fil_lat*DEGtoRAD)) then
             NN(j) = int(cos(fil_lat*DEGtoRAD)/sinu(j)*1.2D0)
             if (NN(j) .gt. MAX_NN) MAX_NN = NN(J)
          else 
@@ -46,19 +51,22 @@ use constant_mod
 !
 !$OMP PARALLEL DO PRIVATE (iblock,k,j)
    do iblock = 1, nblocks_clinic
-         do j =jst,jmt
+         do j = 3, jmt-2
             if (NN(j) .ge. NCY) then       
                DO K = 1,KK
                   DO I = 1,IMT
                      XS (I)= X (I,J,K,iblock)* Z (I,J,K,iblock)
                   END DO
-                  DO I = 2,IMM
+                  DO I = 3,imt-2
                      X (I,J,K,iblock)= (0.5D0*XS(I)+0.25D0*(XS(I-1)+XS(I+1)))*Z(I,J,K,iblock)
                   END DO
                ENDDO
             endif
          END DO
      END DO
+!
+         call POP_HaloUpdate(X, POP_haloClinic, POP_gridHorzLocSWcorner , &
+                       POP_fieldKindVector, errorCode, fillValue = 0.0_r8)
 !
    END DO
 
@@ -145,7 +153,7 @@ use constant_mod
          
       MAX_NN = 0
       do j =jst,jmt
-         if (sint(j).le.cos(fil_lat*DEGtoRAD)) then
+         if (cos(tlat(1,j,1)).le.cos(fil_lat*DEGtoRAD)) then
             NN(j) = int(cos(fil_lat*DEGtoRAD)/sint(j)*1.2D0)
             if (NN(j) .gt. MAX_NN) MAX_NN = NN(J)
          else
@@ -155,25 +163,21 @@ use constant_mod
 
 !!$OMP PARALLEL DO PRIVATE (iblock,J,nn,xs)
       DO NCY = 1,MAX_NN
-         do j =jst,jmt
+         do j =3, jmt-2
             if (NN(j) .ge. NCY) then
                DO I = 1,IMT
                   XS (I)= X (I,J,IBLOCK)* Z (I,J,1,iblock)
                END DO
-               DO I = 2,IMM
+               DO I = 3, imt-2
                   X(I,J,iblock)=(XS(I)*(1.0D0-0.25D0*Z(I-1,J,1,iblock)-0.25D0*Z(I+1,J,1,iblock)) &
                             +0.25D0*(XS(I-1)+XS(I+1)))*Z(I,J,1,iblock)
                END DO
-!              if (nx_proc == 1) then
-!                 X (1,J)= X (IMM,J)
-!                 X (IMT,J)= X (2,J)
-!              endif
             endif
          enddo
-!        if (nx_proc .ne. 1) then
-!           call exchange_2D_boundary(x,1,NN,NCY,0)
-!           call exchange_2D_boundary(x,1,NN,NCY,1)
-!        end if
+!        
+         call POP_HaloUpdate(X , POP_haloClinic, POP_gridHorzLocCenter,&
+                       POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
+!
       END DO
 
 

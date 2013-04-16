@@ -194,7 +194,7 @@
             ie = this_block%ie
             jb = this_block%jb
             je = this_block%je
-            if (this_block%jblock == nblocks_y) then
+            if (this_block%jblock == 1) then
                !*** for topmost row in tripole only sum
                !*** 1st half of domain - others are redundant
                if (present(MASK)) then

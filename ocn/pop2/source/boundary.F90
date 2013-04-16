@@ -37,6 +37,8 @@ use grid, only : kmt, kmu
       do i=  1, imt
          do k = 1, kmt(i,j,iblock)
             vit(i,j,k,iblock) = 1.0_r8
+         end do
+         do k = 1, kmu(i,j,iblock)
             viv(i,j,k,iblock) = 1.0_r8
          end do
       end do

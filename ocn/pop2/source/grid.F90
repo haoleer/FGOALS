@@ -28,6 +28,7 @@
    use msg_mod
    use global_reductions
    use pconst_mod
+   use operators
 
    implicit none
    private
@@ -630,10 +631,10 @@
       write(stdout,blank_fmt)
       write(stdout,topo_fmt1) nsurface_t, nsurface_u
       write(stdout,topo_fmt2) nocean_t, nocean_u
-      write(stdout,topo_fmt3) area_t*1.0e-10_r8, &
-                              area_u*1.0e-10_r8
-      write(stdout,topo_fmt4) volume_t*1.0e-15_r8, &
-                              volume_u*1.0e-15_r8
+      write(stdout,topo_fmt3) area_t*1.0e-6_r8, &
+                              area_u*1.0e-6_r8
+      write(stdout,topo_fmt4) volume_t*1.0e-9_r8, &
+                              volume_u*1.0e-9_r8
       write(stdout,blank_fmt)
    endif
 
@@ -990,13 +991,6 @@
       DO K = 2,KM
          ODZT (K)= 1.0D0/ (ZKT (K -1) - ZKT (K))
       END DO
-
-      if (mytid == 1) then
-          write(115,*) zkp
-          write(115,*) zkt
-          close(115)
-      end if
-
 
 !-----------------------------------------------------------------------
 !EOC
@@ -1764,6 +1758,7 @@
 !
       real(r8) eps, abcd
       integer :: iblock, ErrorCode
+      type (block) :: this_block
 !
       do iblock = 1, nblocks_clinic
 !
@@ -1809,38 +1804,19 @@
             END IF
          END DO
       END DO
+   end do
 !
-      DO J = 2,jmt-1
-      DO I = 2,imt-1
-         R1A_u(I,J,iblock)= hue(i  ,j  ,iblock)*dyur(i,j,iblock)*dxur(i,j,iblock)*p5
-         R1B_u(I,J,iblock)= hue(i+1,j  ,iblock)*dyur(i,j,iblock)*dxur(i,j,iblock)*p5
-         R2A_u(I,J,iblock)= hun(i  ,j  ,iblock)*dxur(i,j,iblock)*dyur(i,j,iblock)*p5
-         R2B_u(I,J,iblock)= hun(i  ,j+1,iblock)*dxur(i,j,iblock)*dyur(i,j,iblock)*p5
-         R1A_t(I,J,iblock)= htw(i-1,j  ,iblock)*dytr(i,j,iblock)*dxur(i,j,iblock)*p5
-         R1B_t(I,J,iblock)= htw(i  ,j  ,iblock)*dytr(i,j,iblock)*dxur(i,j,iblock)*p5
-         R2A_t(I,J,iblock)= hts(i  ,j-1,iblock)*dxtr(i,j,iblock)*dyur(i,j,iblock)*p5
-         R2B_t(I,J,iblock)= hts(i  ,j  ,iblock)*dxtr(i,j,iblock)*dyur(i,j,iblock)*p5
-      END DO
-      END DO
+   do iblock =1, nblocks_clinic
+      this_block = get_block(blocks_clinic(iblock),iblock)
+      call grad(1, hbx(:,:,iblock), hby(:,:,iblock), ht , this_block)
+   end do
 !
-      end do
-!
-   call POP_HaloUpdate(r1a_u, POP_haloClinic, POP_gridHorzLocSface, &
-                       POP_fieldKindScalar, errorCode,fillValue = 0.0_r8)
-   call POP_HaloUpdate(r1b_u, POP_haloClinic, POP_gridHorzLocSface, &
-                       POP_fieldKindScalar, errorCode,fillValue = 0.0_r8)
-   call POP_HaloUpdate(r2a_u, POP_haloClinic, POP_gridHorzLocWface, &
-                       POP_fieldKindScalar, errorCode,fillValue = 0.0_r8)
-   call POP_HaloUpdate(r2b_u, POP_haloClinic, POP_gridHorzLocWface, &
-                       POP_fieldKindScalar, errorCode,fillValue = 0.0_r8)
-   call POP_HaloUpdate(r1a_t, POP_haloClinic, POP_gridHorzLocWface, &
-                       POP_fieldKindScalar, errorCode,fillValue = 0.0_r8)
-   call POP_HaloUpdate(r1b_t, POP_haloClinic, POP_gridHorzLocEface, &
-                       POP_fieldKindScalar, errorCode,fillValue = 0.0_r8)
-   call POP_HaloUpdate(r2a_t, POP_haloClinic, POP_gridHorzLocNface, &
-                       POP_fieldKindScalar, errorCode,fillValue = 0.0_r8)
-   call POP_HaloUpdate(r2b_t, POP_haloClinic, POP_gridHorzLocSface, &
-                       POP_fieldKindScalar, errorCode,fillValue = 0.0_r8)
+  call POP_HaloUpdate(hbx, POP_haloClinic, POP_gridHorzLocSwcorner, &
+                               POP_fieldKindVector, errorCode,         &
+                               fillValue = 0.0_r8)
+  call POP_HaloUpdate(hby, POP_haloClinic, POP_gridHorzLocSwcorner, &
+                               POP_fieldKindVector, errorCode,         &
+                               fillValue = 0.0_r8)
 !
 
  end subroutine calc_coeff

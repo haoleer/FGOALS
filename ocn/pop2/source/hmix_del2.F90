@@ -331,25 +331,13 @@
 !
 !-----------------------------------------------------------------------
 
-   if (mytid == 0) then
-       write(113,*) "OK______1"
-       close(113)
-   end if
    allocate(DTN(nx_block,ny_block,nblocks_clinic), &
             DTS(nx_block,ny_block,nblocks_clinic), &
             DTE(nx_block,ny_block,nblocks_clinic), &
             DTW(nx_block,ny_block,nblocks_clinic))
-   if (mytid == 0) then
-       write(113,*) "OK______2"
-       close(113)
-   end if
 
    allocate(WORK1 (nx_block,ny_block), &
             WORK2 (nx_block,ny_block))
-   if (mytid == 0) then
-       write(113,*) "OK______3"
-       close(113)
-   end if
 
    do iblock=1,nblocks_clinic
       WORK1 = (HTS(:,:,iblock)/HUE(:,:,iblock))*p5*(AHF(:,:,iblock) + &
@@ -368,10 +356,6 @@
 
    end do
 
-   if (mytid == 0) then
-       write(113,*) "OK______4"
-       close(113)
-   end if
 
 !-----------------------------------------------------------------------
 !
@@ -380,10 +364,6 @@
 !-----------------------------------------------------------------------
 
    deallocate(WORK1, WORK2)
-   if (mytid == 0) then
-       write(113,*) "OK______5"
-       close(113)
-   end if
 
 !-----------------------------------------------------------------------
 !EOC

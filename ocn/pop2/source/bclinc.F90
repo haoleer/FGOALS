@@ -367,5 +367,7 @@ use operators
   END DO
  
 !
+  call mpi_barrier(mpi_comm_ocn,ierr)
+
       RETURN
       END SUBROUTINE BCLINC

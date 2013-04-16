@@ -76,7 +76,7 @@ use operators
     ric   = 0.0_r8
     rict  = 0.0_r8
     ricdt = 0.0_r8
-    at    = 0.0_r8
+    akt   = 0.0_r8
 !
 ! ric locate at integer level
 !
@@ -292,7 +292,8 @@ use operators
       pay = -OD0*work2
       pax = -OD0*work1
    END DO
-
+!!
+  call mpi_barrier(mpi_comm_ocn,ierr)
       RETURN
       END SUBROUTINE READYT
  

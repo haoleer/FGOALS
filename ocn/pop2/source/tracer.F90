@@ -15,6 +15,8 @@ use pmix_mod
 use msg_mod
 use smuvh
 use advection
+use blocks
+use domain
       IMPLICIT NONE
  
       integer     :: n2, iblock
@@ -31,6 +33,9 @@ use advection
 #else
       real(r8)    :: LAMDA,wt1,wt2,adv_y,adv_x,adv_z,adv_x1,adv_x2
 #endif
+      type (block) :: this_block          ! block information for current block
+
+   
 !XC
  
 !---------------------------------------------------------------------
@@ -170,8 +175,8 @@ use advection
 !
 #if (!defined CANUTO)
 #ifdef SPMD
-      call exch_boundary(akt(1,1,1,1),km)
-      call exch_boundary(akt(1,1,1,2),km)
+!     call exch_boundary(akt(1,1,1,1),km)
+!     call exch_boundary(akt(1,1,1,2),km)
 #endif
 #endif
 !
@@ -278,6 +283,7 @@ use advection
 !
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K)
    do iblock = 1, nblocks_clinic
+   this_block = get_block(blocks_clinic(iblock),iblock)
    do k =1, km
       call hdifft_del4(k,HDTK,ATB,this_block,ntracer)
       do j= 3, jmt-2
@@ -292,6 +298,7 @@ use advection
 !
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K)
    do iblock = 1, nblocks_clinic
+   this_block = get_block(blocks_clinic(iblock),iblock)
    do k =1, km
       call hdifft_del2(k,HDTK,ATB,this_block,ntracer)
       do j= 3, jmt-2
@@ -683,6 +690,7 @@ use advection
       deallocate(stf,tf)
       deallocate(wkb,wkc,wkd)
       deallocate(rit)
+  call mpi_barrier(mpi_comm_ocn,ierr)
       RETURN
       END SUBROUTINE TRACER
  

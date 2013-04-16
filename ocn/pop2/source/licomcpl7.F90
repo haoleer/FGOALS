@@ -186,8 +186,6 @@ use cforce_mod
     LOGMSG()
       CALL CONST
     LOGMSG()
-      write(120+mytid,*) adv_momentum, adv_tracer
-      close(120+mytid)
       if (mytid == 0) then
       write(111,*)"OK------3"
       close(111)
@@ -443,7 +441,9 @@ use cforce_mod
 
 !     PREDICTION OF BAROTROPIC MODE
     LOGMSG()
+      call energy
                CALL BAROTR
+      call energy
       if (mytid == 0) then
       write(111,*)"OK------15.0"
       close(111)
@@ -453,6 +453,7 @@ use cforce_mod
 !     PREDICTION OF BAROCLINIC MODE
     LOGMSG()
                CALL BCLINC
+      call energy
       if (mytid == 0) then
       write(111,*)"OK------16.0"
       close(111)
@@ -471,7 +472,9 @@ use cforce_mod
       write(111,*)"OK------17.0"
       close(111)
       end if
+      stop
             CALL TRACER
+      call energy
       if (mytid == 0) then
       write(111,*)"OK------18.0"
       close(111)
@@ -760,7 +763,6 @@ use cforce_mod
 
     call mct_gsMap_orderedPoints(gsMap_o, mytid, idata)
     call mct_gGrid_importIAttr(dom_o,'GlobGridNum',idata,lsize)
-
 
 
 

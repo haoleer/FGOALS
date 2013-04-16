@@ -21,6 +21,8 @@ use distribution
       character (len=18) :: fname
       integer :: klevel
 !
+      write(140+mytid,*) "OK----1", mytid, iday, rest_freq, iday, imd
+      close(140+mytid)
          number_day = iday !+1 !LPF 20120816
          number_month = month
          if ( number_day  > imd ) then
@@ -29,177 +31,185 @@ use distribution
          end if
          nwmf= iyfm
 
-      if(mytid==0) write(*,*)'in instant,iday=,imd=,rest_freq',iday,imd,rest_freq
-!     if ( 1 .or. mod(iday,rest_freq) == 0 .or. iday == imd) then ! lihuimin, FOR DEBUG
+      write(140+mytid,*) "OK----2", mytid, iday, rest_freq, iday, imd, nwmf, number_month
+      close(140+mytid)
+!
+     if(mytid==0) write(*,*)'in instant,iday=,imd=,rest_freq',iday,imd,rest_freq
+!
      if ( mod(iday,rest_freq) == 0 .or. iday == imd) then
 !
-       if ( mytid == 0 ) then
-         fname(1:8)='fort.22.'
-         fname(13:13)='-'
-         fname(16:16)='-'
-         write(fname(14:15),'(i2.2)')mon0
-         write(fname(9:12),'(i4.4)')nwmf
-         write(fname(17:18),'(i2.2)') number_day
+!      if ( mytid == 0 ) then
+!        fname(1:8)='fort.22.'
+!        fname(13:13)='-'
+!        fname(16:16)='-'
+!        write(fname(14:15),'(i2.2)')mon0
+!        write(fname(9:12),'(i4.4)')nwmf
+!        write(fname(17:18),'(i2.2)') number_day
 !
-     if(mytid==0) write(6,*)'in instant',iday,imd,rest_freq
-         if ( number_day ==1 .and. mon0 < 12) then
-             write(fname(14:15),'(i2.2)')mon0+1
-         end if
+!        if ( number_day ==1 .and. mon0 < 12) then
+!            write(fname(14:15),'(i2.2)')mon0+1
+!        end if
 !
-         if ( number_day ==1 .and. mon0 == 12) then
-             write(fname(14:15),'(i2.2)')mon0-11
-             write(fname(9:12),'(i4.4)')nwmf+1
-         end if
+!        if ( number_day ==1 .and. mon0 == 12) then
+!            write(fname(14:15),'(i2.2)')mon0-11
+!            write(fname(9:12),'(i4.4)')nwmf+1
+!        end if
 
-         open (17, file="rpointer.ocn", form='formatted')
-         write(17,'(a18)') fname
-         close(17)
-          write(*,*)'fname=',fname
-         open(22,file=trim(out_dir)//fname,form='unformatted')
-!         write(6,*) "in SSAVEcdf, month=",mon0,"day=",number_day
-       end if
+!        open (17, file="rpointer.ocn", form='formatted')
+!        write(17,'(a18)') fname
+!        close(17)
+!         write(*,*)'fname=',fname
+!        open(22,file=trim(out_dir)//fname,form='unformatted')
+!      end if
 !
-          allocate(buffer(imt_global,jmt_global))
+!      write(120+mytid,*) "OK-----1"
+!      close(120+mytid)
+!         allocate(buffer(imt_global,jmt_global))
+!      write(120+mytid,*) "OK-----2"
+!      close(120+mytid)
 !         write(*,*) 'allocate sucess'
 
-         call gather_global(buffer, h0, master_task,distrb_clinic)
+!        call gather_global(buffer, h0, master_task,distrb_clinic)
+!      write(120+mytid,*) "OK-----3"
+!      close(120+mytid)
 !
-         if (mytid==0) then
-         WRITE (22)buffer
-!         open(92,file='z0_99.dat',form='unformatted')
-!         WRITE (92)buffer
-!          close(92) 
-         end if
-!           write(*,*)'finish h0'
+!        if (mytid==0) then
+!        WRITE (22)buffer
+!        end if
+!
+!      write(120+mytid,*) "OK-----4"
+!      close(120+mytid)
 
-         do klevel=1,km
-         call gather_global(buffer, u(:,:,klevel,:), master_task,distrb_clinic)
-         if (mytid==0) then
-         WRITE (22)buffer
-         end if
-         end do
+!        do klevel=1,km
+!        call gather_global(buffer, u(:,:,klevel,:), master_task,distrb_clinic)
+!        if (mytid==0) then
+!        WRITE (22)buffer
+!        end if
+!        end do
 !         write(*,*)'finish U'
-         
-         do klevel=1,km
-         call gather_global(buffer, v(:,:,klevel,:), master_task,distrb_clinic)
-         if (mytid==0) then
-         WRITE (22)buffer
-         end if
-         end do
+!        
+!        do klevel=1,km
+!        call gather_global(buffer, v(:,:,klevel,:), master_task,distrb_clinic)
+!        if (mytid==0) then
+!        WRITE (22)buffer
+!        end if
+!        end do
 !         write(*,*)'finish V'
 !
-         do klevel=1,km
-         call gather_global(buffer, at(:,:,klevel,1,:), master_task,distrb_clinic)
-         if (mytid==0) then
-         WRITE (22)buffer
-         end if
-         end do
+!        do klevel=1,km
+!        call gather_global(buffer, at(:,:,klevel,1,:), master_task,distrb_clinic)
+!        if (mytid==0) then
+!        WRITE (22)buffer
+!        end if
+!        end do
 !         write(*,*)'finish at1'
 !
-         do klevel=1,km
-         call gather_global(buffer, at(:,:,klevel,2,:), master_task,distrb_clinic)
-         if (mytid==0) then
-         WRITE (22)buffer
-         end if
-         end do
+!        do klevel=1,km
+!        call gather_global(buffer, at(:,:,klevel,2,:), master_task,distrb_clinic)
+!        if (mytid==0) then
+!        WRITE (22)buffer
+!        end if
+!        end do
 !         write(*,*)'finish at2'
 !lhl20110728
-         do klevel=1,km
-         call gather_global(buffer, ws(:,:,klevel,:), master_task,distrb_clinic)
-         if (mytid==0) then
-         WRITE (22)buffer
-         end if
-         end do
+!        do klevel=1,km
+!        call gather_global(buffer, ws(:,:,klevel,:), master_task,distrb_clinic)
+!        if (mytid==0) then
+!        WRITE (22)buffer
+!        end if
+!        end do
 !         write(*,*)'finish at2'
-         
-         call gather_global(buffer, su, master_task,distrb_clinic)
-         if (mytid==0) then
-         WRITE (22)buffer
-         end if
+!        
+!        call gather_global(buffer, su, master_task,distrb_clinic)
+!        if (mytid==0) then
+!        WRITE (22)buffer
+!        end if
 !         write(*,*)'finish su'
 
-         call gather_global(buffer, sv, master_task,distrb_clinic)
-         if (mytid==0) then
-         WRITE (22)buffer
-         end if
+!        call gather_global(buffer, sv, master_task,distrb_clinic)
+!        if (mytid==0) then
+!        WRITE (22)buffer
+!        end if
 
 !         write(*,*)'finish sv'
 
-         call gather_global(buffer, swv, master_task,distrb_clinic)
-         if (mytid==0) then
-         WRITE (22)buffer
-         end if
+!        call gather_global(buffer, swv, master_task,distrb_clinic)
+!        if (mytid==0) then
+!        WRITE (22)buffer
+!        end if
 !         write(*,*)'finish swv'
-         call gather_global(buffer, lwv, master_task,distrb_clinic)
-         if (mytid==0) then
-         WRITE (22)buffer
-         end if
+!        call gather_global(buffer, lwv, master_task,distrb_clinic)
+!        if (mytid==0) then
+!        WRITE (22)buffer
+!        end if
 !         write(*,*)'finish lwv'
-         call gather_global(buffer, sshf, master_task,distrb_clinic)
-         if (mytid==0) then
-         WRITE (22)buffer
-         end if
+!        call gather_global(buffer, sshf, master_task,distrb_clinic)
+!        if (mytid==0) then
+!        WRITE (22)buffer
+!        end if
 !         write(*,*)'finish sshf'
-         call gather_global(buffer, lthf, master_task,distrb_clinic)
-         if (mytid==0) then
-         WRITE (22)buffer
-         end if
+!        call gather_global(buffer, lthf, master_task,distrb_clinic)
+!        if (mytid==0) then
+!        WRITE (22)buffer
+!        end if
 !         write(*,*)'finish lthf'
-         call gather_global(buffer, fresh, master_task,distrb_clinic)
-         if (mytid==0) then
-         WRITE (22)buffer
-         end if
+!        call gather_global(buffer, fresh, master_task,distrb_clinic)
+!        if (mytid==0) then
+!        WRITE (22)buffer
+!        end if
 !         write(*,*)'finish fresh'
-!lhl20110728
-         if (mytid==0) then
-             write(22) number_month, number_day
-         end if
+!        if (mytid==0) then
+!            write(22) number_month, number_day
+!        end if
 !
-         if(mytid==0) write(*,*)'finish number'
-!lhl20120731
 #ifdef COUP
-         call gather_global(buffer, t_cpl, master_task,distrb_clinic)
-         if (mytid==0) then
-         WRITE (22)buffer
-         end if
+!        call gather_global(buffer, t_cpl, master_task,distrb_clinic)
+!        if (mytid==0) then
+!        WRITE (22)buffer
+!        end if
 !         write(*,*)'finish t_cpl'
-         call gather_global(buffer, s_cpl, master_task,distrb_clinic)
-         if (mytid==0) then
-         WRITE (22)buffer
-         end if
+!        call gather_global(buffer, s_cpl, master_task,distrb_clinic)
+!        if (mytid==0) then
+!        WRITE (22)buffer
+!        end if
 !         write(*,*)'finish s_cpl'
-         call gather_global(buffer, u_cpl, master_task,distrb_clinic)
-         if (mytid==0) then
-         WRITE (22)buffer
-         end if
+!        call gather_global(buffer, u_cpl, master_task,distrb_clinic)
+!        if (mytid==0) then
+!        WRITE (22)buffer
+!        end if
 !         write(*,*)'finish u_cpl'
-         call gather_global(buffer, v_cpl, master_task,distrb_clinic)
-         if (mytid==0) then
-         WRITE (22)buffer
-         end if
+!        call gather_global(buffer, v_cpl, master_task,distrb_clinic)
+!        if (mytid==0) then
+!        WRITE (22)buffer
+!        end if
 !         write(*,*)'finish v_cpl'
-         call gather_global(buffer, dhdx, master_task,distrb_clinic)
-         if (mytid==0) then
-         WRITE (22)buffer
-         end if
+!        call gather_global(buffer, dhdx, master_task,distrb_clinic)
+!        if (mytid==0) then
+!        WRITE (22)buffer
+!        end if
 !         write(*,*)'finish dhdx'
-         call gather_global(buffer, dhdy, master_task,distrb_clinic)
-         if (mytid==0) then
-         WRITE (22)buffer
-         end if
+!        call gather_global(buffer, dhdy, master_task,distrb_clinic)
+!        if (mytid==0) then
+!        WRITE (22)buffer
+!        end if
 !         write(*,*)'finish dhdy'
-         call gather_global(buffer, q, master_task,distrb_clinic)
-         if (mytid==0) then
-         WRITE (22)buffer
-         end if
+!        call gather_global(buffer, q, master_task,distrb_clinic)
+!        if (mytid==0) then
+!        WRITE (22)buffer
+!        end if
 !         write(*,*)'finish q'
 #endif
 
-      if(mytid==0) write(*,*)'ok  fort.22'
-        close(22)
-      end if
+!     if(mytid==0) then
+!       close(22)
+!     end if
 !
-     deallocate( buffer)
+!      write(120+mytid,*) "OK-----4"
+!      close(120+mytid)
+!      deallocate( buffer)
+!      write(120+mytid,*) "OK-----5"
+!      close(120+mytid)
+  end if
 
 !$OMP PARALLEL DO PRIVATE (iblock,k,j,i)
    do iblock = 1, nblocks_clinic
@@ -232,11 +242,11 @@ use distribution
          END DO
       END DO
    end do
-!
+ 
      ISB = 0
      ISC = 0
      IST = 0
-!
+ 
 !     write(*,*)'ok instant'
       return
       end

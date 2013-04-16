@@ -45,8 +45,8 @@ use operators
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM
-         DO J = JST,JET
-            DO I = 1,IMT
+         DO J = 1, JMT-1
+            DO I = 2,IMT
                UK (I,J,K,IBLOCK)= (1.0D0+ WORK (I,J,IBLOCK)* OHBU (I,J,IBLOCK))* UWK (I,J,K,IBLOCK)
                VK (I,J,K,IBLOCK)= (1.0D0+ WORK (I,J,IBLOCK)* OHBU (I,J,IBLOCK))* VWK (I,J,K,IBLOCK)
             END DO
@@ -69,8 +69,8 @@ use operators
 !$OMP PARALLEL DO PRIVATE (IBLOCK)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM
-         DO J = JSM,JEM
-            DO I = 2,IMM
+         DO J = 2, JMT-1
+            DO I = 2,IMT-1
                WORK (I,J,IBLOCK)= WORK(I,J,IBLOCK) - DZP (K)* WKA (I,J,K,IBLOCK)* VIT (I,J,K,IBLOCK)
             END DO
          END DO
@@ -81,8 +81,8 @@ use operators
 !$OMP PARALLEL DO PRIVATE (IBLOCK)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 2,KM
-         DO J = JSM,JEM
-            DO I = 2,IMM
+         DO J = 2, JMT-1
+            DO I = 2,IMT-1
                WS (I,J,K,IBLOCK)= VIT (I,J,K,IBLOCK)* (WS (I,J,K -1,IBLOCK) + &
                DZP (K -1)* (WORK (I,J,IBLOCK)* OHBT (I,J,IBLOCK) + WKA (I,J,K -1,IBLOCK)))
             END DO
@@ -92,8 +92,8 @@ use operators
 !
 !$OMP PARALLEL DO PRIVATE (J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
-      DO J = JST,JET
-         DO I = 1,IMT
+      DO J = 2, JMT-1
+         DO I = 2, JMT-1
             WORK (I,J,IBLOCK)= 1.0D0/ (1.0D0+ H0WK (I,J,IBLOCK)* OHBT (I,J,IBLOCK))
          END DO
       END DO
@@ -102,8 +102,8 @@ use operators
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 2,KM
-         DO J = JSM,JEM
-            DO I = 2,IMM
+         DO J = 2, JMT-1
+            DO I = 2,IMT-1
                WS (I,J,K,IBLOCK)= WS (I,J,K,IBLOCK)* WORK (I,J,IBLOCK)
             END DO
          END DO

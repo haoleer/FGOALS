@@ -45,12 +45,10 @@ use hmix_del4
       integer*4,  dimension(4) :: count(4)
       character (len=18) :: fname
       INTEGER :: NMFF
-!     integer :: mmm(imt_global,jmt_global)
 
       allocate(h0(imt,jmt,max_blocks_clinic),u(imt,jmt,km,max_blocks_clinic),v(imt,jmt,km,max_blocks_clinic), &
                at(imt,jmt,km,ntra,max_blocks_clinic))
-      allocate(buffer(imt_global,jmt_global))
-!     allocate( mask_g(imt_global,jmt_global),mask_r(imt,jmt,max_blocks_clinic) )
+      allocate(buffer(imt_global+2,jmt_global))
 
 
       if (mytid==0)then
@@ -172,7 +170,7 @@ use hmix_del4
         call check_err (iret)
        end if
 !
-      call scatter_global(at(:,:,k,1,:), buffer, master_task, distrb_clinic, &
+      call scatter_global(at(:,:,k,1,:), buffer(2:imt_global+1,:), master_task, distrb_clinic, &
                           field_loc_center, field_type_scalar)
 !
        if (mytid == 0 ) then
@@ -180,7 +178,7 @@ use hmix_del4
         call check_err (iret)
        end if
 !
-       call scatter_global(at(:,:,k,2,:), buffer,master_task, distrb_clinic, &
+       call scatter_global(at(:,:,k,2,:), buffer(2:imt_global+1,:),master_task, distrb_clinic, &
                           field_loc_center, field_type_scalar)
 !
        end do !km
@@ -244,7 +242,7 @@ use hmix_del4
       call check_err (iret)
       end if
 !
-      call scatter_global(at(:,:,k,1.:),buffer, master_task, distrb_clinic, &
+      call scatter_global(at(:,:,k,1.:),buffer(2:imt_global+1,:), master_task, distrb_clinic, &
                           field_loc_center, field_type_scalar)
 !
       if (mytid == 0 ) then
@@ -256,7 +254,7 @@ use hmix_del4
       call check_err (iret)
       end if
 !
-      call scatter_global(at(:,:,k,2.:), buffer, master_task, distrb_clinic, &
+      call scatter_global(at(:,:,k,2.:), buffer(2:imt_global+1,:), master_task, distrb_clinic, &
                           field_loc_center, field_type_scalar)
 !
        end do
@@ -291,11 +289,12 @@ use hmix_del4
          if (mytid==0) then
          open(22,file=trim(out_dir)//fname,form='unformatted')
          end if
-
+!
          if (mytid==0) then
          READ (22)buffer
          end if
-         call scatter_global(h0,buffer, master_task, distrb_clinic, &
+
+         call scatter_global(h0,buffer(2:imt_global+1,:), master_task, distrb_clinic, &
                           field_loc_center, field_type_scalar)
          call POP_HaloUpdate(h0 , POP_haloClinic, POP_gridHorzLocCenter,&
                        POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
@@ -304,7 +303,7 @@ use hmix_del4
          if (mytid==0) then
          READ (22)buffer
          end if
-         call scatter_global(u(:,:,k,:), buffer, master_task, distrb_clinic, &
+         call scatter_global(u(:,:,k,:), buffer(2:imt_global+1,:), master_task, distrb_clinic, &
                           field_loc_swcorner, field_type_vector)
          end do
          call POP_HaloUpdate(u , POP_haloClinic, POP_gridHorzLocSWcorner , &
@@ -314,7 +313,7 @@ use hmix_del4
          if (mytid==0) then
          READ (22)buffer
          end if
-         call scatter_global(v(:,:,k,:),buffer, master_task, distrb_clinic, &
+         call scatter_global(v(:,:,k,:),buffer(2:imt_global+1,:), master_task, distrb_clinic, &
                           field_loc_swcorner, field_type_vector)
          end do
          call POP_HaloUpdate(v , POP_haloClinic, POP_gridHorzLocSWcorner , &
@@ -324,7 +323,7 @@ use hmix_del4
          if (mytid==0) then
          READ (22)buffer
          end if
-         call scatter_global(at(:,:,k,1,:),buffer, master_task, distrb_clinic, &
+         call scatter_global(at(:,:,k,1,:),buffer(2:imt_global+1,:), master_task, distrb_clinic, &
                           field_loc_center, field_type_scalar)
          end do
          call POP_HaloUpdate(at(:,:,:,1,:) , POP_haloClinic, POP_gridHorzLocCenter , &
@@ -334,7 +333,7 @@ use hmix_del4
          if (mytid==0) then
          READ (22)buffer
          end if
-         call scatter_global(at(:,:,k,2,:),buffer, master_task, distrb_clinic, &
+         call scatter_global(at(:,:,k,2,:),buffer(2:imt_global+1,:), master_task, distrb_clinic, &
                           field_loc_center, field_type_scalar)
          end do
          call POP_HaloUpdate(at(:,:,:,2,:) , POP_haloClinic, POP_gridHorzLocCenter , &
@@ -384,44 +383,44 @@ use hmix_del4
           if (mytid==0) then
            READ (22)buffer
           end if
-          call scatter_global(t_cpl,buffer, master_task, distrb_clinic, &
+          call scatter_global(t_cpl,buffer(2:imt_global+1,:), master_task, distrb_clinic, &
                           field_loc_center, field_type_scalar)
 !for s_cpl
           if (mytid==0) then
            READ (22)buffer
           end if
-          call scatter_global(s_cpl, buffer, master_task, distrb_clinic, &
+          call scatter_global(s_cpl, buffer(2:imt_global+1,:), master_task, distrb_clinic, &
                           field_loc_center, field_type_scalar)
 !for u_cpl
           if (mytid==0) then
            READ (22)buffer
           end if
 !for v_cpl
-          call scatter_global(u_cpl, buffer, master_task, distrb_clinic, &
+          call scatter_global(u_cpl, buffer(2:imt_global+1,:), master_task, distrb_clinic, &
                           field_loc_center, field_type_vector)
           if (mytid==0) then
            READ (22)buffer
           end if
-          call scatter_global(v_cpl, buffer, master_task, distrb_clinic, &
+          call scatter_global(v_cpl, buffer(2:imt_global+1,:), master_task, distrb_clinic, &
                           field_loc_center, field_type_vector)
 
 !for dhdx 
           if (mytid==0) then
            READ (22)buffer
           end if
-          call scatter_global(dhdx,buffer, master_task, distrb_clinic, &
+          call scatter_global(dhdx,buffer(2:imt_global+1,:), master_task, distrb_clinic, &
                           field_loc_center, field_type_scalar)
 !for dhdy 
           if (mytid==0) then
            READ (22)buffer
           end if
-          call scatter_global(dhdy, buffer, master_task, distrb_clinic, &
+          call scatter_global(dhdy, buffer(2:imt_global+1,:), master_task, distrb_clinic, &
                           field_loc_center, field_type_scalar)
 !for q
           if (mytid==0) then
            READ (22)buffer
           end if
-          call scatter_global(q ,buffer,  master_task, distrb_clinic, &
+          call scatter_global(q ,buffer(2:imt_global+1,:),  master_task, distrb_clinic, &
                           field_loc_center, field_type_scalar)
          end if
 !        end if
@@ -432,8 +431,9 @@ use hmix_del4
       call mpi_bcast(number_day,1,mpi_integer,0,mpi_comm_ocn,ierr)
 
 #endif
+      if (mytid == 0) then
          CLOSE(22)
- 
+      end if
  
          NMFF = MOD (MONTH -1,12)
  
@@ -475,20 +475,8 @@ use hmix_del4
       call init_del4t
       call init_del4u
 #else
-      if (mytid == 0 ) then
-         write(112,*) "OK-----1"
-         close(112)
-      end if
       call init_del2t
-      if (mytid == 0 ) then
-         write(112,*) "OK-----2"
-         close(112)
-      end if
       call init_del2u
-      if (mytid == 0 ) then
-         write(112,*) "OK-----3"
-         close(112)
-      end if
 #endif
 !
       if (mytid==0)then
@@ -498,8 +486,8 @@ use hmix_del4
 #endif
       endif 
 
+
       deallocate(buffer)
-!     deallocate(mask_g)
 
       RETURN
 
