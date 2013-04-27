@@ -100,14 +100,10 @@
    do j=2,ny_block
    do i=1,nx_block-1
       if (k <= KMT(i,j,bid)) then
-         DIV_OUT(i,j) = p5*(UX(i+1,j  )*DYU(i+1,j  ,bid) +  & 
-                            UX(i+1,j-1)*DYU(i+1,j-1,bid) -  &
-                            UX(i  ,j  )*DYU(i  ,j  ,bid) -  &
-                            UX(i  ,j-1)*DYU(i  ,j-1,bid) +  &
-                            UY(i+1,j  )*DXU(i+1,j  ,bid) +  &
-                            UY(i  ,j  )*DXU(i  ,j  ,bid) -  &
-                            UY(i+1,j-1)*DXU(i+1,j-1,bid) -  &
-                            UY(i  ,j-1)*DXU(i  ,j-1,bid))
+         DIV_OUT(i,j) = p5*((UX(i+1,j  )+ UX(i+1,j-1))*HTW(i+1,j,bid) -  &
+                            (UX(i  ,j  )+ UX(i  ,j-1))*HTW(i  ,j,bid) +  &
+                            (UY(i+1,j  )+ UY(i  ,j  ))*HTS(i  ,j,bid) -  &
+                            (UY(i+1,j-1)+ UY(i  ,j-1))*HTS(i  ,j-1,bid))*TAREA_R(i,j,bid)
       endif
    end do
    end do

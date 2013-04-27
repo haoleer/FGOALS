@@ -46,7 +46,7 @@ use param_mod
       real(r4),dimension(jmt)::DYR_IN
       real(r8),dimension(imt,jmt,max_blocks_clinic):: EBEA,EBEB,EBLA,EBLB,EPEA,EPEB,EPLA,EPLB
       real(r8),dimension(jmt)::OUY,OTX,OUX,SOTX,SOUX, &
-                    FF,CV1,CV2,SNLAT,SINT, &
+                    FF,CV1,CV2,SINT, &
                     SINU,DYR,DXDYU,DXDYT, &
                     R1A,R1B,R2A,R2B,R1C, &
                     R1D,R2C,R2D
@@ -96,6 +96,7 @@ use param_mod
 !Yu
 
       real(r8),dimension(imt,jmt,max_blocks_clinic)::ohbt,ohbu,dzph,hbx,hby
+      real(r8),dimension(imt,jmt,max_blocks_clinic):: SNLAT
       real(r8),dimension(jmt):: COSU,COST
 #ifdef SPMD
        real(r8),dimension(:),allocatable::COSU_global,COST_global

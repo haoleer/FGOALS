@@ -93,12 +93,18 @@ use operators
 !$OMP PARALLEL DO PRIVATE (J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO J = 2, JMT-1
-         DO I = 2, JMT-1
+         DO I = 2, IMT-1
             WORK (I,J,IBLOCK)= 1.0D0/ (1.0D0+ H0WK (I,J,IBLOCK)* OHBT (I,J,IBLOCK))
          END DO
       END DO
    END DO
  
+      if ( mytid == 0) then
+            write(117,*) ((ws(i,j,3,1), i=3,80),j=6,6)
+            write(117,*)
+            write(117,*) ((work(i,j,1), i=3,80),j=6,6)
+            close(117)
+      end if
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 2,KM
@@ -109,6 +115,8 @@ use operators
          END DO
       END DO
    END DO
+    
+
  
       deallocate(uk,vk)
 

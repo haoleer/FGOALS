@@ -16,6 +16,9 @@ use operators
 use smuvh
 use POP_GridHorzMod
 use POP_HaloMod
+use global_reductions
+use distribution
+use constant_mod
       IMPLICIT NONE
 
       INTEGER :: IEB,NC,IEB_LOOP
@@ -73,6 +76,7 @@ use POP_HaloMod
 #else
 !$OMP PARALLEL DO PRIVATE (IBLOCK)
      DO IBLOCK = 1, NBLOCKS_CLINIC
+         this_block = get_block(blocks_clinic(iblock),iblock)
          call hdiffu_del2(1, HDUK, HDVK, ubp(:,:,iblock), vbp(:,:,iblock), this_block)
          DO J = 3, jmt-2
             DO I = 3, imt-2
@@ -98,12 +102,20 @@ use POP_HaloMod
             END IF
          END IF
 
+      write(120+mytid,*) ((wka(i,j,5,1),i=3,imt-2),j=3,jmt-2)
+      close(120+mytid)
+      write(140+mytid,*) ((wka(i,j,6,1),i=3,imt-2),j=3,jmt-2)
+      close(140+mytid)
+      write(160+mytid,*) ((dlub(i,j,1),i=3,imt-2),j=3,jmt-2)
+      close(160+mytid)
+      stop
 !---------------------------------------------------------------------
 !     + (g'-1)g*dH/dr
 !---------------------------------------------------------------------
 
 !$OMP PARALLEL DO PRIVATE (IBLOCK)
      DO IBLOCK = 1, NBLOCKS_CLINIC
+         this_block = get_block(blocks_clinic(iblock),iblock)
          call grad(1, GRADX, GRADY, H0, this_block)
          DO J = 3, jmt-2
             DO I = 3, imt-2
@@ -181,6 +193,7 @@ use POP_HaloMod
 
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I) 
     DO IBLOCK = 1, NBLOCKS_CLINIC
+         this_block = get_block(blocks_clinic(iblock),iblock)
          call div(1,DIV_OUT,wka(:,:,1,iblock),wka(:,:,2,iblock),this_block)
          DO J = 2, jmt-2
             DO I = 3,imt-2
@@ -188,14 +201,59 @@ use POP_HaloMod
              END DO
           ENDDO
     END DO
+!   write(120+mytid,*) isb, global_maxval(work,distrb_clinic,field_loc_center ), global_minval(work,distrb_clinic,field_loc_center)
+!   write(120+mytid,*) global_maxval(wka(:,:,3,:),distrb_clinic,field_loc_center ), global_minval(wka(:,:,3,:),distrb_clinic,field_loc_center)
+!   write(120+mytid,*) global_maxval(wka(:,:,4,:),distrb_clinic,field_loc_center ), global_minval(wka(:,:,4,:),distrb_clinic,field_loc_center)
+!   write(120+mytid,*) global_maxval(wka(:,:,1,:),distrb_clinic,field_loc_center ), global_minval(wka(:,:,1,:),distrb_clinic,field_loc_center)
+!   write(120+mytid,*) global_maxval(wka(:,:,2,:),distrb_clinic,field_loc_center ), global_minval(wka(:,:,2,:),distrb_clinic,field_loc_center)
+
+
+       if (mytid == 1) then
+           write(112,*)"OK-----------1"
+           close(112)
+       end if
 !
 !---------------------------------------------------------------------
 !     PREDICTING VB , UB & H0
 !---------------------------------------------------------------------
+         call POP_HaloUpdate(work , POP_haloClinic, POP_gridHorzLocCenter,&
+                       POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
+!
+       if (mytid == 1) then
+           write(112,*)"OK-----------2"
+           close(112)
+       end if
+         call POP_HaloUpdate(wka(:,:,3,:), POP_haloClinic, POP_gridHorzLocSWcorner , &
+                       POP_fieldKindVector, errorCode, fillValue = 0.0_r8)
+!
+       if (mytid == 1) then
+           write(112,*)"OK-----------3"
+           close(112)
+       end if
+         call POP_HaloUpdate(wka(:,:,4,:), POP_haloClinic, POP_gridHorzLocSWcorner , &
+                       POP_fieldKindVector, errorCode, fillValue = 0.0_r8)
+ 
+       if (mytid == 1) then
+           write(112,*)"OK-----------4"
+           close(112)
+       end if
+
 !YU  Oct. 24,2005
-         CALL SMUV (WKA(:,:,3,:) ,VIV,1,fil_lat1)
-         CALL SMUV (WKA(:,:,4,:) ,VIV,1,fil_lat1)
-         CALL SMZ0 (WORK,VIT,fil_lat1)
+         CALL SMUV_2D (WKA(:,:,3,:) ,VIV(:,:,1,:),fil_lat1)
+       if (mytid == 1) then
+           write(112,*)"OK-----------5"
+           close(112)
+       end if
+         CALL SMUV_2D (WKA(:,:,4,:) ,VIV(:,:,1,:),fil_lat1)
+       if (mytid == 1) then
+           write(112,*)"OK-----------6"
+           close(112)
+       end if
+         CALL SMZ0 (WORK,VIT(:,:,1,:),fil_lat1)
+       if (mytid == 1) then
+           write(112,*)"OK-----------7"
+           close(112)
+       end if
 !YU  Oct. 24,2005
 !
          IF (ISB < 1) THEN
@@ -203,8 +261,8 @@ use POP_HaloMod
 !
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
     DO IBLOCK = 1, NBLOCKS_CLINIC
-         DO J = 3,jmt-2
-            DO I = 3,imt-2
+         DO J = 1, jmt
+            DO I = 1,imt
                UB (I,J,IBLOCK)= UBP (I,J,IBLOCK) + WKA (I,J,3,IBLOCK)* DTB
                VB (I,J,IBLOCK)= VBP (I,J,IBLOCK) + WKA (I,J,4,IBLOCK)* DTB
                H0 (I,J,IBLOCK)= H0P (I,J,IBLOCK) + WORK (I,J,IBLOCK) * DTB
@@ -212,22 +270,14 @@ use POP_HaloMod
          END DO
      END DO
 
+
 !---------------------------------------------------------------------
 !     FILTER FORCING AT HIGT LATITUDES
 !---------------------------------------------------------------------
-         call POP_HaloUpdate(h0 , POP_haloClinic, POP_gridHorzLocCenter,&
-                       POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
-!
-         call POP_HaloUpdate(ub, POP_haloClinic, POP_gridHorzLocSWcorner , &
-                       POP_fieldKindVector, errorCode, fillValue = 0.0_r8)
-!
-         call POP_HaloUpdate(vb, POP_haloClinic, POP_gridHorzLocSWcorner , &
-                       POP_fieldKindVector, errorCode, fillValue = 0.0_r8)
 
-
-            CALL SMUV (UB ,VIV,1,fil_lat1)
-            CALL SMUV (VB ,VIV,1,fil_lat1)
-            CALL SMZ0 (H0,VIT,fil_lat1)
+            CALL SMUV_2D (UB ,VIV(:,:,1,:),fil_lat1)
+            CALL SMUV_2D (VB ,VIV(:,:,1,:),fil_lat1)
+            CALL SMZ0 (H0,VIT(:,:,1,:),fil_lat1)
 !        
 
          IF (IEB == 0) THEN
@@ -266,15 +316,6 @@ use POP_HaloMod
 !     FILTER FORCING AT HIGT LATITUDES
 !---------------------------------------------------------------------
 !        
-         call POP_HaloUpdate(h0 , POP_haloClinic, POP_gridHorzLocCenter,&
-                       POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
-!
-         call POP_HaloUpdate(wka(:,:,1,:), POP_haloClinic, POP_gridHorzLocSWcorner , &
-                       POP_fieldKindVector, errorCode, fillValue = 0.0_r8)
-!
-         call POP_HaloUpdate(wka(:,:,2,:), POP_haloClinic, POP_gridHorzLocSWcorner , &
-                       POP_fieldKindVector, errorCode, fillValue = 0.0_r8)
-
 
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
     DO IBLOCK = 1, NBLOCKS_CLINIC
@@ -293,12 +334,12 @@ use POP_HaloMod
 !YU  Oct. 24,2005
 !lhl0711         IF (MOD(ISB,1200)==0) THEN
          IF (MOD(ISB,1440)==1) THEN
-            CALL SMUV (UB ,VIV,1,fil_lat2)
-            CALL SMUV (VB ,VIV,1,fil_lat2)
-            CALL SMZ0 (H0 ,VIT,fil_lat2)
-            CALL SMUV (UBP,VIV,1,fil_lat2)
-            CALL SMUV (VBP,VIV,1,fil_lat2)
-            CALL SMZ0 (H0P,VIT,fil_lat2)
+            CALL SMUV_2D (UB ,VIV(:,:,1,:),fil_lat2)
+            CALL SMUV_2D (VB ,VIV(:,:,1,:),fil_lat2)
+            CALL SMZ0 (H0 ,VIT(:,:,1,:),fil_lat2)
+            CALL SMUV_2D (UBP,VIV(:,:,1,:),fil_lat2)
+            CALL SMUV_2D (VBP,VIV(:,:,1,:),fil_lat2)
+            CALL SMZ0 (H0P,VIT(:,:,1,:),fil_lat2)
          END IF
 
 !YU  Oct. 24,2005
@@ -319,6 +360,7 @@ use POP_HaloMod
     END DO
 
       END DO baro_loop
+      close(120+mytid)
 
       deallocate(dlub,dlvb)
   call mpi_barrier(mpi_comm_ocn,ierr)

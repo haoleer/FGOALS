@@ -86,8 +86,8 @@ use msg_mod
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM
-         call ugrid_to_tgrid(wp12(:,:,k,iblock),up(:,:,k,iblock),iblock)
-         call ugrid_to_tgrid(wp13(:,:,k,iblock),vp(:,:,k,iblock),iblock)
+         call ugrid_to_tgrid(wp12(:,:,k,iblock),up(:,:,k,iblock),iblock,k)
+         call ugrid_to_tgrid(wp13(:,:,k,iblock),vp(:,:,k,iblock),iblock,k)
       END DO
    END DO
 !
@@ -162,7 +162,7 @@ use msg_mod
             AKS_BACK(K)=0.0D0
          end do
 !
-         DO K = 1,ITNU(i,j,iblock)-1
+         DO K = 1,KMT(i,j,iblock)-1
                wp1(K)= VIT (I,J,K+1,iblock)* (AT (I,J,K,1,iblock)-(AT (I,J,K,1,iblock)-AT (I,J,K+1,1,iblock))* &
                                DZP (K)/(DZP(K)+DZP(K+1)))
                wp2(K)= VIT (I,J,K+1,iblock)* (AT (I,J,K,2,iblock)-(AT (I,J,K,2,iblock)-AT (I,J,K+1,2,iblock))* &
@@ -171,7 +171,7 @@ use msg_mod
                        pdensity(I,J,K+1,iblock))* DZP (K)/(DZP(K)+DZP(K+1)))*1.d-3
                wp8(k)=-vit(i,j,k+1,iblock)*ZKP(k+1)*1.d+2
          END DO
-         DO K = 1,ITNU(i,j,iblock)-1
+         DO K = 1,KMT(i,j,iblock)-1
          wp4(k)=vit(i,j,k+1,iblock)*RIT(i,j,k,iblock)
          wp5(k)=vit(i,j,k+1,iblock)*RIDT(i,j,k,iblock)
          wp6(k)=vit(i,j,k+1,iblock)*S2T(i,j,k,iblock)
@@ -181,7 +181,7 @@ use msg_mod
          wp10=vit(i,j,1,iblock)*BUOYTUR(I,J,iblock)*1.0d+4
          wp11=vit(i,j,1,iblock)*BUOYSOL(I,J,iblock)*1.0d+4
 !
-         IWK=ITNU(I,J,iblock)-1
+         IWK=KMT(I,J,iblock)-1
 !
 !input ZKT in cm, AT(1) in C, AT(2) in (s-35)/1000., PDENSITY in g/cm^3
 
@@ -192,12 +192,27 @@ use msg_mod
 !output in cm^2/s, so 1d-4 should be multipled
                AKM_BACK,AKT_BACK,AKS_BACK,&
 !input  RICT in 1/s^2 USTAR in cm/s, BUOYTUR,BUOYSOL in cm^2/s^3,FF in 1/s
-               wp7,wp9,wp10,wp11,FF(J),& !OK
+               wp7,wp9,wp10,wp11,FCORT(i,j,iblock) ,& !OK
 !output amld in cm, akmt,akh, and aks in cm^2/s
 !               AMLD(I,J,iblock),AKMT(I,J,1,iblock),AKT(I,J,1,1,iblock),AKT(I,J,1,2,iblock),&
                AMLD(I,J,iblock),WK1,WK2,WK3,&
 !input int
-               IWK,NA(I,J,iblock),KM,1,0,0,i,j) !OK!
+               IWK,kmt(I,J,iblock)-1,KM,1,0,0,i,j) !OK!
+            if (mytid == 0 .and. j > 44 .and. j < 47  .and. i > 2 .and. i < 10) then
+               write(122,*) i,j,ff(j), amld(i,j,1)
+               write(122,*) "WP1", wp1(1:10)
+               write(122,*) "WP2", wp2(1:10)
+               write(122,*) "WP3", wp3(1:10)
+               write(122,*) "WP4", wp4(1:10)
+               write(122,*) "WP5", wp5(1:10)
+               write(122,*) "WP6", wp6(1:10)
+               write(122,*) "WP7", wp7(1:10)
+               write(122,*) "WP8", wp8(1:10)
+               write(122,*) "WP9", wp9,wp10, wp11
+               write(122,*) "WK1", WK1(1:10)
+               write(122,*) "WK2", WK2(1:10)
+               write(122,*) "WK3", WK3(1:10)
+            end if
 
          DO K = 1,KM
          xxx = WK1(K)
@@ -230,8 +245,6 @@ use msg_mod
 !---------------------------------------------------------------------
       CALL UPWELL (U,V,H0)
       
- 
- 
 !---------------------------------------------------------------------
 !     INITIALIZE WORK ARRAYS
 !---------------------------------------------------------------------
@@ -258,7 +271,7 @@ use msg_mod
          dlu(:,:,:,IBLOCK)=adv_uu
          dlv(:,:,:,IBLOCK)=adv_vv
    END DO
- 
+
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
     DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM
@@ -286,23 +299,23 @@ use msg_mod
             else
                diff_v1= AKMU(I,J,K-1,IBLOCK)*(1-AIDIF)*(VP(I,J,K-1,IBLOCK)- VP(I,J,K,IBLOCK))*ODZT(K)*VIV(I,J,K,IBLOCK)+ &
                         (1.0D0- VIV (I,J,K,IBLOCK))* WKA (I,J,K -1,IBLOCK)*(1-AIDIF) &
-                      * (-SNLAT(J)*UP(I,J,K-1,IBLOCK)*SAG+VP(I,J,K-1,IBLOCK)*CAG)
+                      * (-SNLAT(I,J,IBLOCK)*UP(I,J,K-1,IBLOCK)*SAG+VP(I,J,K-1,IBLOCK)*CAG)
                diff_u1= AKMU(I,J,K-1,IBLOCK)*(1-AIDIF)* (UP(I,J,K-1,IBLOCK)-UP(I,J,K,IBLOCK))* ODZT (K)*VIV (I,J,K,IBLOCK) + &
                        (1.0D0- VIV (I,J,K,IBLOCK))* WKA (I,J,K -1,IBLOCK)*(1-AIDIF) &
-                      *(UP(I,J,K-1,IBLOCK)*CAG+SNLAT(J)*VP(I,J,K-1,IBLOCK)* SAG)
+                      *(UP(I,J,K-1,IBLOCK)*CAG+SNLAT(I,J,IBLOCK)*VP(I,J,K-1,IBLOCK)* SAG)
             end if
             if (k==km) then
-               diff_v2= WKA (I,J,KM,IBLOCK)* ( - SNLAT (J)* UP (I,J,KM,IBLOCK)        &
+               diff_v2= WKA (I,J,KM,IBLOCK)* ( - SNLAT (I,J,IBLOCK)* UP (I,J,KM,IBLOCK)        &
                         * SAG + VP (I,J,KM,IBLOCK)* CAG)*(1-AIDIF)
-               diff_u2= WKA (I,J,KM,IBLOCK)* ( UP (I,J,KM,IBLOCK)* CAG + SNLAT (J)    &
+               diff_u2= WKA (I,J,KM,IBLOCK)* ( UP (I,J,KM,IBLOCK)* CAG + SNLAT (I,J,IBLOCK)    &
                         * VP (I,J,KM,IBLOCK)* SAG)*(1-AIDIF)
             else
                diff_v2= AKMU(I,J,K,IBLOCK)*(1-AIDIF)*(VP(I,J,K,IBLOCK)- VP(I,J,K+1,IBLOCK))*ODZT(K+1)*VIV(I,J,K+1,IBLOCK)+ &
                         (1.0D0- VIV (I,J,K+1,IBLOCK))* WKA (I,J,K,IBLOCK)*(1-AIDIF) &
-                      * (-SNLAT(J)*UP(I,J,K,IBLOCK)*SAG+VP(I,J,K,IBLOCK)*CAG)
+                      * (-SNLAT(I,J,IBLOCK)*UP(I,J,K,IBLOCK)*SAG+VP(I,J,K,IBLOCK)*CAG)
                diff_u2= AKMU(I,J,K,IBLOCK)*(1-AIDIF)*(UP(I,J,K,IBLOCK)-UP(I,J,K+1,IBLOCK))* ODZT(K+1)*VIV (I,J,K+1,IBLOCK) + &
                        (1.0D0- VIV (I,J,K+1,IBLOCK))* WKA (I,J,K,IBLOCK)*(1-AIDIF) &
-                      *(UP(I,J,K,IBLOCK)*CAG+SNLAT(J)*VP(I,J,K,IBLOCK)* SAG)
+                      *(UP(I,J,K,IBLOCK)*CAG+SNLAT(I,J,IBLOCK)*VP(I,J,K,IBLOCK)* SAG)
             end if
 #else
             RKV = AMV
@@ -338,23 +351,23 @@ use msg_mod
             else
                diff_v1= RKV*(VP(I,J,K-1,IBLOCK)- VP(I,J,K,IBLOCK))*ODZT(K)*VIV(I,J,K,IBLOCK)+ &
                         (1.0D0- VIV (I,J,K,IBLOCK))* WKA (I,J,K -1,IBLOCK) &
-                      * (-SNLAT(J)*UP(I,J,K-1,IBLOCK)*SAG+VP(I,J,K-1,IBLOCK)*CAG)
+                      * (-SNLAT(I,J,IBLOCK)*UP(I,J,K-1,IBLOCK)*SAG+VP(I,J,K-1,IBLOCK)*CAG)
                diff_u1= RKV * (UP(I,J,K-1,IBLOCK)-UP(I,J,K,IBLOCK))* ODZT (K)*VIV (I,J,K,IBLOCK) + &
                        (1.0D0- VIV (I,J,K,IBLOCK))* WKA (I,J,K -1,IBLOCK) &
-                      *(UP(I,J,K-1,IBLOCK)*CAG+SNLAT(J)*VP(I,J,K-1,IBLOCK)* SAG)   
+                      *(UP(I,J,K-1,IBLOCK)*CAG+SNLAT(I,J,IBLOCK)*VP(I,J,K-1,IBLOCK)* SAG)   
             end if
             if (k==km) then
-               diff_v2= WKA (I,J,KM,IBLOCK)* ( - SNLAT (J)* UP (I,J,KM,IBLOCK)        &
+               diff_v2= WKA (I,J,KM,IBLOCK)* ( - SNLAT (I,J,IBLOCK)* UP (I,J,KM,IBLOCK)        &
                         * SAG + VP (I,J,KM,IBLOCK)* CAG)
-               diff_u2= WKA (I,J,KM,IBLOCK)* ( UP (I,J,KM,IBLOCK)* CAG + SNLAT (J)    &
+               diff_u2= WKA (I,J,KM,IBLOCK)* ( UP (I,J,KM,IBLOCK)* CAG + SNLAT (I,J,IBLOCK)    &
                         * VP (I,J,KM,IBLOCK)* SAG)
             else
                diff_v2= RKV1*(VP(I,J,K,IBLOCK)- VP(I,J,K+1,IBLOCK))*ODZT(K+1)*VIV(I,J,K+1,IBLOCK)+ &
                         (1.0- VIV (I,J,K+1,IBLOCK))* WKA (I,J,K,IBLOCK) &
-                      * (-SNLAT(J)*UP(I,J,K,IBLOCK)*SAG+VP(I,J,K,IBLOCK)*CAG)
+                      * (-SNLAT(I,J,IBLOCK)*UP(I,J,K,IBLOCK)*SAG+VP(I,J,K,IBLOCK)*CAG)
                diff_u2= RKV1* (UP(I,J,K,IBLOCK)-UP(I,J,K+1,IBLOCK))* ODZT(K+1)*VIV (I,J,K+1,IBLOCK) + &
                        (1.0- VIV (I,J,K+1,IBLOCK))* WKA (I,J,K,IBLOCK) &
-                      *(UP(I,J,K,IBLOCK)*CAG+SNLAT(J)*VP(I,J,K,IBLOCK)* SAG)   
+                      *(UP(I,J,K,IBLOCK)*CAG+SNLAT(I,J,IBLOCK)*VP(I,J,K,IBLOCK)* SAG)   
             end if
 !
 !
@@ -362,6 +375,11 @@ use msg_mod
 !lhl1204
             DLV (I,J,K,IBLOCK) = DLV (I,J,K,IBLOCK) + ODZP (K)* (diff_v1-diff_v2)
             DLU (I,J,K,IBLOCK) = DLU (I,J,K,IBLOCK) + ODZP (K)* (diff_u1-diff_u2)
+            if (mytid == 1 .and. k==3 .and.j > 44 .and. j < 47  .and. i >62 .and. i < 70) then
+                write(123,*) i,j,k
+                write(123,*) diff_u1, diff_u2, akmu(i,j,k-1,1), akmu(i,j,k,1),akmu(i,j,k+1,1)
+                write(123,*) akmt(i-1,j,k,1),akmt(i,j,k,1),akmt(i-1,j+1,k,1),akmt(i,j+1,k,1)
+            end if
         END DO
       END DO
       END DO
@@ -422,6 +440,14 @@ use msg_mod
 !     SET CYCLIC CONDITIONS ON EASTERN AND WESTERN BOUNDARY
 !---------------------------------------------------------------------
  
+     if ( mytid == 0 ) then
+         write(120,*) ((dlu(i,j,3,1),i=3,92),j=6,7)
+         write(121,*) ((dlv(i,j,3,1),i=3,92),j=6,7)
+         close(120)
+         close(121)
+         close(122)
+         close(123)
+     end if
       allocate(dlub(imt,jmt,max_blocks_clinic),dlvb(imt,jmt,max_blocks_clinic),stat=ierr)
       CALL VINTEG (DLU,DLUB)
       CALL VINTEG (DLV,DLVB)
@@ -434,7 +460,7 @@ use msg_mod
 !Yu      write(6,*)'allocation error---tmp1,tmp2'
 !Yu      stop
 !Yu   end if
-  call mpi_barrier(mpi_comm_ocn,ierr)
+      stop
 
       RETURN
       END SUBROUTINE READYC

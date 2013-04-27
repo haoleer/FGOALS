@@ -16,13 +16,61 @@ use POP_HaloMod
 !
       integer            :: ErrorCode   ! temporary
 
-      public :: smuv, smts, smz0
+      public :: smuv, smts, smz0, smuv_2d
 
 
       contains
 
-!write(mytid+600,'(a,3i4)')"SMUV",__LINE__,k,j
-!  CVS: $Id: smuvh.F90,v 1.1.1.1 2004/04/29 06:22:39 lhl Exp $
+!     ========================
+      SUBROUTINE SMUV_2D(X,Z,fil_lat)
+!     ========================
+!     1-D zonal smoother
+
+
+      INTEGER :: JFS1,JFS2,JFN1,JFN2,KK, NCY
+      REAL(r8)    :: fil_lat
+      REAL(r8)    :: X (IMT,JMT,max_blocks_clinic),XS (IMT),Z (IMT,JMT,max_blocks_clinic)
+      INTEGER     :: NN(JMT), MAX_NN, iblock
+!
+!
+      MAX_NN = 11
+      do j =3, jmt-2
+         if (cos(ulat(1,j,1)).le.cos(fil_lat*DEGtoRAD)) then
+            NN(j) = int(cos(fil_lat*DEGtoRAD)/abs(cos(ulat(1,j,1)))*1.2D0)
+         else 
+            NN(j) = 0
+         endif
+      enddo
+
+!
+      DO NCY = 1,MAX_NN
+!
+!$OMP PARALLEL DO PRIVATE (iblock,k,j)
+   do iblock = 1, nblocks_clinic
+         do j = 3, jmt-2
+            if (NN(j) .ge. NCY) then       
+                  DO I = 1,IMT
+                     XS (I)= X (I,J,iblock)* Z (I,J,iblock)
+                  END DO
+                  DO I = 3,imt-2
+                     X (I,J,iblock)= (0.5D0*XS(I)+0.25D0*(XS(I-1)+XS(I+1)))*Z(I,J,iblock)
+                  END DO
+            endif
+         end do
+   end do
+!
+         call POP_HaloUpdate(X, POP_haloClinic, POP_gridHorzLocSWcorner , &
+                       POP_fieldKindVector, errorCode, fillValue = 0.0_r8)
+!
+   END DO
+
+      RETURN
+      END SUBROUTINE SMUV_2D
+
+
+
+
+
 !     ========================
       SUBROUTINE SMUV (X,Z,KK,fil_lat)
 !     ========================
@@ -34,13 +82,11 @@ use POP_HaloMod
       REAL(r8)    :: X (IMT,JMT,KK,max_blocks_clinic),XS (IMT),Z (IMT,JMT,KM,max_blocks_clinic)
       INTEGER     :: NN(JMT), MAX_NN, iblock
 
-!lhl      fil_lat=55.D0
 !
-      MAX_NN = 0
+      MAX_NN = 10
       do j =3, jmt-2
          if (cos(ulat(1,j,1)).le.cos(fil_lat*DEGtoRAD)) then
-            NN(j) = int(cos(fil_lat*DEGtoRAD)/sinu(j)*1.2D0)
-            if (NN(j) .gt. MAX_NN) MAX_NN = NN(J)
+            NN(j) = int(cos(fil_lat*DEGtoRAD)/cos(ulat(1,j,1))*1.2D0)
          else 
             NN(j) = 0
          endif
@@ -91,11 +137,10 @@ use POP_HaloMod
 !lhl      fil_lat=56.D0
 !
 
-      MAX_NN = 0
+      MAX_NN = 10
       do j =jst,jmt
          if (sint(j).le.cos(fil_lat*DEGtoRAD)) then
             NN(j) = int(cos(fil_lat*DEGtoRAD)/sint(j)*1.2D0)
-            if (NN(j) .gt. MAX_NN) MAX_NN = NN(J)
          else
             NN(j) = 0
          endif
@@ -144,18 +189,17 @@ use POP_HaloMod
 
       INTEGER :: JFS1,JFS2,JFN1,JFN2,NCY
       REAL(r8)    :: fil_lat
-      REAL(r8)    :: X (IMT,JMT,max_blocks_clinic),XS (IMT),Z (IMT,JMT,KM,max_blocks_clinic)
+      REAL(r8)    :: X (IMT,JMT,max_blocks_clinic),XS (IMT),Z (IMT,JMT,max_blocks_clinic)
       INTEGER    :: NN(JMT), MAX_NN, iblock
 
 
 !lhl      fil_lat=54.D0
 !
          
-      MAX_NN = 0
-      do j =jst,jmt
+      MAX_NN = 14
+      do j = 3,jmt-2
          if (cos(tlat(1,j,1)).le.cos(fil_lat*DEGtoRAD)) then
-            NN(j) = int(cos(fil_lat*DEGtoRAD)/sint(j)*1.2D0)
-            if (NN(j) .gt. MAX_NN) MAX_NN = NN(J)
+            NN(j) = int(cos(fil_lat*DEGtoRAD)/abs(cos(tlat(1,j,1)))*1.2D0)
          else
             NN(j) = 0
          endif
@@ -163,16 +207,18 @@ use POP_HaloMod
 
 !!$OMP PARALLEL DO PRIVATE (iblock,J,nn,xs)
       DO NCY = 1,MAX_NN
+         do iblock = 1, nblocks_clinic
          do j =3, jmt-2
             if (NN(j) .ge. NCY) then
                DO I = 1,IMT
-                  XS (I)= X (I,J,IBLOCK)* Z (I,J,1,iblock)
+                  XS (I)= X (I,J,IBLOCK)* Z (I,J,iblock)
                END DO
                DO I = 3, imt-2
-                  X(I,J,iblock)=(XS(I)*(1.0D0-0.25D0*Z(I-1,J,1,iblock)-0.25D0*Z(I+1,J,1,iblock)) &
-                            +0.25D0*(XS(I-1)+XS(I+1)))*Z(I,J,1,iblock)
+                  X(I,J,iblock)=(XS(I)*(1.0D0-0.25D0*Z(I-1,J,iblock)-0.25D0*Z(I+1,J,iblock)) &
+                            +0.25D0*(XS(I-1)+XS(I+1)))*Z(I,J,iblock)
                END DO
             endif
+         enddo
          enddo
 !        
          call POP_HaloUpdate(X , POP_haloClinic, POP_gridHorzLocCenter,&

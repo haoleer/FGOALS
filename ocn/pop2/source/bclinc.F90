@@ -38,9 +38,9 @@ use operators
                SBCX(I,J,IBLOCK) = SU (I,J,IBLOCK)* OD0
                SBCY(I,J,IBLOCK) = SV (I,J,IBLOCK)* OD0
                BBCX(I,J,IBLOCK)= C0F*SQRT(UP(I,J,KM,IBLOCK)*UP(I,J,KM,IBLOCK)+VP(I,J,KM,IBLOCK)*VP(I,J,KM,IBLOCK))&
-                          *(UP(I,J,KM,IBLOCK)*CAG+SNLAT(J)*VP (I,J,KM,IBLOCK)*SAG)
+                          *(UP(I,J,KM,IBLOCK)*CAG+SNLAT(I,J,IBLOCK)*VP (I,J,KM,IBLOCK)*SAG)
                BBCY(I,J,IBLOCK)= C0F*SQRT(UP(I,J,KM,IBLOCK)*UP(I,J,KM,IBLOCK)+VP(I,J,KM,IBLOCK)*VP(I,J,KM,IBLOCK))&
-                          *(-SNLAT(J)*UP(I,J,KM,IBLOCK)*SAG+VP(I,J,KM,IBLOCK)*CAG)
+                          *(-SNLAT(I,J,IBLOCK)*UP(I,J,KM,IBLOCK)*SAG+VP(I,J,KM,IBLOCK)*CAG)
             ENDDO
          ENDDO
      ENDDO

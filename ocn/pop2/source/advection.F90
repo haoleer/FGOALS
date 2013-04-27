@@ -42,22 +42,22 @@
 !
       real(r8) ,intent(in) :: uuu(imt,jmt,km), vvv(imt,jmt,km),www(imt,jmt,km)
       real(r8), intent(out):: adv_uu(imt,jmt,km), adv_vv(imt,jmt,km)
-      real(r8) :: u_eface(imt,jmt,km), v_nface(imt,jmt,km)
-      real(r8) :: adv_z1, adv_z2,adv_z3,adv_z4
+      real(r8) :: u_wface(imt,jmt,km), v_sface(imt,jmt,km)
+      real(r8) :: adv_z1, adv_z2,adv_z3,adv_z4,adv_xx, adv_yy
       integer, intent(in)  :: iblock
 !
      adv_uu = c0
      adv_vv = c0
 !
       do k=1, km
-      do j= 2,jmt
-      do i= 2,imt
+      do j= 2,jmt-1
+      do i= 2,imt-1
          if ( trim(adv_momentum) == 'centered' ) then
-            u_eface(i,j,k) = (uuu(i-1,j,k) + uuu(i,j,k))*P5
-            v_nface(i,j,k) = (vvv(i,j-1,k) + vvv(i,j,k))*P5
+            u_wface(i,j,k) = (uuu(i-1,j,k) + uuu(i,j,k))*P25*hue(i-1,j,iblock)
+            v_sface(i,j,k) = (vvv(i,j,k) + vvv(i,j+1,k))*P25*hun(i,j+1,iblock)
          else if ( trim(adv_momentum) == 'flux' ) then
-            u_eface(i,j,k) = (uuu(i-1,j,k)*dyu(i-1,j,iblock) + uuu(i,j,k)*dyu(i,j,iblock))*P5
-            v_nface(i,j,k) = (vvv(i,j-1,k)*dxu(i,j-1,iblock) + vvv(i,j,k)*dxu(i,j,iblock))*P5
+            u_wface(i,j,k) = (uuu(i-1,j,k)*dyu(i-1,j,iblock) + uuu(i,j,k)*dyu(i,j,iblock))*P25
+            v_sface(i,j,k) = (vvv(i,j,k)*dxu(i,j,iblock) + vvv(i,j+1,k)*dxu(i,j+1,iblock))*P25
          end if
       end do
       end do
@@ -67,14 +67,14 @@
         do k = 1,km
         do j= 3,jmt-2
         do i= 3,imt-2
-           adv_uu(i,j,k) =  -u_eface(i  ,j,k)*(uuu(i  ,j,k)-uuu(i-1,j,k))*dxu(i,j,iblock)  &
-                            -u_eface(i+1,j,k)*(uuu(i+1,j,k)-uuu(i  ,j,k))*dxu(i,j,iblock)  &
-                            -v_nface(i,j  ,k)*(uuu(i,  j,k)-uuu(i,j-1,k))*dyu(i,j,iblock)  &
-                            -v_nface(i,j+1,k)*(uuu(i,j+1,k)-uuu(i,  j,k))*dyu(i,j,iblock)  
-           adv_vv(i,j,k) =  -u_eface(i  ,j,k)*(vvv(i  ,j,k)-vvv(i-1,j,k))*dxu(i,j,iblock)  &
-                            -u_eface(i+1,j,k)*(vvv(i+1,j,k)-vvv(i  ,j,k))*dxu(i,j,iblock)  &
-                            -v_nface(i,j  ,k)*(vvv(i,  j,k)-vvv(i,j-1,k))*dyu(i,j,iblock)  &
-                            -v_nface(i,j+1,k)*(vvv(i,j+1,k)-vvv(i,  j,k))*dyu(i,j,iblock)  
+           adv_uu(i,j,k) = (-u_wface(i  ,j,k)*(uuu(i  ,j,k)-uuu(i-1,j,k))                   &
+                            -u_wface(i+1,j,k)*(uuu(i+1,j,k)-uuu(i  ,j,k))                   &
+                            -v_sface(i,j  ,k)*(uuu(i,j+1,k)-uuu(i,j  ,k))                   &
+                            -v_sface(i,j-1,k)*(uuu(i,j  ,k)-uuu(i,j-1,k)))*uarea_r(i,j,iblock)
+           adv_vv(i,j,k) = (-u_wface(i  ,j,k)*(vvv(i  ,j,k)-vvv(i-1,j,k))                   &
+                            -u_wface(i+1,j,k)*(vvv(i+1,j,k)-vvv(i  ,j,k))                   &
+                            -v_sface(i,j  ,k)*(vvv(i,j+1,k)-vvv(i,j  ,k))                   &
+                            -v_sface(i,j-1,k)*(vvv(i,j  ,k)-vvv(i,j-1,k)))*uarea_r(i,j,iblock)
 !
            if (k==1 )then
                adv_z1=0.0D0
@@ -91,8 +91,8 @@
                 adv_z2=www(I,J,K+1)*(uuu(I,J,K ) - uuu(I,J,K+1))
                 adv_z4=www(I,J,K+1)*(vvv(I,J,K ) - vvv(I,J,K+1))
            end if
-           adv_uu(i,j,k) = P5*adv_uu(i,j,k) - P5*ODZP(K)* (adv_z1+adv_z2)
-           adv_vv(i,j,k) = P5*adv_vv(i,j,k) - P5*ODZP(K)* (adv_z3+adv_z4)
+           adv_uu(i,j,k) = adv_uu(i,j,k) - P5*ODZP(K)* (adv_z1+adv_z2)
+           adv_vv(i,j,k) = adv_vv(i,j,k) - P5*ODZP(K)* (adv_z3+adv_z4)
         end do
         end do
         end do
@@ -100,15 +100,15 @@
         do k = 1,km
         do j= 3,jmt-2
         do i= 3,imt-2
-           adv_uu(i,j,k) = (-u_eface(i  ,j,k)*(uuu(i  ,j,k)+uuu(i-1,j,k))    &
-                            +u_eface(i+1,j,k)*(uuu(i+1,j,k)+uuu(i  ,j,k))    &
-                            -v_nface(i,j  ,k)*(uuu(i,  j,k)+uuu(i,j-1,k))    &
-                            +v_nface(i,j+1,k)*(uuu(i,j+1,k)+uuu(i,  j,k)))*uarea_r(i,j,iblock)*P5 
+           adv_uu(i,j,k) = (-u_wface(i  ,j,k)*(uuu(i  ,j,k)+uuu(i-1,j,k))    &
+                            +u_wface(i+1,j,k)*(uuu(i+1,j,k)+uuu(i  ,j,k))    &
+                            -v_sface(i,j-1,k)*(uuu(i,  j,k)+uuu(i,j-1,k))    &
+                            +v_sface(i,j  ,k)*(uuu(i,j+1,k)+uuu(i,  j,k)))*uarea_r(i,j,iblock)
 !
-           adv_vv(i,j,k) = (-u_eface(i  ,j,k)*(vvv(i,j  ,k)+vvv(i-1,j,k))    &
-                            +u_eface(i+1,j,k)*(vvv(i+1,j,k)+vvv(i  ,j,k))    &
-                            -v_nface(i,j  ,k)*(vvv(i,  j,k)+vvv(i,j-1,k))    &
-                            +v_nface(i,j+1,k)*(vvv(i,j+1,k)+vvv(i,  j,k)))*uarea_r(i,j,iblock)*P5 
+           adv_vv(i,j,k) = (-u_wface(i  ,j,k)*(vvv(i,j  ,k)+vvv(i-1,j,k))    &
+                            +u_wface(i+1,j,k)*(vvv(i+1,j,k)+vvv(i  ,j,k))    &
+                            -v_sface(i,j-1,k)*(vvv(i,  j,k)+vvv(i,j-1,k))    &
+                            +v_sface(i,j  ,k)*(vvv(i,j+1,k)+vvv(i,  j,k)))*uarea_r(i,j,iblock)
 !
            if (k ==1 ) then
                adv_z1=0.0D0
@@ -144,20 +144,20 @@
       real(r8) ,intent(in) :: uuu(imt,jmt,km), vvv(imt,jmt,km),www(imt,jmt,km),ttt(imt,jmt,km)
       integer, intent(in)  :: iblock
       real(r8), intent(out):: adv_tt(imt,jmt,km)
-      real(r8) :: u_eface(imt,jmt,km),v_nface(imt,jmt,km)
+      real(r8) :: u_wface(imt,jmt,km),v_sface(imt,jmt,km)
       real(r8) :: adv_z1, adv_z2
 !
      adv_tt=0.0_r8
 !
       do k=1, km
-      do j= 2,jmt
-      do i= 1,imt-1
+      do j= 2,jmt-1
+      do i= 2,imt-1
          if ( trim(adv_momentum) == 'centered' ) then
-            u_eface(i,j,k) = (uuu(i,j-1,k) + uuu(i,j,k))*P5
-            v_nface(i,j,k) = (vvv(i,j-1,k) + vvv(i+1,j-1,k))*P5
+            u_wface(i,j,k) = (uuu(i,j-1,k) + uuu(i,j,k))*htw(i,j,iblock)*P25
+            v_sface(i,j,k) = (vvv(i,j,k) + vvv(i+1,j,k))*hts(i,j,iblock)*P25
          else if ( trim(adv_momentum) == 'flux' ) then
-            u_eface(i,j,k) = (uuu(i,j-1,k)*dyu(i,j-1,iblock) + uuu(i,j,k)*dyu(i,j,iblock))*P5
-            v_nface(i,j,k) = (vvv(i,j-1,k)*dxu(i,j-1,iblock) + vvv(i+1,j-1,k)*dxu(i+1,j-1,iblock))*P5
+            u_wface(i,j,k) = (uuu(i,j-1,k)*dyu(i,j-1,iblock) + uuu(i,j,k)*dyu(i,j,iblock))*P25
+            v_sface(i,j,k) = (vvv(i,j,k)*dxu(i,j,iblock) + vvv(i+1,j,k)*dxu(i+1,j,iblock))*P25
          end if
       end do
       end do
@@ -167,10 +167,10 @@
         do k = 1,km
         do j= 3,jmt-2
         do i= 3,imt-2
-           adv_tt(i,j,k) =  -u_eface(i  ,j,k)*(ttt(i  ,j,k)-ttt(i-1,j,k))*dxt(i,j,iblock)  &
-                            -u_eface(i+1,j,k)*(ttt(i+1,j,k)-ttt(i  ,j,k))*dxt(i,j,iblock)  &
-                            -v_nface(i,j  ,k)*(ttt(i,  j,k)-ttt(i,j-1,k))*dyt(i,j,iblock)  &
-                            -v_nface(i,j+1,k)*(ttt(i,j+1,k)-ttt(i,  j,k))*dyt(i,j,iblock)
+           adv_tt(i,j,k) = (-u_wface(i  ,j,k)*(ttt(i  ,j,k)-ttt(i-1,j,k))                      &
+                            -u_wface(i+1,j,k)*(ttt(i+1,j,k)-ttt(i  ,j,k))                      &
+                            -v_sface(i,j  ,k)*(ttt(i,j+1,k)-ttt(i,j  ,k))                      &
+                            -v_sface(i,j-1,k)*(ttt(i,j  ,k)-ttt(i,j-1,k)))*tarea_r(i,j,iblock)
 !
            if (k==1 )then
                adv_z1=0.0D0
@@ -184,7 +184,7 @@
                 adv_z2=www(I,J,K+1)*(ttt(I,J,K ) - ttt(I,J,K+1))
            end if
 !
-           adv_tt(i,j,k) = P5*adv_tt(i,j,k) - P5*ODZP(K)* (adv_z1+adv_z2)
+           adv_tt(i,j,k) = adv_tt(i,j,k) - P5*ODZP(K)* (adv_z1+adv_z2)
         end do
         end do
         end do
@@ -192,10 +192,10 @@
         do k = 1,km
         do j= 3,jmt-2
         do i= 3,imt-2
-           adv_tt(i,j,k) = (-u_eface(i  ,j,k)*(ttt(i  ,j,k)+ttt(i-1,j,k))   &
-                            +u_eface(i+1,j,k)*(ttt(i+1,j,k)+ttt(i  ,j,k))   &
-                            -v_nface(i,j  ,k)*(ttt(i,  j,k)+ttt(i,j-1,k))   &
-                            +v_nface(i,j+1,k)*(ttt(i,j+1,k)+ttt(i,  j,k)))*P5*tarea_r(i,j,iblock)
+           adv_tt(i,j,k) = (-u_wface(i  ,j,k)*(ttt(i  ,j,k)+ttt(i-1,j,k))   &
+                            +u_wface(i+1,j,k)*(ttt(i+1,j,k)+ttt(i  ,j,k))   &
+                            -v_sface(i,j-1,k)*(ttt(i,  j,k)+ttt(i,j-1,k))   &
+                            +v_sface(i,j  ,k)*(ttt(i,j+1,k)+ttt(i,  j,k)))*tarea_r(i,j,iblock)
 !
            if (k==1 )then
                adv_z1=0.0D0
@@ -217,6 +217,7 @@
       else
         call exit_licom(sigAbort,'The false advection option for tracer')
       end if
+!
 
       end subroutine advection_tracer
 

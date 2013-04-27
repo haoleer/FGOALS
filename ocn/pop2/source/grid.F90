@@ -79,8 +79,6 @@
       KMT_G            ! k index of deepest grid cell on global T grid
                        ! for use in performing work distribution
 
-   real (r8), dimension(imt,jmt,max_blocks_clinic), public :: &
-         R1A_u, R1B_u, R2A_u, R2B_u, R1A_t, R1B_t, R2A_t, R2B_t
 
 !-----------------------------------------------------------------------
 !
@@ -214,7 +212,7 @@
 !
 !-----------------------------------------------------------------------
 
-   real (r8), dimension (nx_block,ny_block,max_blocks_clinic) :: &
+   real (r8), dimension (nx_block,ny_block,max_blocks_clinic), public :: &
       AT0,ATN,ATE,ATNE,AU0,AUS,AUW,AUSW
 
 !-----------------------------------------------------------------------
@@ -764,7 +762,7 @@
       do j=1,jmt_global
       do i=1,imt_global
          im1 = i-1
-         if (i == 1) ip1 = imt_global ! assume cyclic. non-cyclic
+         if (i == 1) im1 = imt_global ! assume cyclic. non-cyclic
                                      ! will be handled during scatter
          !DXU
          TLON_G(i,j) = p5*(TLAT_G(i,j) + TLAT_G(im1,j))
@@ -1628,7 +1626,7 @@
 ! !IROUTINE: ugrid_to_tgrid
 ! !INTERFACE:
 
- subroutine ugrid_to_tgrid(ARRAY_TGRID, ARRAY_UGRID, iblock)
+ subroutine ugrid_to_tgrid(ARRAY_TGRID, ARRAY_UGRID, iblock,k)
 
 ! !DESCRIPTION:
 !  Interpolates values at U points on a B grid to T points.
@@ -1642,7 +1640,7 @@
 ! !INPUT PARAMETERS:
 
    integer (i4), intent(in) :: &
-     iblock                  ! index for block in baroclinic distrb
+     iblock,k                  ! index for block in baroclinic distrb
 
    real (r8), dimension(nx_block,ny_block), intent(in) :: &
      ARRAY_UGRID             ! field on U points
@@ -1661,21 +1659,25 @@
 !-----------------------------------------------------------------------
 
    integer (i4) :: &
-     i,j                 ! dummy indices
+     i,j                   ! dummy indices
+   real (r8) :: epsln
 
 !-----------------------------------------------------------------------
 !
 !  southwest 4pt average
 !
 !-----------------------------------------------------------------------
+   epsln =1.0D-25
 
    do j=2,ny_block
    do i=1,nx_block-1
 
-     ARRAY_TGRID(i,j) = AT0 (i,j,iblock)*ARRAY_UGRID(i  ,j  ) + &
+     ARRAY_TGRID(i,j) = vit(i,j,k,iblock)*(AT0 (i,j,iblock)*ARRAY_UGRID(i  ,j  ) + &
                         ATN (i,j,iblock)*ARRAY_UGRID(i  ,j-1) + &
                         ATE (i,j,iblock)*ARRAY_UGRID(i+1,j  ) + &
-                        ATNE(i,j,iblock)*ARRAY_UGRID(i+1,j-1)
+                        ATNE(i,j,iblock)*ARRAY_UGRID(i+1,j-1))/  &
+                        (viv(i,j,k,iblock)*at0(i,j,iblock)   +viv(i,j-1,k,iblock)*atn(i,j,iblock) + &
+                         viv(i+1,j,k,iblock)*ate(i,j,iblock) +viv(i+1,j-1,k,iblock)*atne(i,j,iblock) +epsln)
 
    end do
    end do
@@ -1761,6 +1763,12 @@
       type (block) :: this_block
 !
       do iblock = 1, nblocks_clinic
+!
+      do j = 1,jmt
+      do i=  1,imt
+         snlat(i,j,iblock)= SIGN (1.0D0, ulat(i,j,iblock))
+      end do
+      end do
 !
       do j = 1,jmt
       do i=  1,imt

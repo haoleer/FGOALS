@@ -65,8 +65,8 @@ contains
  
 !$OMP PARALLEL DO PRIVATE (IBLOCK)
     do iblock = 1, nblocks_clinic
-      call ugrid_to_tgrid(u_cpl(:,:,iblock),u(:,:,1,iblock),iblock)
-      call ugrid_to_tgrid(v_cpl(:,:,iblock),v(:,:,1,iblock),iblock)
+      call ugrid_to_tgrid(u_cpl(:,:,iblock),u(:,:,1,iblock),iblock,1)
+      call ugrid_to_tgrid(v_cpl(:,:,iblock),v(:,:,1,iblock),iblock,1)
     end do
 !
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)

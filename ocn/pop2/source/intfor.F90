@@ -85,8 +85,8 @@ use domain
 !
 !$OMP PARALLEL DO PRIVATE (IBLOCK)
       DO IBLOCK = 1, NBLOCKS_CLINIC
-          call ugrid_to_tgrid(sx(:,:,iblock),su(:,:,iblock),iblock)
-          call ugrid_to_tgrid(sy(:,:,iblock),sv(:,:,iblock),iblock)
+          call ugrid_to_tgrid(sx(:,:,iblock),su(:,:,iblock),iblock,1)
+          call ugrid_to_tgrid(sy(:,:,iblock),sv(:,:,iblock),iblock,1)
       END DO
 
 !M

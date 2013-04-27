@@ -28,7 +28,7 @@ use domain
       real(r8)    :: LAMDA,wt1,wt2,adv_z
       real(r8),dimension(:,:,:,:), allocatable :: adv_xy1,adv_xy2,adv_xy3,adv_xy4
       real(r8),dimension(imt,jmt,km,max_blocks_clinic) :: uaa,vaa, &
-                adv_x0,adv_y0,adv_c1,adv_c2,atmax,atmin,at0,adv_xx,adv_yy
+                adv_x0,adv_y0,adv_c1,adv_c2,atmax,atmin,adv_xx,adv_yy
       real(r8),dimension(:,:,:,:) , allocatable :: adv_zz,atz, adv_za,adv_zb1,adv_zb2,adv_zc,atmaxz,atminz
 #else
       real(r8)    :: LAMDA,wt1,wt2,adv_y,adv_x,adv_z,adv_x1,adv_x2

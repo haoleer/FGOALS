@@ -134,6 +134,7 @@
 
       allocate(AMF(nx_block,ny_block,nblocks_clinic))
       AMF = c1
+      AM  = AM_TRO
 
 !-----------------------------------------------------------------------
 !
@@ -322,6 +323,7 @@
 
       allocate(AHF(nx_block,ny_block,nblocks_clinic))
       AHF = c1
+      AH  = AM_TRO
 
 !-----------------------------------------------------------------------
 !
@@ -474,6 +476,12 @@
 !  partial bottom cell case modifies the weights.
 !
 !-----------------------------------------------------------------------
+         dum= c0
+         dmc= c0
+         dmn= c0
+         dms= c0
+         dmw= c0
+         dme= c0
 
          do j=this_block%jb,this_block%je
          do i=this_block%ib,this_block%ie
