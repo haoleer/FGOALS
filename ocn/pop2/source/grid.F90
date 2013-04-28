@@ -1454,6 +1454,12 @@
    ATN  = ATN *p25*TAREA_R
    ATE  = ATE *p25*TAREA_R
    ATNE = ATNE*p25*TAREA_R
+!YU
+   AT0 = P25
+   ATN = P25
+   ATE = P25
+   ATNE= P25
+!YU
 
 !-----------------------------------------------------------------------
 

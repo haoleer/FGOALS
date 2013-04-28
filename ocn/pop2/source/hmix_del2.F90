@@ -476,13 +476,6 @@
 !  partial bottom cell case modifies the weights.
 !
 !-----------------------------------------------------------------------
-         dum= c0
-         dmc= c0
-         dmn= c0
-         dms= c0
-         dmw= c0
-         dme= c0
-
          do j=this_block%jb,this_block%je
          do i=this_block%ib,this_block%ie
 
@@ -510,10 +503,20 @@
                              DMS(i,j,bid)*UMIXK(i  ,j-1) +  &
                              DME(i,j,bid)*UMIXK(i+1,j  ) +  &
                              DMW(i,j,bid)*UMIXK(i-1,j  )))
+            if (mytid == 1 .and. k==3 .and.j > 44 .and. j < 47  .and. i >62 .and. i < 70) then
+                write(130,*) i,j,k
+                write(130,*) duc(i,j,1),dum(i,j,1),dun(i,j,1),dus(i,j,1),due(i,j,1),duw(i,j,1)
+                write(130,*) dmn(i,j,1),dms(i,j,1)
+                write(130,*) dme(i,j,1),dmw(i,j,1),dmc(i,j,1)
+                write(130,*) umixk(i,j),vmixk(i,j), am
+            end if
 
          end do
          end do
 
+         if( mytid == 1 .and. k ==3) then
+             close(130)
+         end if
 !-----------------------------------------------------------------------
 !
 !  zero fields at land points

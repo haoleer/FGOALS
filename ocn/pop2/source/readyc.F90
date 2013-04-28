@@ -440,17 +440,17 @@ use msg_mod
 !     SET CYCLIC CONDITIONS ON EASTERN AND WESTERN BOUNDARY
 !---------------------------------------------------------------------
  
+      allocate(dlub(imt,jmt,max_blocks_clinic),dlvb(imt,jmt,max_blocks_clinic),stat=ierr)
+      CALL VINTEG (DLU,DLUB)
+      CALL VINTEG (DLV,DLVB)
      if ( mytid == 0 ) then
-         write(120,*) ((dlu(i,j,3,1),i=3,92),j=6,7)
-         write(121,*) ((dlv(i,j,3,1),i=3,92),j=6,7)
+         write(120,*) ((dlub(i,j,1),i=3,92),j=6,7)
+         write(121,*) ((dlvb(i,j,1),i=3,92),j=6,7)
          close(120)
          close(121)
          close(122)
          close(123)
      end if
-      allocate(dlub(imt,jmt,max_blocks_clinic),dlvb(imt,jmt,max_blocks_clinic),stat=ierr)
-      CALL VINTEG (DLU,DLUB)
-      CALL VINTEG (DLV,DLVB)
 !
 !---------------------------------------------------------------------
 !     VERTICAL INTEGRATION
