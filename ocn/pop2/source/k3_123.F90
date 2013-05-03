@@ -43,29 +43,28 @@ use grid
  
 !$OMP PARALLEL DO PRIVATE (iblock,j,k,m,i)
    do iblock = 1, nblocks_clinic
-      DO j = 2,jmm
+      DO j = 2,jmt-1
          DO k = 2,km
             m = kisrpl (k)
-            DO i = 2,imm
-               e (i,k -1,j,1,iblock) = OTX (j)* p25* c1e10 &
+            DO i = 2,imt-1
+               e (i,k -1,j,1,iblock) =  p5* c1e10 &
                * (tmask (i -1,k -1,j,iblock)* tmask (i,k -1,j,iblock)* (rhoi (i,k -1,j,m,iblock) &
-               - rhoi (i -1,k -1,j,m,iblock)) &
+               - rhoi (i -1,k -1,j,m,iblock))/hun(i,j,iblock) &
                + tmask (i,k -1,j,iblock)* tmask (i +1,k -1,j,iblock)* (rhoi (i +1,k -1,j,m,iblock)&
-               - rhoi (i,k -1,j,m,iblock)) &
+               - rhoi (i,k -1,j,m,iblock))/hun(i+1,j,iblock) &
                + tmask (i -1,k,j,iblock)* tmask (i,k,j,iblock)* (rhoi (i,k,j,m,iblock) &
-               - rhoi (i -1,k,j,m,iblock)) &
+               - rhoi (i -1,k,j,m,iblock))/hun(i,j,iblock) &
                + tmask (i,k,j,iblock)* tmask (i +1,k,j,iblock)* (rhoi (i +1,k,j,m,iblock) &
-                                - rhoi (i,k,j,m,iblock)))                     
-               e (i,k -1,j,2,iblock) = dytr (i,j,iblock)* p25* c1e10 &
-
+                                - rhoi (i,k,j,m,iblock))/hun(i+1,j,iblock))                     
+               e (i,k -1,j,2,iblock) =  p5* c1e10 &
                * (tmask (i,k -1,j -1,iblock)* tmask (i,k -1,j,iblock)* (rhoi (i,k -1,j,m,iblock) &
-               - rhoi (i,k -1,j -1,m,iblock)) &
+               - rhoi (i,k -1,j -1,m,iblock))/hue(i,j-1,iblock) &
                + tmask (i,k -1,j,iblock)* tmask (i,k -1,j +1,iblock)* (rhoi (i,k -1,j +1,m,iblock)&
-               - rhoi (i,k -1,j,m,iblock)) &
+               - rhoi (i,k -1,j,m,iblock))/hue(i,j,iblock) &
                + tmask (i,k,j -1,iblock)* tmask (i,k,j,iblock)* (rhoi (i,k,j,m,iblock) &
-               - rhoi (i,k,j -1,m,iblock)) &
+               - rhoi (i,k,j -1,m,iblock))/hue(i,j-1,iblock) &
                + tmask (i,k,j,iblock)* tmask (i,k,j +1,iblock)* (rhoi (i,k,j +1,m,iblock) &
-                                - rhoi (i,k,j,m,iblock)))
+                                - rhoi (i,k,j,m,iblock))/hue(i,j,iblock))
                e (i,k -1,j,3,iblock) = dzwr (k -1)* tmask (i,k -1,j,iblock)* tmask (i,k,j,iblock)* c1e10 &
                                 * (rhoi (i,k -1,j,m,iblock) - rhoi (i,k,j,m,iblock))  
             END DO
@@ -90,9 +89,9 @@ use grid
 !lhl060506
 !$OMP PARALLEL DO PRIVATE (iblock,j,k,i,chkslp,SLOPEMOD,NONDIMR,ahfctr)
    do iblock = 1, nblocks_clinic
-      DO j = 2,jmm
+      DO j = 2,jmt-1
          DO k = 1,km
-            DO i = 1,imt
+            DO i = 1,imt-1
                chkslp = - sqrt (e (i,k,j,1,iblock)**2+ e (i,k,j,2,iblock)**2)* slmxr
                if (e (i,k,j,3) > chkslp) e (i,k,j,3) = chkslp
 !
@@ -104,7 +103,7 @@ use grid
                ELSE         
                F2(i,j,k,iblock) = 0.5D0*( 1.0D0 + SIN(PI*(NONDIMR-0.5D0)))
                ENDIF
-               ahfctr = 1.0D0/ (e (i,k,j,3,iblock)**2+ eps)*F1(i,j,k,iblock)*F2(i,j,k,iblock)*F3(j)
+               ahfctr = 1.0D0/ (e (i,k,j,3,iblock)**2+ eps)*F1(i,j,k,iblock)*F2(i,j,k,iblock)*F3(i,j,iblock)
 !yyq 080408    ahfctr = 1.0D0/ (e (i,k,j,3)**2+ eps)*F1(i,j,k)*F2(i,j,k)
                K3 (i,k,j,1,iblock) = - e (i,k,j,3,iblock)* e (i,k,j,1,iblock)* ahfctr
                K3 (i,k,j,2,iblock) = - e (i,k,j,3)* e (i,k,j,2)* ahfctr
@@ -119,7 +118,7 @@ use grid
 
 !$OMP PARALLEL DO PRIVATE (iblock,j,k,i,chkslp,ahfctr)
    do iblock = 1, nblocks_clinic
-      DO j = 2,jmm
+      DO j = 2,jmt-1
          DO k = 1,km
             DO i = 2,imt -1
                chkslp = - sqrt (e (i,k,j,1,iblock)**2+ e (i,k,j,2,iblock)**2)* slmxr

@@ -72,16 +72,6 @@ use constant_mod
       END DO
  
  
-!$OMP PARALLEL DO PRIVATE (j)
-      DO j = 1,jmt
-         if (sint(j) > 0 ) then
-!           cstrdytr (j)= 1.0D0/ (SINT (j)* DYT (i,j,iblock))   ! !!
-         else
-            cstrdytr (j)= 0.0D0
-         end if
-      END DO
- 
- 
 !$OMP PARALLEL DO PRIVATE (j,k,i,iblock)
       do iblock = 1, nblocks_clinic
       DO j = 1,jmt
@@ -205,17 +195,21 @@ use constant_mod
          fzisop (k) = 1.0D0
       END DO
 !
+     do iblock = 1, nblocks_clinic
      do j=1,jmt
-        xx=asin(sint(j))*180.0D0/PI
+     do i=1,imt
+        xx=tlat(i,j,iblock)*180.0D0/PI
         if (xx > 60.0D0 ) then
             if ( xx > 70.0D0) then
-                 F3(j)=0.0D0
+                 F3(i,j,iblock)=0.0D0
             else
-                 F3(j)=(70.0D0-xx)*0.1D0
+                 F3(i,j,iblock)=(70.0D0-xx)*0.1D0
             end if
         else
             F3(j)=1.0D0
         end if
+     enddo
+     enddo
      enddo
 !
 #ifdef SPMD

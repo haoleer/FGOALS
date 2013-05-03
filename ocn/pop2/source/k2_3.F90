@@ -48,11 +48,11 @@ use grid
  
 !$OMP PARALLEL DO PRIVATE (iblock,j,k,m,i,fxd)
    do iblock = 1, nblocks_clinic
-      DO j = 2,jmm
+      DO j = 2,jmt-1
          DO k = 2,km -1
             m = kisrpl (k)
             fxd = c1e10* p25* dzr (k)
-            DO i = 2,imm
+            DO i = 2,imt-1
                e (i,k,j,3,iblock) = fxd * (rhoi (i,k -1,j,m,iblock) - rhoi (i,k +1,j,m,iblock) &
                              + rhoi (i,k -1,j +1,m,iblock) - rhoi (i,k +1,j +1,m,iblock))
             END DO
@@ -72,8 +72,8 @@ use grid
       m = kisrpl (1)
 !$OMP PARALLEL DO PRIVATE (j,i,fxa,fxb,fxc)
    do iblock = 1, nblocks_clinic
-      DO j = 2,jmm
-         DO i = 2,imm
+      DO j = 2,jmt-1
+         DO i = 2,imt-1
             fxa = p5* (rhoi (i,2,j,m,iblock) + rhoi (i,2,j +1,m,iblock))
             fxb = p5* (rhoi (i,1,j,m,iblock) + rhoi (i,1,j +1,m,iblock))
             fxc = dzwr (1)* (fxb * fxe- fxa * dzw (0))
@@ -93,9 +93,9 @@ use grid
  
 !$OMP PARALLEL DO PRIVATE (iblock,j,i,k,m,fxa,fxb,fxc,fxe)
    do iblock = 1, nblocks_clinic
-      DO j = 2,jmm
-         DO i = 2,imm
-            k = min (ITNU (i,j,iblock),ITNU (i,j +1,iblock))
+      DO j = 2,jmt-1
+         DO i = 2,imt-1
+            k = min (kmt (i,j,iblock),kmt (i,j +1,iblock))
             IF (k /= 0) THEN
                fxe = dzw (k -1) + dzw (k)
                m = kisrpl (k)
@@ -115,16 +115,15 @@ use grid
  
 !$OMP PARALLEL DO PRIVATE (iblock,j,i,k,m)
    do iblock = 1, nblocks_clinic
-      DO j = 2,jmm
+      DO j = 2,jmt-1
          DO k = 1,km
             m = kisrpl (k)
-            DO i = 2,imm
-               e (i,k,j,1,iblock) = p25* OUX (j)* c1e10* ( &
-               rhoi (i +1,k,j +1,m,iblock) - rhoi (i -1,k,j +1,m,iblock) &
-                             + rhoi (i +1,k,j,m,iblock) - rhoi (i -1,k,j,m,iblock)) 
-               e (i,k,j,2,iblock) = tmask (i,k,j,iblock)* tmask (i,k,j +1,iblock)* dyur (i,j,iblock)  &
-                            * c1e10 &
-                             * (rhoi (i,k,j +1,m,iblock) - rhoi (i,k,j,m,iblock))  
+            DO i = 2,imt-1
+               e (i,k,j,1,iblock) = p5* c1e10* ( &
+               (rhoi (i +1,k,j +1,m,iblock) - rhoi (i -1,k,j +1,m,iblock))/(hun(i,j+1,iblock)+hun(i+1,j+1,iblock)) &
+                             + (rhoi (i +1,k,j,m,iblock) - rhoi (i -1,k,j,m,iblock))/(hun(i+1,j,iblock)+hun(i,j,iblock))) 
+               e (i,k,j,2,iblock) = tmask (i,k,j,iblock)* tmask (i,k,j +1,iblock)/hue(i,j,iblock)  &
+                            * c1e10 * (rhoi (i,k,j +1,m,iblock) - rhoi (i,k,j,m,iblock))  
             END DO
          END DO
       END DO
@@ -138,9 +137,9 @@ use grid
  
 !$OMP PARALLEL DO PRIVATE (iblock,j,i,k,olmask)
    do iblock = 1, nblocks_clinic
-      DO j = 2,jmm
+      DO j = 2,jmt-1
          DO k = 1,km
-            DO i = 2,imm
+            DO i = 2,imt-1
                olmask = tmask (i -1,k,j +1,iblock)* tmask (i +1,k,j +1,iblock)        &
                        * tmask (i -1,k,j,iblock) * tmask (i +1,k,j,iblock) 
                if (olmask < c1) e (i,k,j,1,iblock) = c0
@@ -162,9 +161,9 @@ use grid
 !lhl060506
 !$OMP PARALLEL DO PRIVATE (iblock,j,k,i,chkslp,SLOPEMOD,NONDIMR)
    do iblock = 1, nblocks_clinic
-      DO j = 2,jmm
+      DO j = 2,jmt-1
          DO k = 1,km
-            DO i = 1,imt
+            DO i = 1,imt-1
                chkslp = - sqrt (e (i,k,j,1,iblock)**2+ e (i,k,j,2,iblock)**2)* slmxr
                if (e (i,k,j,3,iblock) > chkslp) e (i,k,j,3,iblock) = chkslp
 !
@@ -178,8 +177,7 @@ use grid
                F2(i,j,k,iblock) = 0.5D0*( 1.0D0 + SIN(PI*(NONDIMR-0.5D0)))
                ENDIF
                K2 (i,k,j,3,iblock) = ( - e (i,k,j,2,iblock)* e (i,k,j,3,iblock)* &
-!yyq 080408                     F1(i,j,k)*F2(i,j,k))&
-                                F1(i,j,k,iblock)*F2(i,j,k,iblock)*F3(j))&
+                                F1(i,j,k,iblock)*F2(i,j,k,iblock)*F3(i,j,iblock))&
                               / (e (i,k,j,3,iblock)**2+ eps)
             END DO
          END DO
@@ -190,9 +188,9 @@ use grid
 #else
 
 !$OMP PARALLEL DO PRIVATE (j,k,i,chkslp)
-      DO j = 2,jmm
+      DO j = 2,jmt-1
          DO k = 1,km
-            DO i = 1,imt
+            DO i = 1,imt-1
                chkslp = - sqrt (e (i,k,j,1,iblock)**2+ e (i,k,j,2,iblock)**2)* slmxr
                if (e (i,k,j,3,iblock) > chkslp) e (i,k,j,3,iblock) = chkslp
                K2 (i,k,j,3,iblock) = ( - e (i,k,j,2,iblock)* e (i,k,j,3,iblock)* fzisop (k)) &

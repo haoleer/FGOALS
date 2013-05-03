@@ -46,12 +46,12 @@ use param_mod
       real(r4),dimension(jmt)::DYR_IN
       real(r8),dimension(imt,jmt,max_blocks_clinic):: EBEA,EBEB,EBLA,EBLB,EPEA,EPEB,EPLA,EPLB
       real(r8),dimension(jmt)::OUY,OTX,OUX,SOTX,SOUX, &
-                    FF,CV1,CV2,SINT, &
+                    CV1,CV2,SINT, &
                     SINU,DYR,DXDYU,DXDYT, &
                     R1A,R1B,R2A,R2B,R1C, &
                     R1D,R2C,R2D
 !lhl060506
-      real(r8),dimension(jmt):: FF1,RRD1,RRD2
+      real(r8),dimension(jmt):: RRD1,RRD2
 !lhl060506
 
 !XC
@@ -60,37 +60,29 @@ use param_mod
 #endif
 !XC
 
-#ifdef SPMD
       real(r4),dimension(jmt_global)::DYR_IN_global
       real(r8),dimension(jmt_global)::OUY_global,OTX_global,OUX_global,SOTX_global,SOUX_global, &
-                    FF_global,CV1_global,CV2_global,SNLAT_global,SINT_global, &
+                    CV1_global,CV2_global,SNLAT_global,SINT_global, &
                     SINU_global,DYT_global,DYR_global,DXDYU_global,DXDYT_global, &
                     R1A_global,R1B_global,R2A_global,R2B_global,R1C_global, &
                     R1D_global,R2C_global,R2D_global,EBEA_global,EBEB_global, &
                     EBLA_global,EBLB_global,EPEA_global,EPEB_global,EPLA_global,EPLB_global
 
-!lhl060506                                                                                 
-     real(r8),dimension(jmt_global):: FF1_global
-!lhl060506
 !XC
 #if (defined TSPAS)
       real(r8),dimension(jmt_global):: dtdy_global,dtdx_global,RAA_global,RBB_global
 #endif
 !XC
 
-#endif
-
 
 #if ( defined SMAG)
       real(r8),dimension(jmt):: CXT,CXU,CYT,CYU &
                    ,R1E,R1F,R2E,R2F &
                    ,R3E,R3F,R4E,R4F
-#ifdef SPMD
       real(r8),dimension(:),allocatable:: CXT_global,CXU_global,CYT_global,CYU_global &
                    ,R1E_global,R1F_global,R2E_global,R2F_global &
                    ,R3E_global,R3F_global,R4E_global,R4F_global
 
-#endif
 #endif
 
 !Yu
@@ -98,10 +90,8 @@ use param_mod
       real(r8),dimension(imt,jmt,max_blocks_clinic)::ohbt,ohbu,dzph,hbx,hby
       real(r8),dimension(imt,jmt,max_blocks_clinic):: SNLAT
       real(r8),dimension(jmt):: COSU,COST
-#ifdef SPMD
-       real(r8),dimension(:),allocatable::COSU_global,COST_global
-       integer,dimension(:),allocatable:: i_start,j_start
-#endif
+      real(r8),dimension(:),allocatable::COSU_global,COST_global
+      integer,dimension(:),allocatable:: i_start,j_start
       real(r8),dimension(imt)::CF1,CF2,SF1,SF2
 !
 !

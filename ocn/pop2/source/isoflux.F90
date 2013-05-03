@@ -246,14 +246,14 @@ use constant_mod
       DO k = 1,km
          DO j = 2,jmm
             DO i = 2,imm
-               tf (i,j,k,iblock) = tf (i,j,k,iblock) &
-               + cstrdytr (j)* (work_1 (i,j,k,iblock) - work_1 (i,j -1,k,iblock)) &
-               + OTX (j) * (work_2 (i,j,k,iblock) - work_2 (i -1,j,k,iblock)) &
-               + dzr (k) * (work_3 (i,j,k -1,iblock) - work_3 (i,j,k,iblock))
+!              tf (i,j,k,iblock) = tf (i,j,k,iblock) &
+!              + cstrdytr (j)* (work_1 (i,j,k,iblock) - work_1 (i,j -1,k,iblock)) &
+!              + OTX (j) * (work_2 (i,j,k,iblock) - work_2 (i -1,j,k,iblock)) &
+!              + dzr (k) * (work_3 (i,j,k -1,iblock) - work_3 (i,j,k,iblock))
 !
-               dx_iso(i,j,k,m,iblock)= OTX (j) * (work_2 (i,j,k,iblock) - work_2 (i -1,j,k,iblock)) 
-               dy_iso(i,j,k,m,iblock)= cstrdytr (j)* (work_1 (i,j,k,iblock) - work_1 (i,j -1,k,iblock))
-               dz_iso(i,j,k,m,iblock)= dzr (k) * (work_3 (i,j,k -1,iblock) - work_3 (i,j,k,iblock))
+!              dx_iso(i,j,k,m,iblock)= OTX (j) * (work_2 (i,j,k,iblock) - work_2 (i -1,j,k,iblock)) 
+!              dy_iso(i,j,k,m,iblock)= cstrdytr (j)* (work_1 (i,j,k,iblock) - work_1 (i,j -1,k,iblock))
+!              dz_iso(i,j,k,m,iblock)= dzr (k) * (work_3 (i,j,k -1,iblock) - work_3 (i,j,k,iblock))
 !
             END DO
          END DO
@@ -324,14 +324,14 @@ use constant_mod
       DO k = 1,km
          DO j = 2,jmm
             DO i = 2,imm
-               tf (i,j,k,iblock) = tf (i,j,k,iblock) &
-               - p5* cstrdytr (j)* (work_1 (i,j,k,iblock) - work_1 (i,j -1,k,iblock)) &
-               - p5* OTX (j) * (work_2 (i,j,k,iblock) - work_2 (i -1,j,k,iblock)) &
-               - p5* dzr (k) * (work_3 (i,j,k -1,iblock) - work_3 (i,j,k,iblock)) 
+!              tf (i,j,k,iblock) = tf (i,j,k,iblock) &
+!              - p5* cstrdytr (j)* (work_1 (i,j,k,iblock) - work_1 (i,j -1,k,iblock)) &
+!              - p5* OTX (j) * (work_2 (i,j,k,iblock) - work_2 (i -1,j,k,iblock)) &
+!              - p5* dzr (k) * (work_3 (i,j,k -1,iblock) - work_3 (i,j,k,iblock)) 
 !
-              ay_iso(i,j,k,m,iblock)=- p5* cstrdytr (j)* (work_1 (i,j,k,iblock) - work_1 (i,j -1,k,iblock)) 
-              ax_iso(i,j,k,m,iblock)=- p5* OTX (j) * (work_2 (i,j,k,iblock) - work_2 (i -1,j,k,iblock)) 
-              az_iso(i,j,k,m,iblock)=- p5* dzr (k) * (work_3 (i,j,k -1,iblock) - work_3 (i,j,k,iblock)) 
+!             ay_iso(i,j,k,m,iblock)=- p5* cstrdytr (j)* (work_1 (i,j,k,iblock) - work_1 (i,j -1,k,iblock)) 
+!             ax_iso(i,j,k,m,iblock)=- p5* OTX (j) * (work_2 (i,j,k,iblock) - work_2 (i -1,j,k,iblock)) 
+!             az_iso(i,j,k,m,iblock)=- p5* dzr (k) * (work_3 (i,j,k -1,iblock) - work_3 (i,j,k,iblock)) 
 !
             END DO
          END DO

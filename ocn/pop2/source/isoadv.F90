@@ -152,10 +152,10 @@ use domain
       DO j = jstrt,jmm
          DO k = 1,km -1
             DO i = 2,imt
-               adv_vbtiso (i,k,j,iblock) = DZP (k)* ( &
-               (adv_vetiso (i,k,j,iblock) - adv_vetiso (i -1,k,j,iblock))* OTX (j) + &
-                                    (adv_vntiso (i,k,j,iblock) - adv_vntiso (i,&
-                                     k,j -1,iblock))* cstrdytr (j))     
+!              adv_vbtiso (i,k,j,iblock) = DZP (k)* ( &
+!              (adv_vetiso (i,k,j,iblock) - adv_vetiso (i -1,k,j,iblock))* OTX (j) + &
+!                                   (adv_vntiso (i,k,j,iblock) - adv_vntiso (i,&
+!                                    k,j -1,iblock))* cstrdytr (j))     
             END DO
          END DO
       END DO
@@ -178,7 +178,7 @@ use domain
    do iblock = 1, nblocks_clinic
       DO j = jstrt,jmm
          DO i = 2,imt
-            adv_vbtiso (i,ITNU (i,j,iblock),j,iblock) = c0
+            adv_vbtiso (i,kmt (i,j,iblock),j,iblock) = c0
          END DO
       END DO
    END DO

@@ -50,11 +50,11 @@ use grid
  
 !$OMP PARALLEL DO PRIVATE (iblock,j,k,m,i,fxd)
    do iblock = 1, nblocks_clinic
-      DO j = 2,jmm
+      DO j = 2,jmt-1
          DO k = 2,km -1
             m = kisrpl (k)
             fxd = c1e10* p25* dzr (k)
-            DO i = 1,imm
+            DO i = 1,imt-1
                e (i,k,j,3,iblock) = fxd * (rhoi (i,k -1,j,m,iblock) - rhoi (i,k +1,j,m,iblock) &
                              + rhoi (i +1,k -1,j,m,iblock) - rhoi (i +1,k +1,j,m,iblock)) 
             END DO
@@ -76,8 +76,8 @@ use grid
       m = kisrpl (1)
 !$OMP PARALLEL DO PRIVATE (iblock,j,i,fxa,fxb,fxc)
    do iblock = 1, nblocks_clinic
-      DO j = 2,jmm
-         DO i = 1,imm
+      DO j = 2,jmt-1
+         DO i = 1,imt-1
             fxa = p5* (rhoi (i,2,j,m,iblock) + rhoi (i +1,2,j,m,iblock))
             fxb = p5* (rhoi (i,1,j,m,iblock) + rhoi (i +1,1,j,m,iblock))
             fxc = dzwr (1)* (fxb * fxe- fxa * dzw (0))
@@ -97,9 +97,9 @@ use grid
  
 !$OMP PARALLEL DO PRIVATE (iblock,j,i,m,k,fxa,fxb,fxc,fxe)
    do iblock = 1, nblocks_clinic
-      DO j = 2,jmm
-         DO i = 1,imm
-            k = min (ITNU (i,j,iblock),ITNU (i +1,j,iblock))
+      DO j = 2,jmt-1
+         DO i = 1,imt-1
+            k = min (kmt (i,j,iblock),kmt (i +1,j,iblock))
             IF (k /= 0) THEN
                fxe = dzw (k -1) + dzw (k)
                m = kisrpl (k)
@@ -120,13 +120,13 @@ use grid
  
 !$OMP PARALLEL DO PRIVATE (iblock,j,i,k,m)
    do iblock = 1, nblocks_clinic
-      DO j = 2,jmm
+      DO j = 2,jmt-1
          DO k = 1,km
             m = kisrpl (k)
-            DO i = 1,imm
-               e (i,k,j,1,iblock) = tmask (i,k,j,iblock)* tmask (i +1,k,j,iblock)* OTX (j) &
+            DO i = 1,imt-1
+               e (i,k,j,1,iblock) = tmask (i,k,j,iblock)* tmask (i +1,k,j,iblock)/hun(i,j,iblock) &
                              * c1e10* (rhoi (i +1,k,j,m,iblock) - rhoi (i,k,j,m,iblock))    
-               e (i,k,j,2,iblock) = p25* c1e10* dytr (i,J,iblock)* ( &
+               e (i,k,j,2,iblock) = p5* c1e10/(dxu(i,j-1,iblock)+dxu(i+1,j,iblock))* ( &
                rhoi (i,k,j +1,m,iblock) - rhoi (i,k,j -1,m,iblock) &
                              + rhoi (i +1,k,j +1,m,iblock) - rhoi (i +1,k,j -1,m,iblock))  
             END DO
@@ -142,9 +142,9 @@ use grid
  
 !$OMP PARALLEL DO PRIVATE (iblock,j,i,k,olmask)
    do iblock = 1, nblocks_clinic
-      DO j = 2,jmm
+      DO j = 2,jmt-1
          DO k = 1,km
-            DO i = 1,imm
+            DO i = 1,imt-1
                olmask = tmask (i,k,j -1,iblock)* tmask (i,k,j +1,iblock)* tmask (i +1,&
                        k,j -1,iblock) * tmask (i +1,k,j +1,iblock)    
                if (olmask < c1) e (i,k,j,2,iblock) = c0
@@ -157,9 +157,9 @@ use grid
 #ifdef LDD97
 !$OMP PARALLEL DO PRIVATE (iblock,j,k,i,chkslp,SLOPEMOD,NONDIMR)
    do iblock = 1, nblocks_clinic
-      DO j = 2,jmm
+      DO j = 2,jmt-1
          DO k = 1,km
-            DO i = 1,imt
+            DO i = 1,imt-1
                chkslp = - sqrt (e (i,k,j,1,iblock)**2+ e (i,k,j,2,iblock)**2)* slmxr
                if (e (i,k,j,3,iblock) > chkslp) e (i,k,j,3,iblock) = chkslp
 !
@@ -173,8 +173,7 @@ use grid
                F2(i,j,k,iblock) = 0.5D0*( 1.0D0 + SIN(PI*(NONDIMR-0.5D0)))
                ENDIF
                K1 (i,k,j,3,iblock) = ( - e (i,k,j,1,iblock)* e (i,k,j,3)* &
-!yyq 080408                       F1(i,j,k)*F2(i,j,k)) &
-                                  F1(i,j,k,iblock)*F2(i,j,k,iblock)*F3(j)) &
+                                  F1(i,j,k,iblock)*F2(i,j,k,iblock)*F3(i,j,iblock)) &
                               / (e (i,k,j,3,iblock)**2+ eps)
             END DO
          END DO
@@ -185,9 +184,9 @@ use grid
 
 !$OMP PARALLEL DO PRIVATE (iblock,j,k,i,chkslp)
    do iblock = 1, nblocks_clinic
-      DO j = 2,jmm
+      DO j = 2,jmt-1
          DO k = 1,km
-            DO i = 1,imt
+            DO i = 1,imt-1
                chkslp = - sqrt (e (i,k,j,1,iblock)**2+ e (i,k,j,2,iblock)**2)* slmxr
                if (e (i,k,j,3,iblock) > chkslp) e (i,k,j,3,iblock) = chkslp
                K1 (i,k,j,3,iblock) = ( - e (i,k,j,1,iblock)* e (i,k,j,3,iblock)* fzisop (k)) &
