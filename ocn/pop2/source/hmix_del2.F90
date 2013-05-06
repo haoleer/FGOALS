@@ -260,6 +260,11 @@
    DMW = -DME
    DMS = -DMN
 
+   if (mytid == 0 ) then
+      write(119,*) dyky(3,6), kyu(3,6)
+      write(119,*) tan(ulat(3,6,1)), tan(ulat(3,6,1))/6.371D6,(tan(ulat(3,6,1))/6.371D6)**2
+      close(119)
+   end if
 !-----------------------------------------------------------------------
 !
 !  free up memory
@@ -483,40 +488,51 @@
             cc = DUC(i,j,bid) + DUM(i,j,bid)
 
             HDUK(i,j) = am*((cc          *UMIXK(i  ,j  ) +  &
-                             DUN(i,j,bid)*UMIXK(i  ,j+1) +  &
-                             DUS(i,j,bid)*UMIXK(i  ,j-1) +  &
+                             DUN(i,j,bid)*UMIXK(i  ,j-1) +  &
+                             DUS(i,j,bid)*UMIXK(i  ,j+1) +  &
                              DUE(i,j,bid)*UMIXK(i+1,j  ) +  &
                              DUW(i,j,bid)*UMIXK(i-1,j  ))+  &
                             (DMC(i,j,bid)*VMIXK(i  ,j  ) +  &
-                             DMN(i,j,bid)*VMIXK(i  ,j+1) +  &
-                             DMS(i,j,bid)*VMIXK(i  ,j-1) +  &
+                             DMN(i,j,bid)*VMIXK(i  ,j-1) +  &
+                             DMS(i,j,bid)*VMIXK(i  ,j+1) +  &
                              DME(i,j,bid)*VMIXK(i+1,j  ) +  &
                              DMW(i,j,bid)*VMIXK(i-1,j  )))
 
             HDVK(i,j) = am*((cc          *VMIXK(i  ,j  ) +  &
-                             DUN(i,j,bid)*VMIXK(i  ,j+1) +  &
-                             DUS(i,j,bid)*VMIXK(i  ,j-1) +  &
+                             DUN(i,j,bid)*VMIXK(i  ,j-1) +  &
+                             DUS(i,j,bid)*VMIXK(i  ,j+1) +  &
                              DUE(i,j,bid)*VMIXK(i+1,j  ) +  &
                              DUW(i,j,bid)*VMIXK(i-1,j  ))-  &
                             (DMC(i,j,bid)*UMIXK(i  ,j  ) +  &
-                             DMN(i,j,bid)*UMIXK(i  ,j+1) +  &
-                             DMS(i,j,bid)*UMIXK(i  ,j-1) +  &
+                             DMN(i,j,bid)*UMIXK(i  ,j-1) +  &
+                             DMS(i,j,bid)*UMIXK(i  ,j+1) +  &
                              DME(i,j,bid)*UMIXK(i+1,j  ) +  &
                              DMW(i,j,bid)*UMIXK(i-1,j  )))
-            if (mytid == 1 .and. k==3 .and.j > 44 .and. j < 47  .and. i >62 .and. i < 70) then
-                write(130,*) i,j,k
-                write(130,*) duc(i,j,1),dum(i,j,1),dun(i,j,1),dus(i,j,1),due(i,j,1),duw(i,j,1)
-                write(130,*) dmn(i,j,1),dms(i,j,1)
-                write(130,*) dme(i,j,1),dmw(i,j,1),dmc(i,j,1)
-                write(130,*) umixk(i,j),vmixk(i,j), am
+!           if (mytid == 1 .and. k==3 .and.j > 44 .and. j < 47  .and. i >62 .and. i < 70) then
+      if (mytid ==0 .and. i > 3 .and. i < 20 .and. j >5 .and. j < 8 ) then
+                write(220,*) i,j,k
+                write(220,*) duc(i,j,1),dum(i,j,1),dun(i,j,1),dus(i,j,1),due(i,j,1),duw(i,j,1)
+                write(220,*) dme(i,j,1),dmw(i,j,1)
+                write(220,*) dmn(i,j,1),dms(i,j,1),dmc(i,j,1)
+                write(220,*) umixk(i,j),vmixk(i,j), am
+                write(220,*) am*cc*UMIXK(i  ,j  ), am* DUN(i,j,bid)*UMIXK(i ,j-1) , am*DUS(i,j,bid)*UMIXK(i ,j+1)
+                write(220,*) am*DUE(i,j,bid)*UMIXK(i+1,j),am*DUW(i,j,bid)*UMIXK(i-1,j), am*DMC(i,j,bid)*VMIXK(i ,j ) 
+                write(220,*) am*DMN(i,j,bid)*VMIXK(i,j-1), am*DMS(i,j,bid)*VMIXK(i,j+1),am*DME(i,j,bid)*VMIXK(i+1,j )
+                write(220,*) am*DMW(i,j,bid)*VMIXK(i-1,j  )
+                write(220,*) am*cc*VMIXK(i  ,j  ), am* DUN(i,j,bid)*VMIXK(i ,j-1) , am*DUS(i,j,bid)*VMIXK(i ,j+1)
+                write(220,*) am*DUE(i,j,bid)*VMIXK(i+1,j),am*DUW(i,j,bid)*VMIXK(i-1,j), am*DMC(i,j,bid)*UMIXK(i ,j ) 
+                write(220,*) am*DMN(i,j,bid)*UMIXK(i,j-1), am*DMS(i,j,bid)*UMIXK(i,j+1),am*DME(i,j,bid)*UMIXK(i+1,j )
+                write(220,*) am*DMW(i,j,bid)*UMIXK(i-1,j  )
+                write(220,*) hduk(i,j), hdvk(i,j)
             end if
 
          end do
          end do
 
-         if( mytid == 1 .and. k ==3) then
-             close(130)
-         end if
+         if (mytid ==0) close(220)
+!        if( mytid == 1 .and. k ==3) then
+!            close(130)
+!        end if
 !-----------------------------------------------------------------------
 !
 !  zero fields at land points

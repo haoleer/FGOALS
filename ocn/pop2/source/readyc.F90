@@ -198,21 +198,21 @@ use msg_mod
                AMLD(I,J,iblock),WK1,WK2,WK3,&
 !input int
                IWK,kmt(I,J,iblock)-1,KM,1,0,0,i,j) !OK!
-            if (mytid == 0 .and. j > 44 .and. j < 47  .and. i > 2 .and. i < 10) then
-               write(122,*) i,j,ff(j), amld(i,j,1)
-               write(122,*) "WP1", wp1(1:10)
-               write(122,*) "WP2", wp2(1:10)
-               write(122,*) "WP3", wp3(1:10)
-               write(122,*) "WP4", wp4(1:10)
-               write(122,*) "WP5", wp5(1:10)
-               write(122,*) "WP6", wp6(1:10)
-               write(122,*) "WP7", wp7(1:10)
-               write(122,*) "WP8", wp8(1:10)
-               write(122,*) "WP9", wp9,wp10, wp11
-               write(122,*) "WK1", WK1(1:10)
-               write(122,*) "WK2", WK2(1:10)
-               write(122,*) "WK3", WK3(1:10)
-            end if
+!           if (mytid == 0 .and. j > 44 .and. j < 47  .and. i > 2 .and. i < 10) then
+!              write(122,*) i,j,fcor(i,j,1), amld(i,j,1)
+!              write(122,*) "WP1", wp1(1:10)
+!              write(122,*) "WP2", wp2(1:10)
+!              write(122,*) "WP3", wp3(1:10)
+!              write(122,*) "WP4", wp4(1:10)
+!              write(122,*) "WP5", wp5(1:10)
+!              write(122,*) "WP6", wp6(1:10)
+!              write(122,*) "WP7", wp7(1:10)
+!              write(122,*) "WP8", wp8(1:10)
+!              write(122,*) "WP9", wp9,wp10, wp11
+!              write(122,*) "WK1", WK1(1:10)
+!              write(122,*) "WK2", WK2(1:10)
+!              write(122,*) "WK3", WK3(1:10)
+!           end if
 
          DO K = 1,KM
          xxx = WK1(K)
@@ -375,11 +375,11 @@ use msg_mod
 !lhl1204
             DLV (I,J,K,IBLOCK) = DLV (I,J,K,IBLOCK) + ODZP (K)* (diff_v1-diff_v2)
             DLU (I,J,K,IBLOCK) = DLU (I,J,K,IBLOCK) + ODZP (K)* (diff_u1-diff_u2)
-            if (mytid == 1 .and. k==3 .and.j > 44 .and. j < 47  .and. i >62 .and. i < 70) then
-                write(123,*) i,j,k
-                write(123,*) diff_u1, diff_u2, akmu(i,j,k-1,1), akmu(i,j,k,1),akmu(i,j,k+1,1)
-                write(123,*) akmt(i-1,j,k,1),akmt(i,j,k,1),akmt(i-1,j+1,k,1),akmt(i,j+1,k,1)
-            end if
+!           if (mytid == 1 .and. k==3 .and.j > 44 .and. j < 47  .and. i >62 .and. i < 70) then
+!               write(123,*) i,j,k
+!               write(123,*) diff_u1, diff_u2, akmu(i,j,k-1,1), akmu(i,j,k,1),akmu(i,j,k+1,1)
+!               write(123,*) akmt(i-1,j,k,1),akmt(i,j,k,1),akmt(i-1,j+1,k,1),akmt(i,j+1,k,1)
+!           end if
         END DO
       END DO
       END DO
@@ -443,14 +443,14 @@ use msg_mod
       allocate(dlub(imt,jmt,max_blocks_clinic),dlvb(imt,jmt,max_blocks_clinic),stat=ierr)
       CALL VINTEG (DLU,DLUB)
       CALL VINTEG (DLV,DLVB)
-     if ( mytid == 0 ) then
-         write(120,*) ((dlub(i,j,1),i=3,92),j=6,7)
-         write(121,*) ((dlvb(i,j,1),i=3,92),j=6,7)
-         close(120)
-         close(121)
-         close(122)
-         close(123)
-     end if
+!    if ( mytid == 0 ) then
+!        write(120,*) ((dlub(i,j,1),i=3,92),j=6,7)
+!        write(121,*) ((dlvb(i,j,1),i=3,92),j=6,7)
+!        close(120)
+!        close(121)
+!        close(122)
+!        close(123)
+!    end if
 !
 !---------------------------------------------------------------------
 !     VERTICAL INTEGRATION
@@ -460,7 +460,7 @@ use msg_mod
 !Yu      write(6,*)'allocation error---tmp1,tmp2'
 !Yu      stop
 !Yu   end if
-      stop
+!     stop
 
       RETURN
       END SUBROUTINE READYC

@@ -22,7 +22,7 @@ use isopyc_mod
 use msg_mod
 use domain
 use constant_mod
- 
+use grid
       IMPLICIT NONE
       REAL(r8)    :: zdzk,t1,t2,dptmid,xx
       integer :: iblock
@@ -198,7 +198,7 @@ use constant_mod
      do iblock = 1, nblocks_clinic
      do j=1,jmt
      do i=1,imt
-        xx=tlat(i,j,iblock)*180.0D0/PI
+        xx= abs(tlat(i,j,iblock))*180.0D0/PI
         if (xx > 60.0D0 ) then
             if ( xx > 70.0D0) then
                  F3(i,j,iblock)=0.0D0
@@ -206,7 +206,7 @@ use constant_mod
                  F3(i,j,iblock)=(70.0D0-xx)*0.1D0
             end if
         else
-            F3(j)=1.0D0
+            F3(i,j,iblock)=1.0D0
         end if
      enddo
      enddo

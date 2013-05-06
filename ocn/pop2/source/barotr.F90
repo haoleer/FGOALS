@@ -102,13 +102,14 @@ use constant_mod
             END IF
          END IF
 
-      write(120+mytid,*) ((wka(i,j,5,1),i=3,imt-2),j=3,jmt-2)
-      close(120+mytid)
-      write(140+mytid,*) ((wka(i,j,6,1),i=3,imt-2),j=3,jmt-2)
-      close(140+mytid)
-      write(160+mytid,*) ((dlub(i,j,1),i=3,imt-2),j=3,jmt-2)
-      close(160+mytid)
-      stop
+      if (mytid ==0 ) then
+      write(120+isb,*) ((wka(i,j,5,1),i=3,imt-2),j=6,7)
+      close(120+isb)
+      write(130+isb,*) ((wka(i,j,6,1),i=3,imt-2),j=6,7)
+      close(130+isb)
+      write(140+isb,*) ((dlub(i,j,1),i=3,imt-2),j=6,7)
+      close(140+isb)
+      end if
 !---------------------------------------------------------------------
 !     + (g'-1)g*dH/dr
 !---------------------------------------------------------------------
@@ -119,13 +120,19 @@ use constant_mod
          call grad(1, GRADX, GRADY, H0, this_block)
          DO J = 3, jmt-2
             DO I = 3, imt-2
-               gstar=(WGP (I,J,IBLOCK) -1.0)*G *0.5
+               gstar=(WGP (I,J,IBLOCK) -1.0)*G 
                WKA (I,J,1,IBLOCK) = WKA (I,J,5,IBLOCK) + gstar*GRADX(I,J)
                WKA (I,J,2,IBLOCK) = WKA (I,J,6,IBLOCK) + gstar*GRADY(I,J)
+      if (mytid ==0 .and. i > 3 .and. i < 20 .and. j >5 .and. j < 8 ) then
+      write(150+isb,*) i,j,gstar, gradx(i,j),grady(i,j)
+      end if
             END DO
          END DO
      END DO
 
+      if (mytid ==0 ) then
+      close(150+isb)
+      end if
 
 !Yu
 !$OMP PARALLEL DO PRIVATE (iblock)
@@ -145,10 +152,15 @@ use constant_mod
                WKA (I,J,2,IBLOCK)= VIV (I,J,1,IBLOCK)* ( WKA (I,J,2,IBLOCK) + DLVB (I,J,IBLOCK)     &
                               + FCOR(I,J,Iblock)* UBP (I,J,IBLOCK) + &
                PAY (I,J,IBLOCK) + PYB (I,J,IBLOCK) - WORK (I,J,IBLOCK)* WHY (I,J,IBLOCK) )
+      if (mytid ==0 .and. i > 3 .and. i < 20 .and. j >5 .and. j < 8 ) then
+      write(160+isb,*) i,j, pax(i,j,1),pxb(i,j,1), work(i,j,1), whx(i,j,1), WKA (I,J,1,1)
+      write(160+isb,*) i,j, pay(i,j,1),pyb(i,j,1), work(i,j,1), why(i,j,1), WKA (I,J,2,1)
+      end if
             END DO
          END DO
      END DO
 
+     if (mytid ==0) close(124)
 !---------------------------------------------------------------------
 !     CORIOLIS ADJUSTMENT
 !---------------------------------------------------------------------
@@ -160,6 +172,9 @@ use constant_mod
                DO I = 3, imt-2
                   WKA (I,J,3,IBLOCK)= EBEA(I,J,IBLOCK)* WKA (I,J,1,IBLOCK) - EBEB(I,J,IBLOCK)* WKA (I,J,2,IBLOCK)
                   WKA (I,J,4,IBLOCK)= EBEA(I,J,IBLOCK)* WKA (I,J,2,IBLOCK) + EBEB(I,J,IBLOCK)* WKA (I,J,1,IBLOCK)
+      if (mytid ==0 .and. i > 3 .and. i < 20 .and. j >5 .and. j < 8 ) then
+      write(170+isb,*) i,j, wka(i,j,3,1), wka(i,j,4,1),ebea(i,j,1), ebeb(i,j,1)
+      end if
                END DO
             END DO
      END DO
@@ -170,12 +185,16 @@ use constant_mod
                DO I = 3, imt-2
                   WKA (I,J,3,IBLOCK)= EBLA (I,J,Iblock)* WKA (I,J,1,IBLOCK) - EBLB (I,J,Iblock)* WKA (I,J,2,IBLOCK)
                   WKA (I,J,4,IBLOCK)= EBLA (I,J,Iblock)* WKA (I,J,2,IBLOCK) + EBLB (I,J,Iblock)* WKA (I,J,1,IBLOCK)
+      if (mytid ==0 .and. i > 3 .and. i < 20 .and. j >5 .and. j < 8 ) then
+      write(170+isb,*) i,j, wka(i,j,3,1), wka(i,j,4,1),ebea(i,j,1), ebeb(i,j,1)
+      end if
                END DO
             END DO
      END DO
          END IF
 
 
+     if (mytid==0) close(170+isb)
 
 !---------------------------------------------------------------------
 !     COMPUTING DH0
@@ -186,9 +205,13 @@ use constant_mod
             DO I = 1,IMT-1
                WKA (I,J,1,IBLOCK)= UB (I,J,IBLOCK)* (DZPH (I,J,IBLOCK) + WORK (I,J,IBLOCK))
                WKA (I,J,2,IBLOCK)= VB (I,J,IBLOCK)* (DZPH (I,J,IBLOCK) + WORK (I,J,IBLOCK))
+      if (mytid ==0 .and. i > 3 .and. i < 20 .and. j >5 .and. j < 8 ) then
+      write(180+isb,*) i,j, ub(i,j,1),vb(i,j,1), dzph(i,j,1), work(i,j,1), wka(i,j,1,1),wka(i,j,2,1)
+      end if
             END DO
          END DO
      END DO
+     if(mytid==0) close(180+isb)
 
 
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I) 
@@ -198,9 +221,13 @@ use constant_mod
          DO J = 2, jmt-2
             DO I = 3,imt-2
                WORK (I,J,IBLOCK)=VIT(I,J,1,IBLOCK)*(-1)*div_out(i,j)
+      if (mytid ==0 .and. i > 3 .and. i < 20 .and. j >5 .and. j < 8 ) then
+      write(190+isb,*) i,j, wka(i,j,1,1),wka(i,j,2,1), div_out(i,j)
+      end if
              END DO
           ENDDO
     END DO
+     if(mytid==0) close(190+isb)
 !   write(120+mytid,*) isb, global_maxval(work,distrb_clinic,field_loc_center ), global_minval(work,distrb_clinic,field_loc_center)
 !   write(120+mytid,*) global_maxval(wka(:,:,3,:),distrb_clinic,field_loc_center ), global_minval(wka(:,:,3,:),distrb_clinic,field_loc_center)
 !   write(120+mytid,*) global_maxval(wka(:,:,4,:),distrb_clinic,field_loc_center ), global_minval(wka(:,:,4,:),distrb_clinic,field_loc_center)
@@ -208,10 +235,6 @@ use constant_mod
 !   write(120+mytid,*) global_maxval(wka(:,:,2,:),distrb_clinic,field_loc_center ), global_minval(wka(:,:,2,:),distrb_clinic,field_loc_center)
 
 
-       if (mytid == 1) then
-           write(112,*)"OK-----------1"
-           close(112)
-       end if
 !
 !---------------------------------------------------------------------
 !     PREDICTING VB , UB & H0
@@ -219,42 +242,27 @@ use constant_mod
          call POP_HaloUpdate(work , POP_haloClinic, POP_gridHorzLocCenter,&
                        POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
 !
-       if (mytid == 1) then
-           write(112,*)"OK-----------2"
-           close(112)
-       end if
          call POP_HaloUpdate(wka(:,:,3,:), POP_haloClinic, POP_gridHorzLocSWcorner , &
                        POP_fieldKindVector, errorCode, fillValue = 0.0_r8)
 !
-       if (mytid == 1) then
-           write(112,*)"OK-----------3"
-           close(112)
-       end if
          call POP_HaloUpdate(wka(:,:,4,:), POP_haloClinic, POP_gridHorzLocSWcorner , &
                        POP_fieldKindVector, errorCode, fillValue = 0.0_r8)
  
-       if (mytid == 1) then
-           write(112,*)"OK-----------4"
-           close(112)
-       end if
 
 !YU  Oct. 24,2005
          CALL SMUV_2D (WKA(:,:,3,:) ,VIV(:,:,1,:),fil_lat1)
-       if (mytid == 1) then
-           write(112,*)"OK-----------5"
-           close(112)
-       end if
          CALL SMUV_2D (WKA(:,:,4,:) ,VIV(:,:,1,:),fil_lat1)
-       if (mytid == 1) then
-           write(112,*)"OK-----------6"
-           close(112)
-       end if
          CALL SMZ0 (WORK,VIT(:,:,1,:),fil_lat1)
-       if (mytid == 1) then
-           write(112,*)"OK-----------7"
-           close(112)
-       end if
 !YU  Oct. 24,2005
+    DO IBLOCK = 1, NBLOCKS_CLINIC
+         DO J = 1, jmt
+            DO I = 1,imt
+      if (mytid ==0 .and. i > 3 .and. i < 20 .and. j >5 .and. j < 8 ) then
+      write(200+isb,*) i,j, wka(i,j,3,1),wka(i,j,4,1),work(i,j,1)
+      end if
+            END DO
+         END DO
+     END DO
 !
          IF (ISB < 1) THEN
 
@@ -346,8 +354,22 @@ use constant_mod
 
          ISB = ISB +1
       END IF
+!
+    DO IBLOCK = 1, NBLOCKS_CLINIC
+         DO J = 1, jmt
+            DO I = 1,imt
+      if (mytid ==0 .and. i > 3 .and. i < 20 .and. j >5 .and. j < 8 ) then
+      write(210+isb,*) i,j, ub(i,j,1),vb(i,j,1),h0(i,j,1)
+      end if
+            END DO
+         END DO
+     END DO
 
-
+     if (mytid == 0) then
+        close(200+isb)
+        close(210+isb)
+     end if
+       if (isb == 6) stop
 
 !$OMP PARALLEL DO PRIVATE (J,I)
     DO IBLOCK = 1, NBLOCKS_CLINIC
@@ -360,7 +382,6 @@ use constant_mod
     END DO
 
       END DO baro_loop
-      close(120+mytid)
 
       deallocate(dlub,dlvb)
   call mpi_barrier(mpi_comm_ocn,ierr)
