@@ -311,11 +311,14 @@ use constant_mod
 
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
     DO IBLOCK = 1, NBLOCKS_CLINIC
-         DO J = 3,jmt-2
-            DO I = 3,imt-2
+         DO J = 1,jmt
+            DO I = 1,imt
                WKA (I,J,1,IBLOCK) = UBP (I,J,IBLOCK) + WKA (I,J,3,IBLOCK)* DTB2
                WKA (I,J,2,IBLOCK) = VBP (I,J,IBLOCK) + WKA (I,J,4,IBLOCK)* DTB2
                WORK(I,J,IBLOCK)   = H0P (I,J,IBLOCK) + WORK (I,J,IBLOCK)* DTB2
+      if (mytid ==0 .and. i > 3 .and. i < 20 .and. j >5 .and. j < 8 ) then
+      write(210+isb,*) i,j, wka(i,j,1,1),wka(i,j,2,1),work(i,j,1)
+      end if
             END DO
          END DO
     END DO
@@ -327,7 +330,7 @@ use constant_mod
 
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
     DO IBLOCK = 1, NBLOCKS_CLINIC
-         DO J = JST,JET
+         DO J = 1, jmt
             DO I = 1,IMT
                UBP (I,J,IBLOCK) = AFB2* UB (I,J,IBLOCK) + AFB1* (UBP (I,J,IBLOCK) + WKA (I,J,1,IBLOCK))
                UB (I,J,IBLOCK) = WKA (I,J,1,IBLOCK)*VIV(I,J,1,IBLOCK)
@@ -335,6 +338,12 @@ use constant_mod
                VB (I,J,IBLOCK) = WKA (I,J,2,IBLOCK)*VIV(I,J,1,IBLOCK)
                H0P (I,J,IBLOCK) = AFB2* H0 (I,J,IBLOCK) + AFB1* (H0P (I,J,IBLOCK) + WORK(I,J,IBLOCK))
                H0 (I,J,IBLOCK) = WORK (I,J,IBLOCK)
+      if (mytid ==0 .and. i > 3 .and. i < 20 .and. j >5 .and. j < 8 ) then
+      write(220+isb,*) i,j, ub(i,j,1),vb(i,j,1),h0(i,j,1)
+      end if
+      if (mytid ==0 .and. i > 3 .and. i < 20 .and. j >5 .and. j < 8 ) then
+      write(230+isb,*) i,j, AFB2,AFB1,DTB2,jet,jmt
+      end if
             END DO
          END DO
     END DO
@@ -351,25 +360,26 @@ use constant_mod
          END IF
 
 !YU  Oct. 24,2005
-
-         ISB = ISB +1
-      END IF
-!
     DO IBLOCK = 1, NBLOCKS_CLINIC
          DO J = 1, jmt
             DO I = 1,imt
       if (mytid ==0 .and. i > 3 .and. i < 20 .and. j >5 .and. j < 8 ) then
-      write(210+isb,*) i,j, ub(i,j,1),vb(i,j,1),h0(i,j,1)
+      write(240+isb,*) i,j, ub(i,j,1),vb(i,j,1),h0(i,j,1)
       end if
             END DO
          END DO
      END DO
-
      if (mytid == 0) then
         close(200+isb)
         close(210+isb)
+        close(220+isb)
+        close(230+isb)
+        close(240+isb)
      end if
-       if (isb == 6) stop
+
+         ISB = ISB +1
+      END IF
+!
 
 !$OMP PARALLEL DO PRIVATE (J,I)
     DO IBLOCK = 1, NBLOCKS_CLINIC

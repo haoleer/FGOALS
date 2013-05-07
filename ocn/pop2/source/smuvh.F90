@@ -59,10 +59,22 @@ use POP_HaloMod
          end do
    end do
 !
+         if (mytid == 0 ) then
+            write(260,*) NCY, max_blocks_clinic
+            write(260,*) (x(i,6,1),i=1,imt)
+         end if
          call POP_HaloUpdate(X, POP_haloClinic, POP_gridHorzLocSWcorner , &
                        POP_fieldKindVector, errorCode, fillValue = 0.0_r8)
+         if (mytid == 0 ) then
+            write(261,*) NCY, max_blocks_clinic
+            write(261,*) (x(i,6,1),i=1,imt)
+         end if
 !
    END DO
+        if (mytid == 0) then
+            close(260)
+            close(261)
+        end if
 
       RETURN
       END SUBROUTINE SMUV_2D
