@@ -33,8 +33,8 @@ use operators
 !M
 !$OMP PARALLEL DO PRIVATE (J,I) 
       do iblock = 1, nblocks_clinic
-         DO J = JSM,JEM
-            DO I = 2,IMM
+         DO J = 2, jmt-1
+            DO I = 2,imt-1
                SBCX(I,J,IBLOCK) = SU (I,J,IBLOCK)* OD0
                SBCY(I,J,IBLOCK) = SV (I,J,IBLOCK)* OD0
                BBCX(I,J,IBLOCK)= C0F*SQRT(UP(I,J,KM,IBLOCK)*UP(I,J,KM,IBLOCK)+VP(I,J,KM,IBLOCK)*VP(I,J,KM,IBLOCK))&
@@ -62,8 +62,8 @@ use operators
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM
-         DO J = JSM,JEM
-            DO I = 2,IMM
+         DO J = 2,jmt-1
+            DO I = 2,imt-1
                DLU (I,J,K,IBLOCK) = DLU (I,J,K,IBLOCK) - FCOR(I,J,IBLOCK) * VP (I,J,K,IBLOCK)
                DLV (I,J,K,IBLOCK) = DLV (I,J,K,IBLOCK) + FCOR(I,J,IBLOCK) * UP (I,J,K,IBLOCK)
             END DO
@@ -81,7 +81,7 @@ use operators
       IF (ISC /= 0) AA = 0.5
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
-      DO J = JST,JET
+      DO J = 1,jmt
          DO I = 1,IMT
             H0BF (I,J,IBLOCK)= H0BF (I,J,IBLOCK)* ONBB
          END DO
@@ -90,7 +90,7 @@ use operators
  
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
-      DO J = JST,JET
+      DO J = 1, jmt
          DO I = 1,IMT
             WORK (I,J,IBLOCK)= AA * H0BF (I,J,IBLOCK) + (1.0- AA)* H0BL (I,J,IBLOCK)
          END DO
@@ -99,7 +99,7 @@ use operators
  
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I,WKK)
    DO IBLOCK = 1, NBLOCKS_CLINIC
-      DO J = JST,JET
+      DO J = 1,jmt
          DO I = 1,IMT
             WKK (1)= (PSA (I,J,IBLOCK)* OD0+ WORK (I,J,IBLOCK)* G)* VIT (I,J,1,IBLOCK)
             DO K = 1,KM
@@ -119,8 +119,8 @@ use operators
       this_block = get_block(blocks_clinic(iblock),iblock)
       DO K = 1,KM
          call grad(k, GRADX, GRADY, wka, this_block)
-         DO J = JSM,JEM
-            DO I = 2,IMM
+         DO J = 2,jmt-1
+            DO I = 2,imt-1
                DLV (I,J,K,IBLOCK) = DLV (I,J,K,IBLOCK) - grady(i,j)
                DLU (I,J,K,IBLOCK) = DLU (I,J,K,IBLOCK) - gradx(i,j)
             END DO
@@ -133,7 +133,7 @@ use operators
 !$OMP PARALLEL DO PRIVATE (K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM
-         DO J = JST,JET
+         DO J = 1, JMT
             DO I = 1,IMT
                WKA (I,J,K,IBLOCK)= (1.0+ OHBT (I,J,IBLOCK)* ZKT (K))* WORK (I,J,IBLOCK)      &
                             * VIT (I,J,K,IBLOCK)
@@ -147,8 +147,8 @@ use operators
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM
          call grad(k, GRADX, GRADY, wka, this_block)
-         DO J = JSM,JEM
-            DO I = 2,IMM
+         DO J = 2, JMT-1
+            DO I = 2,IMT-1
                GGU = 0.125* (GG (I,J,K,IBLOCK) + GG (I -1,J,K,IBLOCK) + GG (I,J +1,K,IBLOCK) &
                      + GG (I -1,J +1,K,IBLOCK))
                DLV (I,J,K,IBLOCK) = DLV (I,J,K,IBLOCK) + GGU * grady(i,j)
@@ -167,8 +167,8 @@ use operators
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I,WK1,WK2)
    DO IBLOCK = 1, NBLOCKS_CLINIC
          DO K = 1,KM
-            DO J = JSM,JEM
-               DO I = 2,IMM
+            DO J = 2, JMT-1
+               DO I = 2,IMT-1
                   WK1 = EPEA(I,J,IBLOCK)* DLV(I,J,K,IBLOCK) + EPEB(I,J,IBLOCK)* DLU (I,J,K,IBLOCK)
                   WK2 = EPEA(I,J,IBLOCK)* DLU(I,J,K,IBLOCK) - EPEB(I,J,IBLOCK)* DLV (I,J,K,IBLOCK)
                   DLV (I,J,K,IBLOCK)= WK1* VIV (I,J,K,IBLOCK)
@@ -181,8 +181,8 @@ use operators
 !$OMP PARALLEL DO PRIVATE (K,J,I,WK1,WK2)
    DO IBLOCK = 1, NBLOCKS_CLINIC
          DO K = 1,KM
-            DO J = JSM,JEM
-               DO I = 2,IMM
+            DO J = 2, JMT-1
+               DO I = 2,IMT-1
                   WK1 = EPLA(I,J,IBLOCK)* DLV(I,J,K,IBLOCK) + EPLB(I,J,IBLOCK)*DLU(I,J,K,IBLOCK)
                   WK2 = EPLA(I,J,IBLOCK)* DLU(I,J,K,IBLOCK) - EPLB(I,J,IBLOCK)*DLV(I,J,K,IBLOCK)
                   DLV (I,J,K,IBLOCK)= WK1* VIV(I,J,K,IBLOCK)
@@ -198,8 +198,15 @@ use operators
 !     SET CYCLIC CONDITIONS ON EASTERN AND WESTERN BOUNDARY
 !---------------------------------------------------------------------
  
-      CALL SMUV (DLU,VIV,KM,fil_lat1)
-      CALL SMUV (DLV,VIV,KM,fil_lat1)
+!
+         call POP_HaloUpdate(DLU, POP_haloClinic, POP_gridHorzLocSWcorner , &
+                       POP_fieldKindVector, errorCode, fillValue = 0.0_r8)
+!
+         call POP_HaloUpdate(DLV, POP_haloClinic, POP_gridHorzLocSWcorner , &
+                       POP_fieldKindVector, errorCode, fillValue = 0.0_r8)
+!
+      CALL SMUV_3D (DLU,VIV,fil_lat1)
+      CALL SMUV_3D (DLV,VIV,fil_lat1)
 !YU 
 
  
@@ -212,7 +219,7 @@ use operators
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM
-         DO J = JST,JET
+         DO J = 1,JMT
             DO I = 1,IMT
                V (I,J,K,IBLOCK)= VP (I,J,K,IBLOCK) + DLV (I,J,K,IBLOCK)* DTC
                U (I,J,K,IBLOCK)= UP (I,J,K,IBLOCK) + DLU (I,J,K,IBLOCK)* DTC
@@ -229,7 +236,7 @@ use operators
 !$OMP PARALLEL DO PRIVATE (K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM
-         DO J = JST,JET
+         DO J = 1, JMT
             DO I = 1,IMT
                U (I,J,K,IBLOCK)= (U (I,J,K,IBLOCK) - WORK (I,J,IBLOCK) + UB (I,J,IBLOCK))* VIV (I,J,K,IBLOCK)
             END DO
@@ -242,7 +249,7 @@ use operators
 !$OMP PARALLEL DO PRIVATE (K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM
-         DO J = JST,JET
+         DO J = 1, JMT
             DO I = 1,IMT
                V (I,J,K,IBLOCK)= (V (I,J,K,IBLOCK) - WORK (I,J,IBLOCK) + VB (I,J,IBLOCK))* VIV (I,J,K,IBLOCK)
             END DO
@@ -259,7 +266,7 @@ use operators
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM
-         DO J = JST,JET
+         DO J = 1,JMT
             DO I = 1,IMT
                WKA (I,J,K,IBLOCK)= VP (I,J,K,IBLOCK) + DLV (I,J,K,IBLOCK)* DTC2
             END DO
@@ -273,7 +280,7 @@ use operators
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM
-         DO J = JST,JET
+         DO J = 1, JMT
             DO I = 1,IMT
                WKA (I,J,K,IBLOCK)= (WKA (I,J,K,IBLOCK) - WORK (I,J,IBLOCK) + VB (I,J,IBLOCK))* VIV (I,J,K,IBLOCK)
             END DO
@@ -289,7 +296,7 @@ use operators
 !$OMP PARALLEL DO PRIVATE (K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM
-         DO J = JST,JET
+         DO J = 1,JMT
             DO I = 1,IMT
                VP (I,J,K,IBLOCK) = AFC2* V (I,J,K,IBLOCK) + AFC1* (VP (I,J,K,IBLOCK) + WKA (I,J,K,IBLOCK))
                V (I,J,K,IBLOCK) = WKA (I,J,K,IBLOCK)
@@ -302,7 +309,7 @@ use operators
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM
-         DO J = JST,JET
+         DO J = 1, JMT
             DO I = 1,IMT
                WKA (I,J,K,IBLOCK)= UP (I,J,K,IBLOCK) + DLU (I,J,K,IBLOCK)* DTC2
             END DO
@@ -316,7 +323,7 @@ use operators
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM
-         DO J = JST,JET
+         DO J = 1, JMT
             DO I = 1,IMT
                WKA (I,J,K,IBLOCK)= (WKA (I,J,K,IBLOCK) - WORK (I,J,IBLOCK) + UB (I,J,IBLOCK))* VIV (I,J,K,IBLOCK)
             END DO
@@ -331,7 +338,7 @@ use operators
 !$OMP PARALLEL DO PRIVATE (K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM
-         DO J = JST,JET
+         DO J = 1, JMT
             DO I = 1,IMT
                UP (I,J,K,IBLOCK) = AFC2* U (I,J,K,IBLOCK) + AFC1* (UP (I,J,K,IBLOCK) + WKA (I,J,K,IBLOCK))
                U (I,J,K,IBLOCK) = WKA (I,J,K,IBLOCK)

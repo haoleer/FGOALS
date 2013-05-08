@@ -38,8 +38,8 @@ use grid
    do iblock = 1, nblocks_clinic
       DO j = 2,jmm
          DO k = 2,km -1
-            fxa = - p5* dzr (k)* athkdf * SINU (j)
-            DO i = 1,imt
+            fxa = - p5* dzr (k)* athkdf 
+            DO i = 2,imt-1
                adv_vntiso (i,k,j,iblock) = fxa * tmask (i,k,j,iblock)* tmask (i,k,j +1,iblock)* ( &
                                     K2 (i,k -1,j,3,iblock) - K2 (i,k +1,j,3,iblock))
             END DO
@@ -55,10 +55,9 @@ use grid
       fxa = - p5* dzr (1)* athkdf
 !$OMP PARALLEL DO PRIVATE (iblock,j,i,k)
    do iblock = 1, nblocks_clinic
-      DO j = 2,jmm
-         DO i = 1,imt
+      DO j = 2,jmt-1
+         DO i = 2,imt-1
             adv_vntiso (i,1,j,iblock) = - fxa * tmask (i,1,j,iblock)* tmask (i,1,j +1,iblock)&
-                                * SINU (j) &
                                  * (K2 (i,1,j,3,iblock) + K2 (i,2,j,3,iblock))   
          END DO
       END DO
@@ -69,12 +68,11 @@ use grid
  
 !$OMP PARALLEL DO PRIVATE (iblock,j,i,k)
    do iblock = 1, nblocks_clinic
-      DO j = 2,jmm
-         DO i = 1,imt
+      DO j = 2,jmt-1
+         DO i = 2, imt-1
             k = min (ITNU (i,j,iblock),ITNU (i,j +1,iblock))
             IF (k /= 0) THEN
-               adv_vntiso (i,k,j,iblock) = - p5* dzr (k)* athkdf * SINU (j)    &
-                                   * tmask (i,k,j,iblock) &
+               adv_vntiso (i,k,j,iblock) = - p5* dzr (k)* athkdf * tmask (i,k,j,iblock) &
                                     * tmask (i,k,j +1,iblock)* (K2 (i,k,j,3,iblock)   &
                                       + K2 (i,k -1,j,3,iblock))          
             END IF
@@ -82,9 +80,6 @@ use grid
       END DO
    END DO
 
-#ifdef SPMD
-!     call exchange_3d_iso(adv_vntiso,km,1,1)
-#endif 
  
 !-----------------------------------------------------------------------
 !     compute the zonal component of the isopycnal mixing velocity
@@ -95,10 +90,10 @@ use grid
  
 !$OMP PARALLEL DO PRIVATE (iblock,j,k,fxa,i)
    do iblock = 1, nblocks_clinic
-      DO j = jstrt,jmm
+      DO j = 2, jmt-1
          DO k = 2,km -1
             fxa = - p5* dzr (k)* athkdf
-            DO i = 1,imm
+            DO i = 2,imt-1
                adv_vetiso (i,k,j,iblock) = fxa * tmask (i,k,j,iblock)* tmask (i +1,k,j,iblock) &
                                     * (K1 (i,k -1,j,3,iblock) - K1 (i,k +1,j,3,iblock))      
             END DO
@@ -114,8 +109,8 @@ use grid
       fxa = - p5* dzr (1)* athkdf
 !$OMP PARALLEL DO PRIVATE (iblock,j,k,i)
    do iblock = 1, nblocks_clinic
-      DO j = jstrt,jmm
-         DO i = 1,imm
+      DO j = 2, jmt-1
+         DO i = 2,imt-1
             adv_vetiso (i,1,j,iblock) = - fxa * tmask (i,1,j,iblock)* tmask (i +1,1,j,iblock) &
                                  * (K1 (i,1,j,3,iblock) + K1 (i,2,j,3,iblock)) 
          END DO
@@ -125,8 +120,8 @@ use grid
  
 !$OMP PARALLEL DO PRIVATE (iblock,j,i,k)
    do iblock = 1, nblocks_clinic
-      DO j = jstrt,jmm
-         DO i = 1,imm
+      DO j = 2,jmt-1
+         DO i = 2, imt-1
             k = min (ITNU (i,j,iblock),ITNU (i +1,j,iblock))
             IF (k /= 0) THEN
                adv_vetiso (i,k,j,iblock) = - p5* dzr (k)* athkdf * tmask (i,k,j,iblock) &
@@ -136,9 +131,6 @@ use grid
          END DO
       END DO
   END DO
- 
- 
-!     call exchange_3d_iso(adv_vntiso,km,1,1)
  
 !----------------------------------------------------------------------
 !     compute the vertical component of the isopycnal mixing velocity
@@ -150,13 +142,12 @@ use grid
  
 !$OMP PARALLEL DO PRIVATE (iblock,j,i,k)
    do iblock = 1, nblocks_clinic
-      DO j = jstrt,jmm
+      DO j = 3, jmt-2
          DO k = 1,km -1
-            DO i = 2,imt
-!              adv_vbtiso (i,k,j,iblock) = DZP (k)* ( &
-!              (adv_vetiso (i,k,j,iblock) - adv_vetiso (i -1,k,j,iblock))* OTX (j) + &
-!                                   (adv_vntiso (i,k,j,iblock) - adv_vntiso (i,&
-!                                    k,j -1,iblock))* cstrdytr (j))     
+            DO i = 3,imt-2
+               adv_vbtiso (i,k,j,iblock) = DZP (k)* ( &
+               (adv_vetiso (i,k,j,iblock) - adv_vetiso (i -1,k,j,iblock))* dxtr (i,j,iblock) + &
+               (adv_vntiso (i,k,j,iblock) - adv_vntiso (i,k,j -1,iblock))* dytr (i,j,iblock))     
             END DO
          END DO
       END DO
@@ -165,9 +156,9 @@ use grid
  
 !$OMP PARALLEL DO PRIVATE (iblock,j)
    do iblock = 1, nblocks_clinic
-      DO j = jstrt,jmm
+      DO j = 3, jmt-2
          DO k = 1,km -1
-            DO i = 2,imt
+            DO i = 3,imt-2
                adv_vbtiso (i,k,j,iblock) = adv_vbtiso (i,k,j,iblock) + adv_vbtiso (i,k -1,j,iblock)
             END DO
          END DO
@@ -177,8 +168,8 @@ use grid
  
 !$OMP PARALLEL DO PRIVATE (iblock,j,i)
    do iblock = 1, nblocks_clinic
-      DO j = jstrt,jmm
-         DO i = 2,imt
+      DO j = 3, jmt-2
+         DO i = 3, imt-2
             adv_vbtiso (i,kmt (i,j,iblock),j,iblock) = c0
          END DO
       END DO

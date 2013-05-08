@@ -39,8 +39,8 @@ use constant_mod
 !$OMP PARALLEL DO PRIVATE (iblock,k,j,i)
    do iblock = 1, nblocks_clinic
       DO k = 2,km -1
-         DO j = 2,jmm
-            DO i = 1,imt
+         DO j = 2, jmt-1
+            DO i = 2,imt-1
                temp (i,j,k,iblock)= p25* dzr (k)* (atb (i,j +1,k -1,m,iblock) - atb ( &
                   i,j +1,k +1,m,iblock) &
                    + atb (i,j,k -1,m,iblock) - atb (i,j, k +1,m,iblock))    
@@ -58,8 +58,8 @@ use constant_mod
       k = 1
 !$OMP PARALLEL DO PRIVATE (iblock,j,i)
    do iblock = 1, nblocks_clinic
-      DO j = 2,jmm
-         DO i = 1,imt
+      DO j = 2,jmt-1
+         DO i = 2, imt-1
             temp (i,j,k,iblock) = 0.25* dzr (k)* (atb (i,j +1,k,m,iblock) - atb (i,   &
                           j +1,k +1,m,iblock)+atb (i,j,k,m,iblock) - atb (i,j, k +1,m,iblock))
          END DO
@@ -77,8 +77,8 @@ use constant_mod
  
 !$OMP PARALLEL DO PRIVATE (iblock,j,i,k,fxa,fxb,fxc,fxe)
    do iblock = 1, nblocks_clinic
-      DO j = 2,jmm
-         DO i = 1,imt
+      DO j = 2,jmt-1
+         DO i = 2,imt-1
             k = min (ITNU (i,j,iblock),ITNU (i,j +1,iblock))
             IF (k /= 0) THEN
                fxe = dzw (k -1) + dzw (k)
@@ -108,11 +108,10 @@ use constant_mod
       DO k = 1,km
          DO j = 2,jmm
             DO i = 1,imt
-               work_1 (i,j,k,iblock)= ( ahisop * dyur (i,j,iblock)* (atb (i,j +1,k,m,iblock)- atb (i,j,k,m,iblock)) + &
-               ahisop * K2 (i,k,j,3,iblock)* temp (i,j,k,iblock) )* &
-               SINU (j)* vit (i,j,k,iblock)* vit (i,j +1,k,iblock) 
+               work_1(i,j,k,iblock)=(ahisop*dyur(i,j,iblock)*(atb(i,j+1,k,m,iblock)-atb(i,j,k,m,iblock))+ &
+               ahisop*K2(i,k,j,3,iblock)*temp(i,j,k,iblock))*vit(i,j,k,iblock)*vit(i,j+1,k,iblock) 
 !
-               ddy_iso(i,j,k,m,iblock)=work_1(i,j,k,iblock)/SINU(J)
+               ddy_iso(i,j,k,m,iblock)=work_1(i,j,k,iblock)
 !
             END DO
          END DO
@@ -128,8 +127,8 @@ use constant_mod
 !$OMP PARALLEL DO PRIVATE (iblock,k,j,i)
    do iblock = 1, nblocks_clinic
       DO k = 2,km -1
-         DO j = 2,jmm
-            DO i = 1,imm
+         DO j = 2,jmt-1
+            DO i = 2,imt-1
                temp (i,j,k,iblock)= p25* dzr (k)* (atb (i +1,j,k -1,m,iblock) - atb ( &
                              i+1,j,k+1,m,iblock)+atb(i,j,k-1,m,iblock)-atb(i,j,k+1,m,iblock))     
             END DO
@@ -193,7 +192,7 @@ use constant_mod
       DO k = 1,km
          DO j = 2,jmm
             DO i = 1,imm
-               work_2 (i,j,k,iblock)= ( ahisop * OTX (j)* (atb (i +1,j,k,m,iblock)    &
+               work_2 (i,j,k,iblock)= ( ahisop * dxtr(i,j,iblock)* (atb (i +1,j,k,m,iblock)    &
                               - atb (i,j,k,m,iblock)) + &
                ahisop*K1(i,k,j,3,iblock)*temp(i,j,k,iblock) )*vit(i+1,j,k,iblock)* vit(i,j,k,iblock) 
             END DO
@@ -211,8 +210,8 @@ use constant_mod
 !$OMP PARALLEL DO PRIVATE (iblock,k,j,i)
    do iblock = 1, nblocks_clinic
       DO k = 2,km
-         DO j = 2,jmm
-            DO i = 2,imm
+         DO j = 2,jmt-1
+            DO i = 2,imt-1
                work_3 (i,j,k -1,iblock) = ahisop * p25* vit (i,j,k,iblock)* ( &
                OTX (j)* K3 (i,k -1,j,1,iblock)* &
                (vit (i -1,j,k ,iblock)* (atb (i,j,k,m,iblock) - atb (i -1,j,k,m,iblock)) &
@@ -244,16 +243,16 @@ use constant_mod
 !$OMP PARALLEL DO PRIVATE (iblock,k,j,i)
   do iblock = 1, nblocks_clinic
       DO k = 1,km
-         DO j = 2,jmm
-            DO i = 2,imm
-!              tf (i,j,k,iblock) = tf (i,j,k,iblock) &
-!              + cstrdytr (j)* (work_1 (i,j,k,iblock) - work_1 (i,j -1,k,iblock)) &
-!              + OTX (j) * (work_2 (i,j,k,iblock) - work_2 (i -1,j,k,iblock)) &
-!              + dzr (k) * (work_3 (i,j,k -1,iblock) - work_3 (i,j,k,iblock))
+         DO j = 3,jmt-2
+            DO i = 3, imt-2
+               tf (i,j,k,iblock) = tf (i,j,k,iblock) &
+               + dytr(i,j,iblock)*(work_1 (i,j,k,iblock) - work_1 (i,j -1,k,iblock)) &
+               + dxtr(i,j,iblock)*(work_2 (i,j,k,iblock) - work_2 (i -1,j,k,iblock)) &
+               + dzr (k)*(work_3 (i,j,k -1,iblock) - work_3 (i,j,k,iblock))
 !
-!              dx_iso(i,j,k,m,iblock)= OTX (j) * (work_2 (i,j,k,iblock) - work_2 (i -1,j,k,iblock)) 
-!              dy_iso(i,j,k,m,iblock)= cstrdytr (j)* (work_1 (i,j,k,iblock) - work_1 (i,j -1,k,iblock))
-!              dz_iso(i,j,k,m,iblock)= dzr (k) * (work_3 (i,j,k -1,iblock) - work_3 (i,j,k,iblock))
+               dx_iso(i,j,k,m,iblock)= dxtr (i,j,iblock)*(work_2 (i,j,k,iblock) - work_2 (i -1,j,k,iblock)) 
+               dy_iso(i,j,k,m,iblock)= dytr (i,j,iblock)*(work_1 (i,j,k,iblock) - work_1 (i,j -1,k,iblock))
+               dz_iso(i,j,k,m,iblock)= dzr (k) * (work_3(i,j,k -1,iblock) - work_3 (i,j,k,iblock))
 !
             END DO
          END DO
@@ -268,12 +267,12 @@ use constant_mod
 !$OMP PARALLEL DO PRIVATE (iblock,k,j,i)
    do iblock = 1, nblocks_clinic
       DO k = 1,km
-         DO j = 2,jmm
-            DO i = 2,imm
+         DO j = 2,jmt-1
+            DO i = 2,imt-1
                work_1 (i,j,k,iblock) = adv_vntiso (i,k,j,iblock)* (atb (i,j +1,k,m,iblock)   &
-                                + atb (i,j,k,m,iblock))
+                                + atb (i,j,k,m,iblock))*hts(i,j-1,iblock)
 !
-               aay_iso(i,j,k,m,iblock) =work_1(i,j,k,iblock)*p5/SINU(J)               
+               aay_iso(i,j,k,m,iblock) =work_1(i,j,k,iblock)*p5
 !
             END DO
          END DO
@@ -288,10 +287,10 @@ use constant_mod
 !$OMP PARALLEL DO PRIVATE (iblock,k,j,i)
    do iblock = 1, nblocks_clinic
       DO k = 1,km
-         DO j = 2,jmm
-            DO i = 1,imm
+         DO j = 2,jmt-1
+            DO i = 2,imt-1
                work_2 (i,j,k,iblock) = adv_vetiso (i,k,j,iblock)* (atb (i +1,j,k,m,iblock)   &
-                                + atb (i,j,k,m,iblock))
+                                + atb (i,j,k,m,iblock))*htw(i-1,j,iblock)
             END DO
          END DO
       END DO
@@ -309,8 +308,8 @@ use constant_mod
 !$OMP PARALLEL DO PRIVATE (iblock,k,j,i)
    do iblock = 1, nblocks_clinic
       DO k = 2,km
-         DO j = 2,jmm
-            DO i = 2,imm
+         DO j = 2,jmt-1
+            DO i = 2,imt-1
                work_3 (i,j,k -1,iblock)= adv_vbtiso (i,k -1,j,iblock)* (atb (i,j,k,m,iblock) &
                                 + atb (i,j,k -1,m,iblock))
             END DO
@@ -322,17 +321,13 @@ use constant_mod
 !$OMP PARALLEL DO PRIVATE (iblock,k,j,i)
    do iblock = 1, nblocks_clinic
       DO k = 1,km
-         DO j = 2,jmm
-            DO i = 2,imm
-!              tf (i,j,k,iblock) = tf (i,j,k,iblock) &
-!              - p5* cstrdytr (j)* (work_1 (i,j,k,iblock) - work_1 (i,j -1,k,iblock)) &
-!              - p5* OTX (j) * (work_2 (i,j,k,iblock) - work_2 (i -1,j,k,iblock)) &
-!              - p5* dzr (k) * (work_3 (i,j,k -1,iblock) - work_3 (i,j,k,iblock)) 
-!
-!             ay_iso(i,j,k,m,iblock)=- p5* cstrdytr (j)* (work_1 (i,j,k,iblock) - work_1 (i,j -1,k,iblock)) 
-!             ax_iso(i,j,k,m,iblock)=- p5* OTX (j) * (work_2 (i,j,k,iblock) - work_2 (i -1,j,k,iblock)) 
-!             az_iso(i,j,k,m,iblock)=- p5* dzr (k) * (work_3 (i,j,k -1,iblock) - work_3 (i,j,k,iblock)) 
-!
+         DO j = 3, jmt-2
+            DO i = 3, jmt-2
+               tf (i,j,k,iblock) = tf (i,j,k,iblock) &
+               - p5* (work_1 (i,j,k,iblock) - work_1 (i,j -1,k,iblock) &
+               + (work_2 (i,j,k,iblock) - work_2 (i -1,j,k,iblock))*t_arear(i,j,iblock) &
+               - p5* dzr (k) * (work_3 (i,j,k -1,iblock) - work_3 (i,j,k,iblock)) 
+ 
             END DO
          END DO
       END DO

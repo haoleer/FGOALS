@@ -75,7 +75,7 @@ use domain
  
 !$OMP PARALLEL DO PRIVATE (J,I)
    DO iblock = 1, nblocks_clinic
-      DO J = JST,JET
+      DO J = 1, JMT
          DO I = 1,IMT
             H0F (I,J,iblock)= H0F (I,J,iblock)* ONBC
          END DO
@@ -84,7 +84,7 @@ use domain
  
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
    DO iblock = 1, nblocks_clinic
-      DO J = JST,JET
+      DO J = 1, JMT
          DO I = 1,IMT
             STF (I,J,IBLOCK)= AA * H0F (I,J,IBLOCK) + (1.0D0- AA)* H0L (I,J,IBLOCK)
          END DO
@@ -94,7 +94,7 @@ use domain
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
    DO iblock = 1, nblocks_clinic
       DO K = 1,KM
-         DO J = JST,JET
+         DO J = 1, JMT
             DO I = 1,IMT
                UTF (I,J,K,IBLOCK)= UTF (I,J,K,IBLOCK)* ONCC
                VTF (I,J,K,IBLOCK)= VTF (I,J,K,IBLOCK)* ONCC
@@ -107,7 +107,7 @@ use domain
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
    DO iblock = 1, nblocks_clinic
       DO K = 1,KM
-         DO J = JST,JET
+         DO J = 1, JMT
             DO I = 1,IMT
                WKD (I,J,K,IBLOCK)= AA * UTF (I,J,K,IBLOCK) + (1.0D0- AA)* UTL (I,J,K,IBLOCK)
                WKB (I,J,K,IBLOCK)= AA * VTF (I,J,K,IBLOCK) + (1.0D0- AA)* VTL (I,J,K,IBLOCK)
@@ -154,7 +154,7 @@ use domain
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
    DO iblock = 1, nblocks_clinic
       DO K = 1,KM
-         DO J = JST,JET
+         DO J = 1, JMT
             DO I = 1,IMT
 #if (defined ISO)
                WKC (I,J,K,IBLOCK) = AHV + AHISOP * K3 (I,K,J,3,IBLOCK)
@@ -172,13 +172,6 @@ use domain
       END DO
    END DO
  
-!
-#if (!defined CANUTO)
-#ifdef SPMD
-!     call exch_boundary(akt(1,1,1,1),km)
-!     call exch_boundary(akt(1,1,1,2),km)
-#endif
-#endif
 !
 !-----------------------------------------------------------------------
 !     SOLVE FOR ONE TRACER AT A TIME
@@ -207,8 +200,8 @@ use domain
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM
-         DO J = JST,JET          
-            DO I = 2,IMM
+         DO J = 2, JMT-1
+            DO I = 2, IMT-1
 #if (defined ISO)       
                WKC (I,J,K,IBLOCK) = AKT(I,J,K,N,IBLOCK) + AHISOP * K3 (I,K,J,3,IBLOCK) 
 #else            
@@ -234,45 +227,6 @@ use domain
  
 #if ( defined SMAG)
          CALL SMAG3
- 
-!$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
-      DO IBLOCK = 1, NBLOCKS_CLINIC
-         DO K = 1,KM
-            DO J = JSM,JEM
-               WKI (1)= 0.0D0
-               DO I = 2,IMT
-                  WKI (I) = 0.5D0* (AH3 (I,J,K,iblock) + AH3 (I -1,J,K,iblock))* (ATB ( &
-                           I,J,K,N,iblock) - ATB (I -1,J,K,N,iblock))* VIT (I,J,K,iblock)* VIT (I -1,J,K,iblock)
-               END DO
-               DO I = 2,IMM
-                  TF (I,J,K,iblock) = TF (I,J,K) + SOTX (J)*(WKI(I+1)-WKI(I))
-!
-!                dx(i,j,k,n,iblock)= SOTX (J)*(WKI(I+1)-WKI(I))
-!
-               END DO
-            END DO
-         END DO
-     END DO
- 
-!$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I,wt1,wt2)
-      DO IBLOCK = 1, NBLOCKS_CLINIC
-         DO K = 1,KM
-         DO J = JSM,JEM
-         DO I = 2,IMM
-            wt1= 0.5D0*(AH3(I,J,K,IBLOCK)+AH3(I,J-1,K,IBLOCK))*(ATB(I,J,K,N,IBLOCK)- &
-                        ATB(I,J-1,K,N,IBLOCK))*VIT(I,J,K,IBLOCK)*VIT(I,J-1,K,IBLOCK)
-            wt2= 0.5D0*(AH3(I,J+1,K,IBLOCK)+AH3(I,J,K,IBLOCK))*(ATB(I,J+1,K,N,IBLOCK)- &
-                        ATB(I,J,K,N,IBLOCK))*VIT(I,J+1,K,IBLOCK)*VIT(I,J,K,IBLOCK)
-            TF (I,J,K,IBLOCK) = TF (I,J,K) + (R2D (J)* wt2 - R2C(J)* wt1)
-!
-!           dy(i,j,k,n,iblock)=(R2D(J)*wt2-R2C(J)*wt1)
-!          ddy(i,j,k,n,iblock)=(R2A(J)*wt2-R2B(J)*wt1)
-!
-         END DO
-         END DO
-         END DO
-      END DO
- 
 #else
  
 !-----------------------------------------------------------------------
@@ -323,8 +277,8 @@ use domain
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I,wt1,wt2)
     DO IBLOCK = 1, NBLOCKS_CLINIC
         DO K=2,KM-1
-        DO J=JSM,JEM
-        DO I=2,IMM
+        DO J=3, JMT-2
+        DO I=3,IMT-2
             wt1= SWV (I,J,IBLOCK)*pen(k-1)*VIT(I,J,K,IBLOCK)
             wt2= SWV (I,J,IBLOCK)*pen(k)*VIT(I,J,K+1,IBLOCK)
             TF (I,J,K,IBLOCK)= TF(I,J,K,IBLOCK)+(wt1-wt2)*ODZP(K)
@@ -338,8 +292,8 @@ use domain
      END DO
 !$OMP PARALLEL DO PRIVATE (J,I,wt1,wt2)
      DO IBLOCK = 1, NBLOCKS_CLINIC
-        DO J=JSM,JEM
-        DO I=2,IMM
+        DO J=3, JMT-2
+        DO I=3,IMT-2
            wt1= SWV (I,J,IBLOCK)*pen(1)*VIT(I,J,2,IBLOCK)
            wt2= SWV (I,J,IBLOCK)*pen(km-1)*VIT(I,J,km,IBLOCK)
            TF(I,J,1,IBLOCK)=TF(I,J,1,IBLOCK)-ODZP(1)*wt1
@@ -362,8 +316,8 @@ use domain
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I,wt1,wt2)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K=2,KM-1
-        DO J=JSM,JEM
-        DO I=2,IMM
+        DO J=3,JMT-2
+        DO I=3,IMT-2
             wt1= SWV(I,J,IBLOCK)*pen_chl(I,J,K-1,IBLOCK)*VIT(I,J,K,IBLOCK)
             wt2= SWV(I,J)*pen_chl(I,J,K,IBLOCK)*VIT(I,J,K+1,IBLOCK)
             TF (I,J,K,IBLOCK)= TF(I,J,K,IBLOCK)+(wt1-wt2)*ODZP(K)
@@ -376,8 +330,8 @@ use domain
   END DO
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I,wt1,wt2)
    DO IBLOCK = 1, NBLOCKS_CLINIC
-        DO J=JSM,JEM
-        DO I=2,IMM
+        DO J=3,JMT-2
+        DO I=3,IMT-2
            wt1= SWV(I,J,iblock)*pen_chl(I,J,1,iblock)*VIT(I,J,2,iblock)
            wt2= SWV(I,J,iblock)*pen_chl(I,J,km-1,iblock)*VIT(I,J,km,iblock)
            TF(I,J,1,iblock)=TF(I,J,1,iblock)-ODZP(1)*wt1
@@ -402,8 +356,8 @@ use domain
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I,wt1,wt2)
    DO IBLOCK = 1, NBLOCKS_CLINIC
         DO K=2,KM-1
-           DO J=JSM,JEM
-           DO I=2,IMM
+           DO J=3,JMT-2
+           DO I=3,IMT-2
               wt1= WKC(I,J,K-1,IBLOCK)*(ATB(I,J,K-1,N,IBLOCK)-ATB(I,J,K,N,IBLOCK))*ODZT(K)*VIT(I,J,K,IBLOCK)
               wt2= WKC(I,J,K,IBLOCK)*(ATB(I,J,K,N,IBLOCK)-ATB(I,J,K+1,N,IBLOCK))*ODZT(K+1)*VIT(I,J,K+1,IBLOCK)
               TF (I,J,K,IBLOCK)= TF(I,J,K,IBLOCK)+ODZP(K)*(wt1-wt2)*(1.0D0-AIDIF)
@@ -416,8 +370,8 @@ use domain
   END DO
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I,wt1,wt2)
    DO IBLOCK = 1, NBLOCKS_CLINIC
-       DO J = JSM,JEM
-       DO I = 2,IMM
+       DO J = 3,JMT-2
+       DO I = 3,IMT-2
            wt1= WKC(I,J,1,IBLOCK)*(ATB(I,J,1,N,IBLOCK)-ATB(I,J,2,N,IBLOCK))*ODZT(2)*VIT(I,J,2,IBLOCK)
            wt2= WKC(I,J,km-1,IBLOCK)*(ATB(I,J,km-1,N,IBLOCK)-ATB(I,J,km,N,IBLOCK))*ODZT(km)*VIT(I,J,km,IBLOCK)
            TF(I,J,1,IBLOCK)=TF(I,J,1,IBLOCK)-ODZP(1)*wt1*(1.0D0-AIDIF)
@@ -438,8 +392,8 @@ use domain
  
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)    
         DO IBLOCK = 1, NBLOCKS_CLINIC
-            DO J = JSM,JEM
-               DO I = 2,IMM
+            DO J = 3,JMT-2
+               DO I = 3,IMT-2
                   IF (ITNU (I,J,IBLOCK) > 0)THEN
 #ifdef COUP
 !                     STF (I,J,IBLOCK) = SSF(I,J,IBLOCK)
@@ -468,8 +422,8 @@ use domain
   ELSE
 !$OMP PARALLEL DO PRIVATE (J,I)
         DO IBLOCK = 1, NBLOCKS_CLINIC
-            DO J = JSM,JEM
-               DO I = 2,IMM
+            DO J = 3,JMT-2
+               DO I = 3,IMT-2
                 IF (ITNU (I,J,IBLOCK) > 0)THEN
 #ifdef COUP
                  STF (I,J,IBLOCK) = TSF(I,J,IBLOCK)
@@ -500,9 +454,9 @@ use domain
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
      DO IBLOCK = 1, NBLOCKS_CLINIC
          DO K = 2,KM
-         do j=1,jmt
+         do j=3,jmt-2
             if (j_global(j)>=(jst_global+1).and.j_global(j)<=(jst_global+50)) then
-               DO I = 2,IMM
+               DO I = 3,jmt-2
                   TF (I,J,K,iblock)= TF (I,J,K,iblock) + VIT (I,J,K,iblock)* (RESTORE (I,J,K,&
                              N,iblock) - ATB (I,J,K,N,iblock))*LAMDA
                END DO
@@ -514,9 +468,9 @@ use domain
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
      DO IBLOCK = 1, NBLOCKS_CLINIC
          DO K = 2,KM
-         do j=1,jmt
+         do j=3,jmt-2
             if (j_global(j)<=(jmt_global-1).and.j_global(j)>=(jmt_global-50)) then
-               DO I = 2,IMM
+               DO I = 3, imt-2
                   TF (I,J,K,iblock)= TF (I,J,K,iblock) + VIT (I,J,K,iblock)* (RESTORE (I,J,K,&
                              N,iblock) - ATB (I,J,K,N,iblock))*LAMDA
                END DO
@@ -533,8 +487,8 @@ use domain
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
       DO IBLOCK = 1, NBLOCKS_CLINIC
          DO K = 1,KM
-            DO J = JSM,JEM
-               DO I = 2,IMM
+            DO J = 3, JMT-2
+               DO I = 3, IMT-2
 !XC
 #if (defined TSPAS)
                   VTL (I,J,K,iblock) = AT (I,J,K,N,iblock) + DTS * TF (I,J,K,iblock)
@@ -554,7 +508,10 @@ use domain
 #if (defined ISO)
          CALL INVTRI (VTL,STF,WKC,AIDIF,C2DTTS)
 #endif
- 
+!
+     call POP_HaloUpdate(VTL , POP_haloClinic, POP_gridHorzLocCenter,&
+                         POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
+!
 !---------------------------------------------------------------------
 !     SET CYCLIC CONDITIONS ON EASTERN AND WESTERN BOUNDARY
 !---------------------------------------------------------------------
@@ -564,7 +521,7 @@ use domain
             CALL SMTS (VTL,VIT,KM,fil_lat2)
          else
              DO IBLOCK = 1, NBLOCKS_CLINIC
-             DO J=JSM,JEM
+             DO J=1, JMT
              DO I=1,IMT  
 #if (defined TSPAS)
                   VTL (I,J,1,IBLOCK) = VTL(I,J,1,IBLOCK)-AT (I,J,1,N,IBLOCK) - NET(I,J,N,IBLOCK)*DTS
@@ -578,7 +535,7 @@ use domain
 !$OMP PARALLEL DO PRIVATE (K,J,I)
         DO  IBLOCK = 1, NBLOCKS_CLINIC
             DO K=2,KM
-            DO J=JSM,JEM
+            DO J=1, JMT
             DO I=1,IMT  
 #if (defined TSPAS)
                   VTL (I,J,K,IBLOCK) = VTL(I,J,K,IBLOCK)-AT (I,J,K,N,IBLOCK)
@@ -594,7 +551,7 @@ use domain
 !
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
          DO IBLOCK = 1, NBLOCKS_CLINIC
-            DO J=JSM,JEM
+            DO J=1, JMT
             DO I=1,IMT  
 #if (defined TSPAS)
                   VTL (I,J,1,IBLOCK) = AT (I,J,1,N,IBLOCK) + VTL(I,J,1,IBLOCK) + NET(I,J,N,IBLOCK)*DTS
@@ -608,7 +565,7 @@ use domain
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
          DO IBLOCK = 1, NBLOCKS_CLINIC
             DO K=2,KM
-            DO J=JSM,JEM
+            DO J=1, JMT
             DO I=1,IMT  
 #if (defined TSPAS)
                   VTL (I,J,K,IBLOCK) = AT (I,J,K,N,IBLOCK) + VTL(I,J,K,IBLOCK)
@@ -627,7 +584,7 @@ use domain
 !$OMP PARALLEL DO PRIVATE (K,J,I)
       DO IBLOCK = 1, NBLOCKS_CLINIC
          DO K = 1,KM
-            DO J = JSM,JEM
+            DO J = 1, JMT
                DO I = 1,IMT
                  trend(i,j,k,N,iblock)=(VTL(I,J,K,iblock)-ATB(I,J,K,N,iblock))/C2DTTS*VIT(I,J,K,iblock)
                END DO
@@ -639,7 +596,7 @@ use domain
 !$OMP PARALLEL DO PRIVATE (K,J,I)
       DO IBLOCK = 1, NBLOCKS_CLINIC
          DO K = 1,KM
-            DO J = JST,JET
+            DO J = 1, JMT
                DO I = 1,IMT
                   ATB(I,J,K,N,IBLOCK)=AT (I,J,K,N,IBLOCK)
                   AT (I,J,K,N,IBLOCK) = VTL (I,J,K,IBLOCK)
@@ -652,7 +609,7 @@ use domain
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
       DO IBLOCK = 1, NBLOCKS_CLINIC
             DO K = 1,KM
-               DO J = JST,JET
+               DO J = 1, JMT
                   DO I = 1,IMT
                      ATB (I,J,K,N,IBLOCK) = AFT2* AT (I,J,K,N,IBLOCK) + AFT1* (ATB (I,&
                                     J,K,N,IBLOCK) + VTL (I,J, K,IBLOCK))
@@ -665,7 +622,7 @@ use domain
 !$OMP PARALLEL DO PRIVATE (K,J,I)
       DO IBLOCK = 1, NBLOCKS_CLINIC
          DO K = 1,KM
-            DO J = JST,JET
+            DO J = 1, JMT
                DO I = 1,IMT
                   AT (I,J,K,N,BLOCK) = VTL (I,J,K,BLOCK)
                END DO
