@@ -28,10 +28,9 @@
    save
 
       real(r8)    :: LAMDA,wt1,wt2,adv_z
-      real(r8),dimension(:,:,:,:), allocatable :: adv_xy1,adv_xy2,adv_xy3,adv_xy4
-      real(r8),dimension(imt,jmt,km,max_blocks_clinic) :: uaa,vaa, &
-                adv_x0,adv_y0,adv_c1,adv_c2,atmax,atmin,adv_xx,adv_yy
-      real(r8),dimension(:,:,:,:) , allocatable :: adv_zz,atz, adv_za,adv_zb1,adv_zb2,adv_zc,atmaxz,atminz
+      real(r8),dimension(:,:,:,:),allocatable :: adv_xy1,adv_xy2,adv_xy3,adv_xy4, at0
+      real(r8),dimension(:,:,:,:),allocatable :: adv_zz,atz, adv_za,adv_zb1,adv_zb2,adv_zc,atmaxz,atminz
+      real(r8),dimension(:,:,:,:),allocatable :: adv_x0,adv_y0,adv_c1,adv_c2,atmax,atmin,adv_xx,adv_yy
 !
    public :: advection_momentum, &
              advection_tracer
@@ -310,7 +309,7 @@
       END DO
 
       deallocate ( adv_xy1,adv_xy2,adv_xy3,adv_xy4)
-      deallocate ( atmax, atmin, uaa, vaa, adv_xy1,adv_xy2,adv_xy3,adv_xy4)
+      deallocate ( atmax, atmin,adv_xy1,adv_xy2,adv_xy3,adv_xy4)
       deallocate ( adv_x0,adv_y0,adv_c1, adv_c2, adv_xx, adv_yy, at0)
       allocate (adv_zz(imt,jmt,km), adv_za(imt,jmt,km),adv_zb1(imt,jmt,km), &
                 adv_zb2(imt,jmt,km), adv_zc(imt,jmt,km), atmaxz(imt,jmt,km), atminz(imt,jmt,km), atz(imt,jmt,km))
