@@ -24,15 +24,7 @@ use domain
       REAL(r8)    :: HDTK(imt,jmt), adv_tt(imt,jmt,km)
 
 !Xiao Chan (Hereinafter XC for short)
-#if (defined TSPAS)
-      real(r8)    :: LAMDA,wt1,wt2,adv_z
-      real(r8),dimension(:,:,:,:), allocatable :: adv_xy1,adv_xy2,adv_xy3,adv_xy4
-      real(r8),dimension(imt,jmt,km,max_blocks_clinic) :: uaa,vaa, &
-                adv_x0,adv_y0,adv_c1,adv_c2,atmax,atmin,adv_xx,adv_yy
-      real(r8),dimension(:,:,:,:) , allocatable :: adv_zz,atz, adv_za,adv_zb1,adv_zb2,adv_zc,atmaxz,atminz
-#else
       real(r8)    :: LAMDA,wt1,wt2,adv_y,adv_x,adv_z,adv_x1,adv_x2
-#endif
       type (block) :: this_block          ! block information for current block
 
    
@@ -116,23 +108,6 @@ use domain
       END DO
   END DO
 
-!XC
-#if (defined TSPAS)
-!     
-!$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
-   DO iblock = 1, nblocks_clinic
-      DO K = 1,KM
-         DO J = JSM,JEM
-            DO I = 2,IMM
-               uaa(i,j,k,iblock)=0.5D0*WKD (i,j,k,iblock) + 0.5D0*WKD (i,j-1,k,iblock)
-               vaa(i,j,k,iblock)=0.5D0*WKC (i,j,k,iblock) + 0.5D0*WKC (i+1,j,k,iblock)
-            END DO
-         END DO
-      END DO
-   END DO
-!XC
-#endif
- 
       CALL UPWELL (WKD,WKB,STF)
  
 #if (defined NODIAG)
@@ -254,7 +229,7 @@ use domain
    do iblock = 1, nblocks_clinic
    this_block = get_block(blocks_clinic(iblock),iblock)
    do k =1, km
-      call hdifft_del2(k,HDTK,ATB,this_block,ntracer)
+      #call hdifft_del2(k,HDTK,ATB,this_block,ntracer)
       do j= 3, jmt-2
       do i= 3, imt-2
            TF (I,J,K,IBLOCK) = TF (I,J,K,IBLOCK) + HDTK(I,J)
