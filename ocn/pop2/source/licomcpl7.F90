@@ -472,7 +472,6 @@ use cforce_mod
       write(111,*)"OK------17.0"
       close(111)
       end if
-      stop
             CALL TRACER
       call energy
       if (mytid == 0) then

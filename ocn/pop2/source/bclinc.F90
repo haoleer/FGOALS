@@ -75,6 +75,13 @@ use operators
 !     PRESSURE GRADIENT FORCES
 !---------------------------------------------------------------------
  
+!     if (mytid ==0 ) then
+!        write(120,*) ((dlu(i,j,2,1),i=3,jmt-2),j=6,7)
+!        write(121,*) ((dlv(i,j,2,1),i=3,jmt-2),j=6,7)
+!        close(120)
+!        close(121)
+!     end if
+
 !!@@@@ DP'/DX
  
       AA = 0.0
@@ -107,7 +114,7 @@ use operators
             END DO
  
             DO K = 1,KM
-               WKA (I,J,K,IBLOCK)= 0.25* (WKK (K) + WKK (K +1))
+               WKA (I,J,K,IBLOCK)= P5* (WKK (K) + WKK (K +1))
             END DO
          END DO
       END DO
@@ -118,7 +125,7 @@ use operators
    DO IBLOCK = 1, NBLOCKS_CLINIC
       this_block = get_block(blocks_clinic(iblock),iblock)
       DO K = 1,KM
-         call grad(k, GRADX, GRADY, wka, this_block)
+         call grad(k, GRADX, GRADY, wka(:,:,k,iblock), this_block)
          DO J = 2,jmt-1
             DO I = 2,imt-1
                DLV (I,J,K,IBLOCK) = DLV (I,J,K,IBLOCK) - grady(i,j)
@@ -127,6 +134,15 @@ use operators
          END DO
       END DO
   END DO
+!     if (mytid ==0 ) then
+!        write(122,*) ((dlu(i,j,2,1),i=3,jmt-2),j=6,7)
+!        write(123,*) ((dlv(i,j,2,1),i=3,jmt-2),j=6,7)
+!        write(124,*) ((wka(i,j,2,1)*2.0D0,i=3,jmt-2),j=6,7)
+!        close(122)
+!        close(123)
+!        close(124)
+!     end if
+
  
 !!@@@@ G'DH/DX
  
@@ -145,11 +161,12 @@ use operators
  
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I,GGU)
    DO IBLOCK = 1, NBLOCKS_CLINIC
+      this_block = get_block(blocks_clinic(iblock),iblock)
       DO K = 1,KM
-         call grad(k, GRADX, GRADY, wka, this_block)
+         call grad(k, GRADX, GRADY, wka(:,:,k,iblock), this_block)
          DO J = 2, JMT-1
             DO I = 2,IMT-1
-               GGU = 0.125* (GG (I,J,K,IBLOCK) + GG (I -1,J,K,IBLOCK) + GG (I,J +1,K,IBLOCK) &
+               GGU = P25* (GG (I,J,K,IBLOCK) + GG (I -1,J,K,IBLOCK) + GG (I,J +1,K,IBLOCK) &
                      + GG (I -1,J +1,K,IBLOCK))
                DLV (I,J,K,IBLOCK) = DLV (I,J,K,IBLOCK) + GGU * grady(i,j)
                DLU (I,J,K,IBLOCK) = DLU (I,J,K,IBLOCK) + GGU * gradx(i,j)
@@ -158,6 +175,14 @@ use operators
       END DO
    END DO
 
+!     if (mytid ==0 ) then
+!        write(125,*) ((dlu(i,j,2,1),i=3,jmt-2),j=6,7)
+!        write(126,*) ((dlv(i,j,2,1),i=3,jmt-2),j=6,7)
+!        write(127,*) ((wka(i,j,2,1),i=3,jmt-2),j=6,7)
+!        close(125)
+!        close(126)
+!        close(127)
+!     end if
  
 !---------------------------------------------------------------------
 !     CORIOLIS ADJUSTMENT
@@ -193,6 +218,13 @@ use operators
   END DO
       END IF
  
+!     if (mytid ==0 ) then
+!        write(128,*) ((dlu(i,j,2,1),i=3,jmt-2),j=6,7)
+!        write(129,*) ((dlv(i,j,2,1),i=3,jmt-2),j=6,7)
+!        close(128)
+!        close(129)
+!     end if
+
  
 !---------------------------------------------------------------------
 !     SET CYCLIC CONDITIONS ON EASTERN AND WESTERN BOUNDARY
@@ -208,6 +240,13 @@ use operators
       CALL SMUV_3D (DLU,VIV,fil_lat1)
       CALL SMUV_3D (DLV,VIV,fil_lat1)
 !YU 
+
+!     if (mytid ==0 ) then
+!        write(130,*) ((dlu(i,j,2,1),i=3,jmt-2),j=6,7)
+!        write(131,*) ((dlv(i,j,2,1),i=3,jmt-2),j=6,7)
+!        close(130)
+!        close(131)
+!     end if
 
  
 !---------------------------------------------------------------------
@@ -350,16 +389,22 @@ use operators
 !YU  Oct. 24, 2005
 !lhl0711     IF (MOD(ISC,60)==0) THEN
      IF (MOD(ISC,160)==1) THEN
-        CALL SMUV (U,VIV,KM,fil_lat2)
-        CALL SMUV (V,VIV,KM,fil_lat2)
-        CALL SMUV (UP,VIV,KM,fil_lat2)
-        CALL SMUV (VP,VIV,KM,fil_lat2)
+        CALL SMUV_3D (U,VIV,fil_lat2)
+        CALL SMUV_3D (V,VIV,fil_lat2)
+        CALL SMUV_3D (UP,VIV,fil_lat2)
+        CALL SMUV_3D (VP,VIV,fil_lat2)
      END IF
 !YU 
  
       ISC = ISC +1
       END IF
 
+!     if (mytid ==0 ) then
+!        write(132,*) ((u(i,j,2,1),i=3,jmt-2),j=6,7)
+!        write(133,*) ((v(i,j,2,1),i=3,jmt-2),j=6,7)
+!        close(132)
+!        close(133)
+!     end if
  
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I) 
    DO IBLOCK = 1, NBLOCKS_CLINIC

@@ -324,10 +324,9 @@ use constant_mod
          DO j = 3, jmt-2
             DO i = 3, jmt-2
                tf (i,j,k,iblock) = tf (i,j,k,iblock) &
-               - p5* (work_1 (i,j,k,iblock) - work_1 (i,j -1,k,iblock) &
-               + (work_2 (i,j,k,iblock) - work_2 (i -1,j,k,iblock))*t_arear(i,j,iblock) &
-               - p5* dzr (k) * (work_3 (i,j,k -1,iblock) - work_3 (i,j,k,iblock)) 
- 
+               - p5*(work_1 (i,j,k,iblock) - work_1 (i,j -1,k,iblock) &
+               +work_2(i,j,k,iblock)-work_2(i-1,j,k,iblock))*tarea_r(i,j,iblock) &
+               - p5*dzr(k)*(work_3(i,j,k-1,iblock) - work_3 (i,j,k,iblock)) 
             END DO
          END DO
       END DO

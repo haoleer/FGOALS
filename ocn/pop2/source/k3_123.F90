@@ -47,7 +47,7 @@ use grid
          DO k = 2,km
             m = kisrpl (k)
             DO i = 2,imt-1
-               e (i,k -1,j,1,iblock) =  p5* c1e10 &
+               e (i,k -1,j,1,iblock) =  p25* c1e10 &
                * (tmask (i -1,k -1,j,iblock)* tmask (i,k -1,j,iblock)* (rhoi (i,k -1,j,m,iblock) &
                - rhoi (i -1,k -1,j,m,iblock))/hun(i,j,iblock) &
                + tmask (i,k -1,j,iblock)* tmask (i +1,k -1,j,iblock)* (rhoi (i +1,k -1,j,m,iblock)&
@@ -56,7 +56,7 @@ use grid
                - rhoi (i -1,k,j,m,iblock))/hun(i,j,iblock) &
                + tmask (i,k,j,iblock)* tmask (i +1,k,j,iblock)* (rhoi (i +1,k,j,m,iblock) &
                                 - rhoi (i,k,j,m,iblock))/hun(i+1,j,iblock))                     
-               e (i,k -1,j,2,iblock) =  p5* c1e10 &
+               e (i,k -1,j,2,iblock) =  p25* c1e10 &
                * (tmask (i,k -1,j -1,iblock)* tmask (i,k -1,j,iblock)* (rhoi (i,k -1,j,m,iblock) &
                - rhoi (i,k -1,j -1,m,iblock))/hue(i,j-1,iblock) &
                + tmask (i,k -1,j,iblock)* tmask (i,k -1,j +1,iblock)* (rhoi (i,k -1,j +1,m,iblock)&
@@ -97,7 +97,7 @@ use grid
 !
                SLOPEMOD= sqrt(e(i,k,j,1,iblock)**2+e(i,k,j,2,iblock)**2)/abs(e(i,k,j,3,iblock)+eps)
                F1(i,j,k,iblock)=0.5D0*( 1.0D0 + tanh((0.004D0-SLOPEMOD)/0.001D0))
-               NONDIMR=-ZKP(k)/(RRD1(j)*(SLOPEMOD+eps))
+               NONDIMR=-ZKP(k)/(RRD1(i,j,iblock)*(SLOPEMOD+eps))
                IF ( NONDIMR>=1.0 ) THEN
                F2(i,j,k,iblock)=1.0D0
                ELSE         

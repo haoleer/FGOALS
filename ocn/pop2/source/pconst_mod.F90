@@ -51,7 +51,7 @@ use param_mod
                     R1A,R1B,R2A,R2B,R1C, &
                     R1D,R2C,R2D
 !lhl060506
-      real(r8),dimension(jmt):: RRD1,RRD2
+      real(r8),dimension(imt,jmt,max_blocks_clinic):: RRD1,RRD2
 !lhl060506
 
 !XC

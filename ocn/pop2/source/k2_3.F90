@@ -60,7 +60,6 @@ use grid
       END DO
   end do
  
- 
 !-----------------------------------------------------------------------
 !     linearly extrapolate densities to ocean surface for calculation
 !     of d(rho_bary_barz)/dz involving level 1.
@@ -119,9 +118,8 @@ use grid
          DO k = 1,km
             m = kisrpl (k)
             DO i = 2,imt-1
-               e (i,k,j,1,iblock) = p5* c1e10* ( &
-               (rhoi (i +1,k,j +1,m,iblock) - rhoi (i -1,k,j +1,m,iblock))/(hun(i,j+1,iblock)+hun(i+1,j+1,iblock)) &
-                             + (rhoi (i +1,k,j,m,iblock) - rhoi (i -1,k,j,m,iblock))/(hun(i+1,j,iblock)+hun(i,j,iblock))) 
+               e (i,k,j,1,iblock) = p5*c1e10/(dxu(i,j,iblock)+dxu(i+1,j,iblock))*(rhoi (i+1,k,j+1,m,iblock) -      &
+                                    rhoi (i -1,k,j +1,m,iblock)+ rhoi (i +1,k,j,m,iblock) - rhoi(i-1,k,j,m,iblock))
                e (i,k,j,2,iblock) = tmask (i,k,j,iblock)* tmask (i,k,j +1,iblock)/hue(i,j,iblock)  &
                             * c1e10 * (rhoi (i,k,j +1,m,iblock) - rhoi (i,k,j,m,iblock))  
             END DO
@@ -169,7 +167,7 @@ use grid
 !
                SLOPEMOD= sqrt(e(i,k,j,1,iblock)**2+e(i,k,j,2,iblock)**2)/abs(e(i,k,j,3,iblock)+eps)
                F1(i,j,k)=0.5D0*( 1.0D0 + tanh((0.004D0-SLOPEMOD)/0.001D0))
-               NONDIMR=-ZKT(k)/(RRD2(j)*(SLOPEMOD+eps))
+               NONDIMR=-ZKT(k)/(RRD2(i,j,iblock)*(SLOPEMOD+eps))
 !
                IF ( NONDIMR>=1.0 ) THEN
                F2(i,j,k,iblock)=1.0D0
@@ -188,6 +186,7 @@ use grid
 #else
 
 !$OMP PARALLEL DO PRIVATE (j,k,i,chkslp)
+   do iblock = 1, nblocks_clinic
       DO j = 2,jmt-1
          DO k = 1,km
             DO i = 1,imt-1
@@ -198,6 +197,7 @@ use grid
             END DO
          END DO
       END DO
+   end do
 #endif
  
       RETURN

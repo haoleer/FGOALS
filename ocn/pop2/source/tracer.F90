@@ -17,6 +17,7 @@ use smuvh
 use advection
 use blocks
 use domain
+use LICOM_Error_mod
       IMPLICIT NONE
  
       integer     :: n2, iblock
@@ -124,13 +125,17 @@ use domain
       CALL ISOPYC
 #endif
  
+     if (mytid ==0 ) then
+        write(120,*)((k3(i,3,j,3,1), i=2,imt-1),j=6,7)
+        close(120)
+     end if
 !@@@  COMPUTING DIFFUSION COEFFICIENT
  
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
    DO iblock = 1, nblocks_clinic
       DO K = 1,KM
-         DO J = 1, JMT
-            DO I = 1,IMT
+         DO J = 2, JMT-1
+            DO I = 2, IMT-1
 #if (defined ISO)
                WKC (I,J,K,IBLOCK) = AHV + AHISOP * K3 (I,K,J,3,IBLOCK)
 #else
@@ -161,7 +166,7 @@ use domain
 
    do iblock = 1, nblocks_clinic
       adv_tt = 0.0_r8
-      call advection_tracer(wkd(:,:,:,iblock),wkb(:,:,:,iblock),ws(:,:,1:km,iblock),at(:,:,:,n,iblock),adv_tt,iblock)
+      call advection_tracer(wkd(:,:,:,iblock),wkb(:,:,:,iblock),ws(:,:,:,iblock),at(:,:,:,n,iblock),adv_tt,iblock)
       do k=1, km
       do j =3, jmt-2
       do i =3, imt-2
@@ -171,6 +176,12 @@ use domain
       end do
    end do
 !
+    
+     if (mytid ==0 ) then
+        write(123,*)((tf(i,j,3,1), i=3,imt-2),j=6,8)
+        close(123)
+     end if
+     stop
 #ifdef CANUTO      
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
@@ -464,13 +475,13 @@ use domain
          DO K = 1,KM
             DO J = 3, JMT-2
                DO I = 3, IMT-2
-!XC
-#if (defined TSPAS)
-                  VTL (I,J,K,iblock) = AT (I,J,K,N,iblock) + DTS * TF (I,J,K,iblock)
-#else
-                  VTL (I,J,K,iblock) = ATB (I,J,K,N,iblock) + C2DTTS * TF (I,J,K,iblock)
-#endif
-!XC
+                  if (trim(adv_tracer) == 'tspas') then
+                     VTL (I,J,K,iblock) = AT (I,J,K,N,iblock) + DTS * TF (I,J,K,iblock)
+                  else if (trim(adv_tracer) == 'centered') then
+                     VTL (I,J,K,iblock) = ATB (I,J,K,N,iblock) + C2DTTS * TF (I,J,K,iblock)
+                  else 
+                     call exit_licom(sigAbort,'The false advection option for tracer')
+                  end if
                END DO
             END DO
          END DO
@@ -493,16 +504,18 @@ use domain
  
                
          if (mod(ist,180) == 1) then
-            CALL SMTS (VTL,VIT,KM,fil_lat2)
+            CALL SMTS (VTL,VIT,fil_lat2)
          else
              DO IBLOCK = 1, NBLOCKS_CLINIC
              DO J=1, JMT
              DO I=1,IMT  
-#if (defined TSPAS)
-                  VTL (I,J,1,IBLOCK) = VTL(I,J,1,IBLOCK)-AT (I,J,1,N,IBLOCK) - NET(I,J,N,IBLOCK)*DTS
-#else
-                  VTL (I,J,1,IBLOCK) = VTL(I,J,1,IBLOCK)- ATB (I,J,1,N,IBLOCK) - NET(I,J,N,IBLOCK)*C2DTTS
-#endif
+                  if (trim(adv_tracer) == 'tspas') then
+                     VTL (I,J,1,IBLOCK) = VTL(I,J,1,IBLOCK)-AT (I,J,1,N,IBLOCK) - NET(I,J,N,IBLOCK)*DTS
+                  else if (trim(adv_tracer) == 'centered') then
+                     VTL (I,J,1,IBLOCK) = VTL(I,J,1,IBLOCK)- ATB (I,J,1,N,IBLOCK) - NET(I,J,N,IBLOCK)*C2DTTS
+                  else 
+                     call exit_licom(sigAbort,'The false advection option for tracer')
+                  end if
              END DO
              END DO
              END DO
@@ -512,27 +525,32 @@ use domain
             DO K=2,KM
             DO J=1, JMT
             DO I=1,IMT  
-#if (defined TSPAS)
+               if (trim(adv_tracer) == 'tspas') then
                   VTL (I,J,K,IBLOCK) = VTL(I,J,K,IBLOCK)-AT (I,J,K,N,IBLOCK)
-#else
+               else if (trim(adv_tracer) == 'centered') then
                   VTL (I,J,K,IBLOCK) = VTL(I,J,K,IBLOCK)- ATB (I,J,K,N,IBLOCK)
-#endif
+               else 
+                     call exit_licom(sigAbort,'The false advection option for tracer')
+               end if
             END DO
             END DO
             END DO
        END DO
                   
-           CALL SMTS (VTL,VIT,KM,fil_lat1)
+           CALL SMTS (VTL,VIT,fil_lat1)
 !
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
          DO IBLOCK = 1, NBLOCKS_CLINIC
             DO J=1, JMT
             DO I=1,IMT  
-#if (defined TSPAS)
+               if (trim(adv_tracer) == 'tspas') then
                   VTL (I,J,1,IBLOCK) = AT (I,J,1,N,IBLOCK) + VTL(I,J,1,IBLOCK) + NET(I,J,N,IBLOCK)*DTS
-#else
+               else if (trim(adv_tracer) == 'centered') then
                   VTL (I,J,1,IBLOCK) = ATB (I,J,1,N,IBLOCK) + VTL(I,J,1,IBLOCK) + NET(I,J,N,IBLOCK)*C2DTTS
-#endif
+               else 
+                     call exit_licom(sigAbort,'The false advection option for tracer')
+               end if
+
             END DO
             END DO
         END DO
@@ -567,7 +585,10 @@ use domain
          END DO
      END DO
  
-#if (defined TSPAS)
+                     VTL (I,J,K,iblock) = AT (I,J,K,N,iblock) + DTS * TF (I,J,K,iblock)
+                     VTL (I,J,K,iblock) = ATB (I,J,K,N,iblock) + C2DTTS * TF (I,J,K,iblock)
+
+  if (trim(adv_tracer) == 'tspas') then
 !$OMP PARALLEL DO PRIVATE (K,J,I)
       DO IBLOCK = 1, NBLOCKS_CLINIC
          DO K = 1,KM
@@ -579,7 +600,7 @@ use domain
             END DO
          END DO
       END DO
-#else
+  else if (trim(adv_tracer) == 'centered') then
          IF (IST >= 1)THEN
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
       DO IBLOCK = 1, NBLOCKS_CLINIC
@@ -599,12 +620,14 @@ use domain
          DO K = 1,KM
             DO J = 1, JMT
                DO I = 1,IMT
-                  AT (I,J,K,N,BLOCK) = VTL (I,J,K,BLOCK)
+                  AT (I,J,K,N,IBLOCK) = VTL (I,J,K,IBLOCK)
                END DO
             END DO
          END DO
       END DO
-#endif
+  else 
+      call exit_licom(sigAbort,'The false advection option for tracer')
+  end if
    END DO
 !XC
 

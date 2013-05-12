@@ -166,7 +166,7 @@ use grid
                SLOPEMOD= sqrt(e(i,k,j,1,iblock)**2+e(i,k,j,2,iblock)**2)/abs(e(i,k,j,3,iblock)+eps)
 !
                F1(i,j,k,iblock)=0.5D0*( 1.0D0 + tanh((0.004D0-SLOPEMOD)/0.001D0))
-               NONDIMR=-ZKT(k)/(RRD1(j)*(SLOPEMOD+eps))
+               NONDIMR=-ZKT(k)/(RRD1(i,j,iblock)*(SLOPEMOD+eps))
                IF ( NONDIMR>=1.0 ) THEN
                F2(i,j,k,iblock)=1.0D0
                ELSE
@@ -197,7 +197,10 @@ use grid
    end do
 #endif
 !lhl060506
-
+    if (mytid == 0) then
+       write(122,*)((k1(i,3,j,3,1), i= 3,imt-2), j=6, 8)
+       close(122)
+    end if
       RETURN
       END SUBROUTINE K1_3
  

@@ -117,7 +117,7 @@ use constant_mod
 !$OMP PARALLEL DO PRIVATE (IBLOCK)
      DO IBLOCK = 1, NBLOCKS_CLINIC
          this_block = get_block(blocks_clinic(iblock),iblock)
-         call grad(1, GRADX, GRADY, H0, this_block)
+         call grad(1, GRADX, GRADY, H0(:,:,iblock), this_block)
          DO J = 3, jmt-2
             DO I = 3, imt-2
                gstar=(WGP (I,J,IBLOCK) -1.0)*G 

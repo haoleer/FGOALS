@@ -72,7 +72,7 @@ use POP_HaloMod
 
 
 !     ========================
-      SUBROUTINE SMUV_3d (X,Z,fil_lat)
+      SUBROUTINE SMUV_3D (X,Z,fil_lat)
 !     ========================
 !     1-D zonal smoother
 
@@ -99,7 +99,7 @@ use POP_HaloMod
    do iblock = 1, nblocks_clinic
          do j = 3, jmt-2
             if (NN(j) .ge. NCY) then       
-               DO K = 1,KK
+               DO K = 1,KM
                   DO I = 1,IMT
                      XS (I)= X (I,J,K,iblock)* Z (I,J,K,iblock)
                   END DO
@@ -117,7 +117,7 @@ use POP_HaloMod
    END DO
 
       RETURN
-      END SUBROUTINE SMUV_3d
+      END SUBROUTINE SMUV_3D
 
 
 
@@ -161,6 +161,7 @@ use POP_HaloMod
                   END DO
                ENDDO
            end if
+         end do
          end do
          call POP_HaloUpdate(X , POP_haloClinic, POP_gridHorzLocCenter,&
                        POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)

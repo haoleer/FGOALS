@@ -1832,6 +1832,30 @@
                                POP_fieldKindVector, errorCode,         &
                                fillValue = 0.0_r8)
 !
+    do iblock =1, nblocks_clinic
+       do j= 1, jmt
+       do i= 1, imt
+          if (abs(FCORT(i,j,iblock)) > 0.0) then
+             rrd1(i,j,iblock) = 2.0_r8/abs(FCORT(i,j,iblock))
+          else
+             rrd1(i,j,iblock) = 100000.0_r8
+          end if
+!
+          if (abs(FCOR(i,j,iblock)) > 0.0) then
+             rrd2(i,j,iblock) = 2.0_r8/abs(FCOR(i,j,iblock))
+          else
+             rrd2(i,j,iblock) = 100000.0_r8
+          end if
+!
+          rrd1(i,j,iblock) = max(rrd1(i,j,iblock), 15000.0_r8)
+          rrd2(i,j,iblock) = max(rrd2(i,j,iblock), 15000.0_r8)
+          rrd1(i,j,iblock) = min(rrd1(i,j,iblock),100000.0_r8)
+          rrd2(i,j,iblock) = min(rrd2(i,j,iblock),100000.0_r8)
+       end do
+       end do
+    end do
+
+!
 
  end subroutine calc_coeff
 
