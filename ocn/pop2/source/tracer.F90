@@ -181,7 +181,6 @@ use LICOM_Error_mod
         write(123,*)((tf(i,j,3,1), i=3,imt-2),j=6,8)
         close(123)
      end if
-     stop
 #ifdef CANUTO      
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
@@ -252,6 +251,7 @@ use LICOM_Error_mod
 #endif
 #endif
 #endif
+    stop
 
 !-----------------------------------------------------------------------
 !     VERTICAL COMPONENT
@@ -380,7 +380,7 @@ use LICOM_Error_mod
         DO IBLOCK = 1, NBLOCKS_CLINIC
             DO J = 3,JMT-2
                DO I = 3,IMT-2
-                  IF (ITNU (I,J,IBLOCK) > 0)THEN
+                  IF (KMT(I,J,IBLOCK) > 0)THEN
 #ifdef COUP
 !                     STF (I,J,IBLOCK) = SSF(I,J,IBLOCK)
                      STF (I,J,IBLOCK) = SSF(I,J,IBLOCK)/ODZP(1)
@@ -410,7 +410,7 @@ use LICOM_Error_mod
         DO IBLOCK = 1, NBLOCKS_CLINIC
             DO J = 3,JMT-2
                DO I = 3,IMT-2
-                IF (ITNU (I,J,IBLOCK) > 0)THEN
+                IF (KMT(I,J,IBLOCK) > 0)THEN
 #ifdef COUP
                  STF (I,J,IBLOCK) = TSF(I,J,IBLOCK)
 #else

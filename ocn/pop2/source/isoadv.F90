@@ -36,7 +36,7 @@ use grid
       adv_vetiso=c0 
 !$OMP PARALLEL DO PRIVATE (j,k,i,fxa,iblock)
    do iblock = 1, nblocks_clinic
-      DO j = 2,jmm
+      DO j = 2,jmt-1
          DO k = 2,km -1
             fxa = - p5* dzr (k)* athkdf 
             DO i = 2,imt-1
@@ -122,7 +122,7 @@ use grid
    do iblock = 1, nblocks_clinic
       DO j = 2,jmt-1
          DO i = 2, imt-1
-            k = min (ITNU (i,j,iblock),ITNU (i +1,j,iblock))
+            k = min (kmt (i,j,iblock),kmt(i +1,j,iblock))
             IF (k /= 0) THEN
                adv_vetiso (i,k,j,iblock) = - p5* dzr (k)* athkdf * tmask (i,k,j,iblock) &
                                     * tmask (i +1,k,j,iblock)* (K1 (i,k,j,3,iblock)   &
@@ -146,8 +146,8 @@ use grid
          DO k = 1,km -1
             DO i = 3,imt-2
                adv_vbtiso (i,k,j,iblock) = DZP (k)* ( &
-               (adv_vetiso (i,k,j,iblock) - adv_vetiso (i -1,k,j,iblock))* dxtr (i,j,iblock) + &
-               (adv_vntiso (i,k,j,iblock) - adv_vntiso (i,k,j -1,iblock))* dytr (i,j,iblock))     
+               (adv_vetiso (i,k,j,iblock)*htw(i+1,j,iblock) - adv_vetiso (i-1,k,j,iblock)*htw(i,j,iblock))* tarea_r(i,j,iblock) + &
+               (adv_vntiso (i,k,j,iblock)*hts(i,j,iblock) - adv_vntiso (i,k,j -1,iblock)*hts(i,j-1,iblock))*tarea_r(i,j,iblock))     
             END DO
          END DO
       END DO
