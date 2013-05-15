@@ -1,2 +1,0 @@
-      allocate ( at0(imt,jmt,km)
-      deallocate ( at0)
