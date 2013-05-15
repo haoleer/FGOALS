@@ -199,6 +199,11 @@ use grid
       END DO
    end do
 #endif
+      if (mytid == 0 ) then
+          write(154,*) ((k2(i,1,j,3,1), i=3,imt-2), j=6,8)
+          close(154)
+      end if
+
  
       RETURN
       END SUBROUTINE K2_3

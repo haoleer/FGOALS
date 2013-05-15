@@ -70,7 +70,7 @@ use grid
    do iblock = 1, nblocks_clinic
       DO j = 2,jmt-1
          DO i = 2, imt-1
-            k = min (ITNU (i,j,iblock),ITNU (i,j +1,iblock))
+            k = min (KMT(i,j,iblock),KMT(i,j +1,iblock))
             IF (k /= 0) THEN
                adv_vntiso (i,k,j,iblock) = - p5* dzr (k)* athkdf * tmask (i,k,j,iblock) &
                                     * tmask (i,k,j +1,iblock)* (K2 (i,k,j,3,iblock)   &
@@ -131,7 +131,30 @@ use grid
          END DO
       END DO
   END DO
- 
+     if (mytid == 0 ) then
+        write(148,*) ((adv_vetiso(i,1,j,1), i=3,imt-2),j=6,8)
+        close(148)
+     end if 
+     if (mytid == 0 ) then
+        write(149,*) ((adv_vntiso(i,1,j,1), i=3,imt-2),j=6,8)
+        close(149)
+     end if 
+     if (mytid == 0 ) then
+        write(150,*) ((k1(i,1,j,3,1), i=3,imt-2),j=6,8)
+        close(150)
+     end if 
+     if (mytid == 0 ) then
+        write(151,*) ((k1(i,2,j,3,1), i=3,imt-2),j=6,8)
+        close(151)
+     end if 
+     if (mytid == 0 ) then
+        write(152,*) ((k2(i,1,j,3,1), i=3,imt-2),j=6,8)
+        close(152)
+     end if 
+     if (mytid == 0 ) then
+        write(153,*) ((k2(i,2,j,3,1), i=3,imt-2),j=6,8)
+        close(153)
+     end if 
 !----------------------------------------------------------------------
 !     compute the vertical component of the isopycnal mixing velocity
 !     at the center of the bottom face of the "t" cells, using the
@@ -174,9 +197,6 @@ use grid
          END DO
       END DO
    END DO
- 
- 
-!     call exchange_3d_iso(adv_vntiso,km,1,0)
 
       RETURN
       END SUBROUTINE ISOADV

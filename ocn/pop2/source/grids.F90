@@ -43,18 +43,6 @@ use msg_mod, only: tag_1d,tag_2d,tag_3d,tag_4d,nproc,status,mpi_comm_ocn
       write(6,*)"Beginning------GRIDS !"
       endif
 
-!XC
-#if (defined TSPAS)
-      if (mytid==0)then
-      write(6,*)"Use TSPAS advection scheme!"
-      endif
-#else
-      if (mytid==0)then
-      write(6,*)"Use CTCS advection scheme!"
-      endif
-#endif
-!XC
-
 !--------------------------------------------------------------
 !     SET LOCAL CONSTANTS
 !--------------------------------------------------------------

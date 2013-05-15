@@ -46,7 +46,6 @@ use constant_mod
       END IF
 !
       baro_loop : DO NC = 1,NBB+IEB_LOOP
-      call energy
 
       if (IEB==1.or.ISB>1) then
 

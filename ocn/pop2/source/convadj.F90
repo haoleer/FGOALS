@@ -30,6 +30,7 @@ use pconst_mod
 use tracer_mod
 use output_mod, only: ICMON
 use domain
+use grid, only : kmt
       IMPLICIT NONE
       integer     :: IBLOCK
       REAL(r8)    :: RHOUP (KM),RHOLO (KM),TRASUM (2)
@@ -48,10 +49,10 @@ use domain
 !$OMP              L,L1,TUP,SUP,TLO,SLO,K,LCONA,LCONB, &
 !$OMP              DZTSUM,N,TRASUM,TRAMIX,LMIX)
     do iblock = 1, nblocks_clinic
-      JJJ : DO J = JST,JMT
-         III : DO I = 2,IMM
+      JJJ : DO J = 1, JMT
+         III : DO I = 1,IMT
  
-            KCON = ITNU (I,J,iblock)
+            KCON = KMT (I,J,iblock)
             LCTOT = 0
             LCVEN = 0
             IF (KCON == 0) CYCLE III
@@ -185,12 +186,11 @@ use domain
       END DO JJJ
    end do
      
-      
-#ifdef TSPAS
+  if (trim(adv_tracer) == 'tspas') then    
 !$OMP PARALLEL DO PRIVATE (K,J,I)
-     DO IBLOCK = 1, NBLOCKS_CILINC
+     DO IBLOCK = 1, NBLOCKS_CLINIC
          DO K = 1,KM
-            DO J = JST,JMT
+            DO J = 1  ,JMT
             DO I = 1  ,IMT
                 ATB(I,J,K,1,IBLOCK)  =  AT(I,J,K,1,IBLOCK)
                 ATB(I,J,K,2,IBLOCK)  =  AT(I,J,K,2,IBLOCK)
@@ -198,6 +198,7 @@ use domain
             END DO
          END DO
       END DO
-#endif
+   end if
+!
       RETURN
       END SUBROUTINE CONVADJ

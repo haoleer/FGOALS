@@ -78,6 +78,10 @@ use POP_GridHorzMod
                        POP_fieldKindVector, errorCode, fillValue = 0.0_r8)
        call POP_HaloUpdate(tmp_sv(:,:,:) , POP_haloClinic, POP_gridHorzLocCenter,&
                        POP_fieldKindVector, errorCode, fillValue = 0.0_r8)
+#ifdef USE_OCN_CARBON
+       call POP_HaloUpdate(pco2(:,:,:) , POP_haloClinic, POP_gridHorzLocCenter,&
+                       POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
+#endif         
 !!
             lthf = lat1 !latent flux
             sshf = sen !sensible flux
@@ -95,9 +99,6 @@ use POP_GridHorzMod
         where(vit(:,:,1,:)<0.5) fresh=spval
         where(vit(:,:,1,:)<0.5) lthf=spval
 !
-#ifdef USE_OCN_CARBON
-        call exchange_2d(pco2)
-#endif         
 !
         do iblock =1 , nblocks_clinic
             call tgrid_to_ugrid(su(:,:,iblock), tmp_su(:,:,iblock),iblock)

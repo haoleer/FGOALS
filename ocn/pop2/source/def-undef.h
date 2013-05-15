@@ -23,6 +23,5 @@
 #define  CANUTO
 #undef SOLARCHLORO
 #undef LDD97
-#define TSPAS
 #undef  SMAG
 #define JMT_GLOBAL 196

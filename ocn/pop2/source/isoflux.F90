@@ -79,7 +79,7 @@ use constant_mod
    do iblock = 1, nblocks_clinic
       DO j = 2,jmt-1
          DO i = 2,imt-1
-            k = min (ITNU (i,j,iblock),ITNU (i,j +1,iblock))
+            k = min (kmt (i,j,iblock),kmt(i,j +1,iblock))
             IF (k /= 0) THEN
                fxe = dzw (k -1) + dzw (k)
                fxa = 0.5D0* (atb (i,j +1,k -1,m,iblock) + atb (i,j,k -1,m,iblock))
@@ -108,7 +108,8 @@ use constant_mod
       DO k = 1,km
          DO j = 2,jmt-1
             DO i = 2,imt-1
-               work_1(i,j,k,iblock)=hts(i,j,iblock)*(ahisop*(atb(i,j+1,k,m,iblock)-atb(i,j,k,m,iblock))+ &
+               work_1(i,j,k,iblock)=hts(i,j,iblock)*(ahisop*(atb(i,j+1,k,m,iblock)-atb(i,j,k,m,iblock))   &
+                                    /hue(i,j,iblock)+ &
                ahisop*K2(i,k,j,3,iblock)*temp(i,j,k,iblock))*vit(i,j,k,iblock)*vit(i,j+1,k,iblock) 
 !
                ddy_iso(i,j,k,m,iblock)=work_1(i,j,k,iblock)
@@ -165,7 +166,7 @@ use constant_mod
    do iblock = 1, nblocks_clinic
       DO j = 2,jmt-1
          DO i = 2,imt-1
-            k = min (ITNU (i,j,iblock),ITNU (i +1,j,iblock))
+            k = min (kmt (i,j,iblock),kmt (i +1,j,iblock))
             IF (k /= 0) THEN
                fxe = dzw (k -1) + dzw (k)
                fxa = p5* (atb (i,j,k -1,m,iblock) + atb (i +1,j,k -1,m,iblock))
@@ -192,7 +193,8 @@ use constant_mod
       DO k = 1,km
          DO j = 2,jmt-1
             DO i = 2,imt-1
-               work_2 (i,j,k,iblock)= htw(i+1,j,iblock)*(ahisop* (atb(i +1,j,k,m,iblock)-atb(i,j,k,m,iblock)) + &
+               work_2 (i,j,k,iblock)= htw(i+1,j,iblock)*(ahisop*(atb(i+1,j,k,m,iblock)-atb(i,j,k,m,iblock))  &
+                                      /hun(i+1,j,iblock) + &
                ahisop*K1(i,k,j,3,iblock)*temp(i,j,k,iblock) )*vit(i+1,j,k,iblock)* vit(i,j,k,iblock) 
             END DO
          END DO
@@ -258,19 +260,19 @@ use constant_mod
  
  
                if (mytid == 0) then
-                  write(133,*) ((dx_iso(i,j,3,1,1),i=3, imt-2), j=6,8)
+                  write(133,*) ((dx_iso(i,j,1,1,1),i=3, imt-2), j=6,8)
                   close(133)
                end if
                if (mytid == 0) then
-                  write(134,*) ((dy_iso(i,j,3,1,1),i=3, imt-2), j=6,8)
+                  write(134,*) ((dy_iso(i,j,1,1,1),i=3, imt-2), j=6,8)
                   close(134)
                end if
                if (mytid == 0) then
-                  write(135,*) ((dz_iso(i,j,3,1,1),i=3, imt-2), j=6,8)
+                  write(135,*) ((dz_iso(i,j,1,1,1),i=3, imt-2), j=6,8)
                   close(135)
                end if
                if (mytid == 0) then
-                  write(136,*) ((tf(i,j,3,1),i=3, imt-2), j=6,8)
+                  write(136,*) ((tf(i,j,1,1),i=3, imt-2), j=6,8)
                   close(136)
                end if
 !-----------------------------------------------------------------------
@@ -303,11 +305,16 @@ use constant_mod
          DO j = 2,jmt-1
             DO i = 2,imt-1
                work_2 (i,j,k,iblock) = adv_vetiso (i,k,j,iblock)* (atb (i +1,j,k,m,iblock)   &
-                                + atb (i,j,k,m,iblock))*htw(i-1,j,iblock)
+                                + atb (i,j,k,m,iblock))*htw(i+1,j,iblock)
+               if (mytid ==0 .and. k==1 .and. j==8 .and. i < imt-1) then
+                     write(147,*) i,j,k
+                     write(147,*) adv_vetiso(i,k,j,1), atb(i+1,j,k,2,1), atb(i,j,k,2,1)
+               end if
             END DO
          END DO
       END DO
    end do
+   if (mytid ==0 ) close(147)
  
  
 !-----------------------------------------------------------------------
@@ -335,7 +342,7 @@ use constant_mod
    do iblock = 1, nblocks_clinic
       DO k = 1,km
          DO j = 3, jmt-2
-            DO i = 3, jmt-2
+            DO i = 3, imt-2
                tf (i,j,k,iblock) = tf (i,j,k,iblock) &
                - p5*(work_1 (i,j,k,iblock) - work_1 (i,j -1,k,iblock) &
                +work_2(i,j,k,iblock)-work_2(i-1,j,k,iblock))*tarea_r(i,j,iblock) &
@@ -348,23 +355,23 @@ use constant_mod
    end do
 !
                if (mytid == 0) then
-                  write(137,*) ((work_1(i,j,3,1)*P5*tarea_r(i,j,1),i=3, imt-2), j=6,8)
+                  write(137,*) ((work_1(i,j,1,1)*P5*tarea_r(i,j,1),i=3, imt-2), j=6,8)
                   close(137)
                end if
                if (mytid == 0) then
-                  write(138,*) ((work_2(i,j,3,1)*P5*tarea_r(i,j,1),i=3, imt-2), j=6,8)
+                  write(138,*) ((work_2(i,j,1,1)*P5*tarea_r(i,j,1),i=3, imt-2), j=6,8)
                   close(138)
                end if
                if (mytid == 0) then
-                  write(139,*) ((work_3(i,j,3,1)*P5*dzr(3) ,i=3, imt-2), j=6,8)
+                  write(139,*) ((work_3(i,j,1,1)*P5*dzr(3) ,i=3, imt-2), j=6,8)
                   close(139)
                end if
                if (mytid == 0) then
-                  write(140,*) ((tf(i,j,3,1),i=3, imt-2), j=6,8)
+                  write(140,*) ((tf(i,j,1,1),i=3, imt-2), j=6,8)
                   close(140)
                end if
    if (mytid == 0) then
-       write(132,*) ((tf(i,j,3,1), i=3,imt-2),j=6,8)
+       write(132,*) ((tf(i,j,1,1), i=3,imt-2),j=6,8)
        close(132)
    end if
 !

@@ -233,7 +233,6 @@ use cforce_mod
 !     SET SURFACE FORCING FIELDS (1: Annual mean; 0: Seasonal cycle)
 !---------------------------------------------------------------------
     LOGMSG()
-!     CALL RDRIVER
 #ifdef SHOW_TIME
       call run_time('RDRIVER')
 #endif
@@ -547,7 +546,7 @@ use cforce_mod
       end if
 
     LOGMSG()
-    CALL SSAVEINS
+!   CALL SSAVEINS
       if (mytid == 0) then
       write(111,*)"OK------25.0"
       close(111)
@@ -562,7 +561,7 @@ use cforce_mod
       end if
 
     if (iday==imd) then
-      CALL SSAVEMON
+!     CALL SSAVEMON
     endif
       if (mytid == 0) then
       write(111,*)"OK------27.0"
@@ -573,7 +572,7 @@ use cforce_mod
 !----------------------------------------------------------------------
     LOGMSG()
     call licom_export_mct(o2x_o)
-
+    if ( iday == 5) stop
     LOGMSG()
       if (mytid == 0) then
       write(111,*)"OK------28.0"

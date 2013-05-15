@@ -9,6 +9,7 @@ use param_mod
 use pconst_mod
 use tracer_mod
 use domain
+use grid, only :  kmt
       IMPLICIT NONE
 !
       real(r8) :: sal_ocn, sal_ice, tdiff, heat_ice_fusion
@@ -26,10 +27,10 @@ use domain
       DO IBLOCK = 1, NBLOCKS_CLINIC
  
       KKK : DO K = 1, 1
-      JJJ : DO J = JST,JMT
+      JJJ : DO J = 1, JMT
          III : DO I = 1,IMT
  
-            IF (ITNU (I,J,IBLOCK) == 0) CYCLE III
+            IF (KMT(I,J,IBLOCK) == 0) CYCLE III
  
             IF (AT (I,J,K,1,IBLOCK) < TBICE) THEN
 #ifdef  COUP
@@ -46,7 +47,7 @@ use domain
       END DO KKK
 !
 #ifdef  COUP
-      DO J=JST,JMT
+      DO J=1,JMT
       DO I=1,IMT
          IF (licomqice(I,J,IBLOCK) > 0.0 .and. at(i,j,1,1,IBLOCK) > TBICE) THEN
               tdiff=min((at(i,j,1,1,iblock)-tbice),licomqice(i,j,iblock))
@@ -60,7 +61,7 @@ use domain
 #endif
 !
       DO K=2,KM
-      DO J=JST,JMT
+      DO J=1,JMT
       DO I=1,IMT
          IF (AT(I,J,K,1,IBLOCK) < TBICE) AT(I,J,K,1,IBLOCK)=TBICE
       ENDDO

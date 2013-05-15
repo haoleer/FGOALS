@@ -54,11 +54,6 @@ use param_mod
       real(r8),dimension(imt,jmt,max_blocks_clinic):: RRD1,RRD2
 !lhl060506
 
-!XC
-#if (defined TSPAS)
-      real(r8),dimension(jmt):: dtdy,dtdx,RAA,RBB
-#endif
-!XC
 
       real(r4),dimension(jmt_global)::DYR_IN_global
       real(r8),dimension(jmt_global)::OUY_global,OTX_global,OUX_global,SOTX_global,SOUX_global, &
@@ -68,10 +63,6 @@ use param_mod
                     R1D_global,R2C_global,R2D_global,EBEA_global,EBEB_global, &
                     EBLA_global,EBLB_global,EPEA_global,EPEB_global,EPLA_global,EPLB_global
 
-!XC
-#if (defined TSPAS)
-      real(r8),dimension(jmt_global):: dtdy_global,dtdx_global,RAA_global,RBB_global
-#endif
 !XC
 
 

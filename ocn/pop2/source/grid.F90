@@ -28,7 +28,6 @@
    use msg_mod
    use global_reductions
    use pconst_mod
-   use operators
 
    implicit none
    private
@@ -1819,10 +1818,20 @@
          END DO
       END DO
    end do
-!
+
+   hbx =c0
+   hby =c0
    do iblock =1, nblocks_clinic
-      this_block = get_block(blocks_clinic(iblock),iblock)
-      call grad(1, hbx(:,:,iblock), hby(:,:,iblock), ht , this_block)
+   do j=2,ny_block-1
+   do i=2,nx_block-1
+      if (k <= KMU(i,j,iblock)) then
+         hbx(i,j,iblock) = DXUR(i,j,iblock)*p5*(ht(i  ,j+1,iblock) - ht(i-1,j,iblock) - &
+                                                ht(i-1,j+1,iblock) + ht(i  ,j,iblock))
+         hby(i,j,iblock) = DYUR(i,j,iblock)*p5*(ht(i  ,j+1,iblock) - ht(i-1,j,iblock) + &
+                                                ht(i-1,j+1,iblock) - ht(i  ,j,iblock))
+      endif
+   end do
+   end do
    end do
 !
   call POP_HaloUpdate(hbx, POP_haloClinic, POP_gridHorzLocSwcorner, &
@@ -1854,8 +1863,6 @@
        end do
        end do
     end do
-
-!
 
  end subroutine calc_coeff
 

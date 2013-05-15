@@ -25,7 +25,7 @@ use LICOM_Error_mod
       REAL(r8)    :: HDTK(imt,jmt), adv_tt(imt,jmt,km)
 
 !Xiao Chan (Hereinafter XC for short)
-      real(r8)    :: LAMDA,wt1,wt2,adv_y,adv_x,adv_z,adv_x1,adv_x2
+      real(r8)    :: LAMDA(imt,jmt,km,max_blocks_clinic),wt1,wt2,adv_y,adv_x,adv_z,adv_x1,adv_x2
       type (block) :: this_block          ! block information for current block
 
    
@@ -178,7 +178,7 @@ use LICOM_Error_mod
 !
     
      if (mytid ==0 ) then
-        write(123,*)((tf(i,j,3,1), i=3,imt-2),j=6,8)
+        write(123,*)((tf(i,j,1,1), i=3,imt-2),j=6,8)
         close(123)
      end if
 #ifdef CANUTO      
@@ -239,7 +239,7 @@ use LICOM_Error_mod
    do iblock = 1, nblocks_clinic
    this_block = get_block(blocks_clinic(iblock),iblock)
    do k =1, km
-      #call hdifft_del2(k,HDTK,ATB,this_block,ntracer)
+      call hdifft_del2(k,HDTK,ATB,this_block,ntracer)
       do j= 3, jmt-2
       do i= 3, imt-2
            TF (I,J,K,IBLOCK) = TF (I,J,K,IBLOCK) + HDTK(I,J)
@@ -251,7 +251,6 @@ use LICOM_Error_mod
 #endif
 #endif
 #endif
-    stop
 
 !-----------------------------------------------------------------------
 !     VERTICAL COMPONENT
@@ -354,6 +353,10 @@ use LICOM_Error_mod
            END DO
         END DO
   END DO
+               if (mytid == 0 ) then
+                     write(145,*) ((tf(i,j,1,1), i=3,imt-2),j=6,8)
+                     close(145)
+               end if
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I,wt1,wt2)
    DO IBLOCK = 1, NBLOCKS_CLINIC
        DO J = 3,JMT-2
@@ -369,7 +372,11 @@ use LICOM_Error_mod
        END DO
        END DO
   END DO
- 
+    
+               if (mytid == 0 ) then
+                     write(146,*) ((wkc(i,j,1,1), i=3,imt-2),j=6,8)
+                     close(146)
+               end if
 !-----------------------------------------------------------------------
 !     SET NEWTONIAN SURFACE BOUNDARY CONDITION
 !-----------------------------------------------------------------------
@@ -404,6 +411,12 @@ use LICOM_Error_mod
                END DO
             END DO
       END DO
+!
+               if (mytid == 0 ) then
+                     write(144,*) odzp(1), AIDIF
+                     write(144,*) ((stf(i,j,1), i=3,imt-2),j=6,8)
+                     close(144)
+               end if
 !
   ELSE
 !$OMP PARALLEL DO PRIVATE (J,I)
@@ -441,12 +454,10 @@ use LICOM_Error_mod
      DO IBLOCK = 1, NBLOCKS_CLINIC
          DO K = 2,KM
          do j=3,jmt-2
-            if (j_global(j)>=(jst_global+1).and.j_global(j)<=(jst_global+50)) then
                DO I = 3,jmt-2
                   TF (I,J,K,iblock)= TF (I,J,K,iblock) + VIT (I,J,K,iblock)* (RESTORE (I,J,K,&
-                             N,iblock) - ATB (I,J,K,N,iblock))*LAMDA
+                             N,iblock) - ATB (I,J,K,N,iblock))*LAMDA(i,j,k,iblock)
                END DO
-             endif
             END DO
          END DO
       END DO
@@ -455,12 +466,10 @@ use LICOM_Error_mod
      DO IBLOCK = 1, NBLOCKS_CLINIC
          DO K = 2,KM
          do j=3,jmt-2
-            if (j_global(j)<=(jmt_global-1).and.j_global(j)>=(jmt_global-50)) then
                DO I = 3, imt-2
                   TF (I,J,K,iblock)= TF (I,J,K,iblock) + VIT (I,J,K,iblock)* (RESTORE (I,J,K,&
-                             N,iblock) - ATB (I,J,K,N,iblock))*LAMDA
+                             N,iblock) - ATB (I,J,K,N,iblock))*LAMDA(i,j,k,iblock)
                END DO
-             endif
             END DO
          END DO
     END DO
@@ -470,6 +479,14 @@ use LICOM_Error_mod
 !     SOLVE FOR "TAU+1" TRACER AT CENTER OF "T" CELLS
 !-----------------------------------------------------------------------
  
+       if (mytid == 0) then
+          write(141,*) ((tf(i,j,1,1),i=3,imt-2),j=6,8)
+          close(141)
+       end if
+       if (mytid == 0) then
+          write(142,*) ((tf(i,j,3,1),i=3,imt-2),j=6,8)
+          close(142)
+       end if
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
       DO IBLOCK = 1, NBLOCKS_CLINIC
          DO K = 1,KM
@@ -495,6 +512,10 @@ use LICOM_Error_mod
          CALL INVTRI (VTL,STF,WKC,AIDIF,C2DTTS)
 #endif
 !
+       if (mytid == 0) then
+          write(143,*) ((vtl(i,j,3,1),i=3,imt-2),j=6,8)
+          close(143)
+       end if
      call POP_HaloUpdate(VTL , POP_haloClinic, POP_gridHorzLocCenter,&
                          POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
 !
@@ -560,11 +581,11 @@ use LICOM_Error_mod
             DO K=2,KM
             DO J=1, JMT
             DO I=1,IMT  
-#if (defined TSPAS)
+              if ( trim(adv_tracer) == 'tspas') then
                   VTL (I,J,K,IBLOCK) = AT (I,J,K,N,IBLOCK) + VTL(I,J,K,IBLOCK)
-#else
+              else
                   VTL (I,J,K,IBLOCK) = ATB (I,J,K,N,IBLOCK) + VTL(I,J,K,IBLOCK)
-#endif
+              end if
             END DO
             END DO
             END DO

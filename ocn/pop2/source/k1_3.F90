@@ -120,13 +120,13 @@ use grid
  
 !$OMP PARALLEL DO PRIVATE (iblock,j,i,k,m)
    do iblock = 1, nblocks_clinic
-      DO j = 2,jmt-1
-         DO k = 1,km
+      DO j = 2,jmt-1 
+      DO k = 1,km
             m = kisrpl (k)
-            DO i = 1,imt-1
-               e (i,k,j,1,iblock) = tmask (i,k,j,iblock)* tmask (i +1,k,j,iblock)/hun(i,j,iblock) &
+            DO i = 2,imt-1
+               e (i,k,j,1,iblock) = tmask (i,k,j,iblock)* tmask (i+1,k,j,iblock)/hun(i+1,j,iblock) &
                              * c1e10* (rhoi (i +1,k,j,m,iblock) - rhoi (i,k,j,m,iblock))    
-               e (i,k,j,2,iblock) = p5* c1e10/(dxu(i,j-1,iblock)+dxu(i+1,j,iblock))* ( &
+               e (i,k,j,2,iblock) = p5* c1e10/(dyu(i+1,j-1,iblock)+dyu(i+1,j,iblock))* ( &
                rhoi (i,k,j +1,m,iblock) - rhoi (i,k,j -1,m,iblock) &
                              + rhoi (i +1,k,j +1,m,iblock) - rhoi (i +1,k,j -1,m,iblock))  
             END DO
@@ -198,7 +198,7 @@ use grid
 #endif
 !lhl060506
     if (mytid == 0) then
-       write(122,*)((k1(i,3,j,3,1), i= 3,imt-2), j=6, 8)
+       write(122,*)((k1(i,1,j,3,1), i= 3,imt-2), j=6, 8)
        close(122)
     end if
       RETURN
