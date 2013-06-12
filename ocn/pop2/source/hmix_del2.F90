@@ -16,14 +16,14 @@
 
    use precision_mod
    use LICOM_Error_Mod
-
+   use pconst_mod, only : vit, viv
    use param_mod
    use blocks
    use msg_mod
    use distribution
    use domain
    use broadcast
-   use constant_mod, only : c0, c1, c2, p5
+   use constant_mod, only : c0, c1, c2, p5, radius
    use grid
    use tracer_mod, only : atb
 
@@ -214,7 +214,6 @@
       WORK1 = (HTS(:,:,iblock) -                         &
                eoshift(HTS(:,:,iblock),dim=2,shift=-1))* &
               TAREA_R(:,:,iblock)  ! KYT
-
       WORK2 = p5*(WORK1 + eoshift(WORK1,dim=1,shift=-1))*    &
               p5*(eoshift(AMF(:,:,iblock),dim=2,shift=-1) + &
                   AMF(:,:,iblock))
@@ -259,7 +258,21 @@
    DUC = -(DUN + DUS + DUE + DUW)               ! scalar laplacian
    DMW = -DME
    DMS = -DMN
-
+!
+     if ( trim(horiz_grid_opt) == 'lat_lon') then
+       DMS= c0
+       DMN= c0
+       do iblock = 1, nblocks_clinic
+       do j=1, jmt
+       do i=1, imt
+          DUM(i,j,iblock)= (c1-tan(ulat(i,j,iblock))**2)/radius/radius 
+          DME(i,j,iblock)= sin(ulat(i,j,iblock))/(radius*dxu(i,j,iblock)*cos(ulat(i,j,iblock)))
+       end do
+       end do
+       end do
+       DMW = -DME
+     end if
+!
 !-----------------------------------------------------------------------
 !
 !  free up memory
@@ -491,7 +504,7 @@
                              DMN(i,j,bid)*VMIXK(i  ,j-1) +  &
                              DMS(i,j,bid)*VMIXK(i  ,j+1) +  &
                              DME(i,j,bid)*VMIXK(i+1,j  ) +  &
-                             DMW(i,j,bid)*VMIXK(i-1,j  )))
+                             DMW(i,j,bid)*VMIXK(i-1,j  )))*viv(i,j,k,bid)
 
             HDVK(i,j) = am*((cc          *VMIXK(i  ,j  ) +  &
                              DUN(i,j,bid)*VMIXK(i  ,j-1) +  &
@@ -502,9 +515,9 @@
                              DMN(i,j,bid)*UMIXK(i  ,j-1) +  &
                              DMS(i,j,bid)*UMIXK(i  ,j+1) +  &
                              DME(i,j,bid)*UMIXK(i+1,j  ) +  &
-                             DMW(i,j,bid)*UMIXK(i-1,j  )))
-!     if (mytid ==0 .and. i > 3 .and. i < 20 .and. j >5 .and. j < 8 ) then
-!               write(220,*) i,j,k
+                             DMW(i,j,bid)*UMIXK(i-1,j  )))*viv(i,j,k,bid)
+!     if (mytid ==8 .and. i > 2 .and. i < 4 .and. j >26 .and. j < 29 ) then
+!               write(220,*) i,j,k, this_block%i_glob(i), this_block%j_glob(j)
 !               write(220,*) duc(i,j,1),dum(i,j,1),dun(i,j,1),dus(i,j,1),due(i,j,1),duw(i,j,1)
 !               write(220,*) dme(i,j,1),dmw(i,j,1)
 !               write(220,*) dmn(i,j,1),dms(i,j,1),dmc(i,j,1)
@@ -523,7 +536,7 @@
          end do
          end do
 
-!        if (mytid ==0) close(220)
+!        if (mytid ==8) close(220)
 !-----------------------------------------------------------------------
 !
 !  zero fields at land points

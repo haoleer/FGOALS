@@ -99,12 +99,6 @@ use operators
       END DO
    END DO
  
-      if ( mytid == 0) then
-            write(117,*) ((ws(i,j,3,1), i=3,80),j=6,6)
-            write(117,*)
-            write(117,*) ((work(i,j,1), i=3,80),j=6,6)
-            close(117)
-      end if
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 2,KM

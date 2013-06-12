@@ -20,11 +20,14 @@ use netcdf
   real(SHR_KIND_R8), parameter ::  latvap   = SHR_CONST_LATVAP ! latent heat of evap   ~ J/kg
   real(SHR_KIND_R8), parameter ::  Tzro     = SHR_CONST_TKFRZ  ! 0 degrees C                       ~ kelvin
   real(SHR_KIND_R8), parameter ::  Tfrz     = Tzro   - 1.8     ! temp of saltwater freezing ~ kelvin
-  real(SHR_KIND_R8), parameter ::  pi       = SHR_CONST_PI     ! a famous math constant
-  real(SHR_KIND_R8), parameter ::  omega    = SHR_CONST_OMEGA  ! earth's rotation  ~ rad/sec
-  real(SHR_KIND_R8), parameter ::  g        = SHR_CONST_G      ! gravity ~ m/s^2
+! real(SHR_KIND_R8), parameter ::  pi       = SHR_CONST_PI     ! a famous math constant
+  real(SHR_KIND_R8), parameter ::  pi       = 4.0*ATAN(1.0)
+! real(SHR_KIND_R8), parameter ::  omega    = SHR_CONST_OMEGA  ! earth's rotation  ~ rad/sec
+  real(SHR_KIND_R8), parameter ::  omega    = 0.7292D-4
+! real(SHR_KIND_R8), parameter ::  g        = SHR_CONST_G      ! gravity ~ m/s^2
+  real(SHR_KIND_R8), parameter ::  g        = 9.806D0
   real(SHR_KIND_R8), parameter ::  DEGtoRAD = PI/180.0         ! PI/180
-
+  real(SHR_KIND_R8), parameter ::  RADIUS   = 6371000D0
 
    real (r8), parameter, public :: &
       c0     =    0.0_r8   ,&
@@ -208,6 +211,7 @@ use netcdf
       call mpi_bcast(rest_freq,1,mpi_integer,0,mpi_comm_ocn,ierr)
       call mpi_bcast(adv_tracer,80,mpi_integer,0,mpi_comm_ocn,ierr)
       call mpi_bcast(adv_momentum,80,mpi_character,0,mpi_comm_ocn,ierr)
+      call mpi_bcast(nstart,1,mpi_integer,0,mpi_comm_ocn,ierr)
 !      call mpi_barrier(mpi_comm_ocn,ierr)
 
       AHICE = AHV
@@ -287,20 +291,6 @@ use netcdf
 !-------------------------------------------------------
       GAMMA = 1.0D0/ (30.0D0*86400.0D0)
 !YU
-!-------------------------------------------------------
-!     FOR FOURIOUR FILTERING
-!-------------------------------------------------------
-
-!      ALFA = 3.1416D0*2.0D0/ FLOAT (IMT -2)
-      ALFA =  4.0* ATAN (1.0)*2.0D0/ FLOAT (IMT -2)
-!$OMP PARALLEL DO PRIVATE (I)
-      DO I = 1,IMT
-         CF1 (I)= COS (ALFA * FLOAT (I -1))
-         CF2 (I)= COS (2.0D0* ALFA * FLOAT (I -1))
-         SF1 (I)= SIN (ALFA * FLOAT (I -1))
-         SF2 (I)= SIN (2.0D0* ALFA * FLOAT (I -1))
-      END DO
-
 
 !-------------------------------------------------------
 !     Read reference temperature, salinity and

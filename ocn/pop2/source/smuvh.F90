@@ -5,7 +5,6 @@
 use precision_mod
 use param_mod
 use msg_mod
-use pconst_mod, only: sinu, sint
 use domain
 use constant_mod
 use grid
@@ -139,8 +138,8 @@ use POP_HaloMod
 
       MAX_NN = 14
       do j =jst,jmt
-         if (sint(j).le.cos(fil_lat*DEGtoRAD)) then
-            NN(j) = int(cos(fil_lat*DEGtoRAD)/sint(j)*1.2D0)
+         if (cos(tlat(1,j,1)).le.cos(fil_lat*DEGtoRAD)) then
+            NN(j) = int(cos(fil_lat*DEGtoRAD)/abs(cos(tlat(1,j,1)))*1.2D0)
          else
             NN(j) = 0
          endif

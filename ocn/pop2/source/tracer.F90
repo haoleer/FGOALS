@@ -18,11 +18,13 @@ use advection
 use blocks
 use domain
 use LICOM_Error_mod
+use gather_scatter
+use distribution
       IMPLICIT NONE
  
       integer     :: n2, iblock
       REAL(r8)    :: AIDIF,C2DTTS,AA,FAW,FIW,ALF,RNCC,ABC,fil_lat1,fil_lat2
-      REAL(r8)    :: HDTK(imt,jmt), adv_tt(imt,jmt,km)
+      REAL(r8)    :: HDTK(imt,jmt), adv_tt(imt,jmt,km),ek0, tttt(imt_global,jmt_global)
 
 !Xiao Chan (Hereinafter XC for short)
       real(r8)    :: LAMDA(imt,jmt,km,max_blocks_clinic),wt1,wt2,adv_y,adv_x,adv_z,adv_x1,adv_x2
@@ -109,7 +111,11 @@ use LICOM_Error_mod
       END DO
   END DO
 
+     write(170+mytid,*) "OK-------1"
+     close(170+mytid)
       CALL UPWELL (WKD,WKB,STF)
+     write(170+mytid,*) "OK-------2"
+     close(170+mytid)
  
 #if (defined NODIAG)
  
@@ -121,16 +127,16 @@ use LICOM_Error_mod
 !-----------------------------------------------------------------------
 !     PREPARATION FOR ISOPYCNAL DIFFUSION & ADVECTION
 !-----------------------------------------------------------------------
+     write(170+mytid,*) "OK-------3"
+     close(170+mytid)
 #if (defined ISO)
       CALL ISOPYC
 #endif
+     write(170+mytid,*) "OK-------4"
+     close(170+mytid)
  
-     if (mytid ==0 ) then
-        write(120,*)((k3(i,3,j,3,1), i=2,imt-1),j=6,7)
-        close(120)
-     end if
 !@@@  COMPUTING DIFFUSION COEFFICIENT
- 
+    
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
    DO iblock = 1, nblocks_clinic
       DO K = 1,KM
@@ -163,19 +169,40 @@ use LICOM_Error_mod
 !---------------------------------------------------------------------
 !     COMPUTE THE ADVECTIVE TERM 
 !---------------------------------------------------------------------
+     write(170+mytid,*) "OK-------5"
+     close(170+mytid)
 
    do iblock = 1, nblocks_clinic
       adv_tt = 0.0_r8
       call advection_tracer(wkd(:,:,:,iblock),wkb(:,:,:,iblock),ws(:,:,:,iblock),at(:,:,:,n,iblock),adv_tt,iblock)
+     write(170+mytid,*) "OK-------6"
+     close(170+mytid)
       do k=1, km
       do j =3, jmt-2
       do i =3, imt-2
-         tf(i,j,k,iblock) = adv_tt(i,j,k)
+         tf(i,j,k,iblock) = adv_tt(i,j,k)*vit(i,j,k,iblock)
       end do
       end do
       end do
    end do
 !
+      do k=1, km
+         call gather_global(tttt, tf(:,:,k,:), master_task,distrb_clinic)
+         if (mytid ==0) write(161,*) ((tttt(i,j), i=1,imt_global), j=1,jmt_global)
+      end do
+         if (mytid ==0) close(161)
+     write(170+mytid,*) "OK-------6"
+     close(170+mytid)
+     call chk_var3d(wkd,ek0,0,km)
+     if ( mytid ==0) write(160,*) "wkd", ek0
+     call chk_var3d(wkb,ek0,0,km)
+     if ( mytid ==0) write(160,*) "wkb", ek0
+     call chk_var3d(ws,ek0,1,km)
+     if ( mytid ==0) write(160,*) "ws", ek0
+     call chk_var3d(at(:,:,:,1,:),ek0,1,km)
+     if ( mytid ==0) write(160,*) "AT", ek0
+     call chk_var3d(tf,ek0,1,km)
+     if ( mytid ==0) write(160,*) ek0
     
      if (mytid ==0 ) then
         write(123,*)((tf(i,j,1,1), i=3,imt-2),j=6,8)
@@ -255,7 +282,10 @@ use LICOM_Error_mod
 !-----------------------------------------------------------------------
 !     VERTICAL COMPONENT
 !-----------------------------------------------------------------------
+     call chk_var3d(tf,ek0,1,km)
+     if ( mytid ==0) write(160,*) ek0
  
+
          IF (N == 1)THEN
 #if (defined SOLAR)
 !     SOLAR SHORTWAVE PENETRATION
@@ -336,6 +366,8 @@ use LICOM_Error_mod
          END IF
  
 !     EDDY-DIFFUSION
+     call chk_var3d(tf,ek0,1,km)
+     if ( mytid ==0) write(160,*) ek0
  
         wt1=0
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I,wt1,wt2)
@@ -380,6 +412,8 @@ use LICOM_Error_mod
 !-----------------------------------------------------------------------
 !     SET NEWTONIAN SURFACE BOUNDARY CONDITION
 !-----------------------------------------------------------------------
+     call chk_var3d(tf,ek0,1,km)
+     if ( mytid ==0) write(160,*) ek0
  
          IF (N == 2)THEN
  
@@ -487,6 +521,8 @@ use LICOM_Error_mod
           write(142,*) ((tf(i,j,3,1),i=3,imt-2),j=6,8)
           close(142)
        end if
+     call chk_var3d(tf,ek0,1,km)
+     if ( mytid ==0) write(160,*) ek0
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
       DO IBLOCK = 1, NBLOCKS_CLINIC
          DO K = 1,KM
@@ -516,6 +552,8 @@ use LICOM_Error_mod
           write(143,*) ((vtl(i,j,3,1),i=3,imt-2),j=6,8)
           close(143)
        end if
+     call chk_var3d(vtl,ek0,1,km)
+     if ( mytid ==0) write(160,*) ek0
      call POP_HaloUpdate(VTL , POP_haloClinic, POP_gridHorzLocCenter,&
                          POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
 !
@@ -649,6 +687,9 @@ use LICOM_Error_mod
   else 
       call exit_licom(sigAbort,'The false advection option for tracer')
   end if
+ call chk_var3d(vtl,ek0,1,km)
+     if ( mytid ==0) write(160,*) ek0
+   stop
    END DO
 !XC
 

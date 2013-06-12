@@ -220,7 +220,7 @@
 !
 !-----------------------------------------------------------------------
 
-   character (char_len) ::  &
+   character (char_len), public ::  &
       horiz_grid_opt,       &! horizontal grid option
       vert_grid_opt,        &! vertical grid option
       sfc_layer_opt,        &! choice for surface layer type
@@ -261,7 +261,7 @@
 !
 !-----------------------------------------------------------------------
 
-   namelist /grid_nml/ horiz_grid_file, vert_grid_file, topography_file
+   namelist /grid_nml/ horiz_grid_file, vert_grid_file, topography_file, horiz_grid_opt
 
    integer (i4) :: &
       nml_error           ! namelist i/o error flag
@@ -288,13 +288,16 @@
          read(11, nml=grid_nml,iostat=nml_error)
       end do
       if (nml_error == 0) close(11)
-      write(6,*) " horiz_grid_file, vert_grid_file, topography_file"
-      write(6,*) horiz_grid_file, vert_grid_file, topography_file
+      write(6,*) " horiz_grid_file, vert_grid_file, topography_file, horiz_grid_opt"
+      write(6,*) horiz_grid_file, vert_grid_file, topography_file, horiz_grid_opt
       call flush(6)
    endif
 
 
       call broadcast_scalar(horiz_grid_file, master_task)
+      call broadcast_scalar(vert_grid_file, master_task)
+      call broadcast_scalar(topography_file, master_task)
+      call broadcast_scalar(horiz_grid_opt, master_task)
       call read_horiz_grid(horiz_grid_file,.true.)
 
 !-----------------------------------------------------------------------
@@ -687,6 +690,7 @@
    type (block) :: &
       this_block
 
+   real (r8) :: temp_xxx(jmt_global)
 !-----------------------------------------------------------------------
 !
 !  if only lat,lon are requested, read only these
@@ -747,13 +751,25 @@
       endif
 
       call scatter_global(TLAT, TLAT_G, master_task, distrb_clinic, &
-                          field_loc_SWcorner, field_type_scalar)
+                          field_loc_center, field_type_scalar)
       call scatter_global(TLON, TLON_G, master_task, distrb_clinic, &
-                          field_loc_SWcorner, field_type_scalar)
+                          field_loc_center, field_type_scalar)
 
       if (my_task == master_task) then
          read(25,rec=3,iostat=ioerr) TLAT_G  ! holds HTS
       endif
+!
+     if(my_task == master_task .and. trim(horiz_grid_opt) == 'lat_lon') then
+        open(35,file="DXU.DAT",form="unformatted")
+        read(35) temp_xxx
+        close(35)
+      do j=1,jmt_global
+         do i=1,imt_global
+            TLAT_G(i,j) = temp_xxx(j)
+         end do
+      end do
+     end if
+
 
       call scatter_global(HTS, TLAT_G, master_task, distrb_clinic, &
                           field_loc_Sface, field_type_scalar)
@@ -790,6 +806,18 @@
             TLON_G(i,j) = TLAT_G(i,j)
          end do
       endif
+!
+     if(my_task == master_task .and. trim(horiz_grid_opt) == 'lat_lon') then
+        open(35,file="DXT.DAT",form="unformatted")
+        read(35) temp_xxx
+        close(35)
+      do j=1,jmt_global
+         do i=1,imt_global
+            TLON_G(i,j) = temp_xxx(j)
+         end do
+      end do
+     end if
+!
 
       call scatter_global(DXT, TLON_G, master_task, distrb_clinic, &
                           field_loc_center, field_type_scalar)
@@ -798,18 +826,30 @@
          read(25,rec=4,iostat=ioerr) TLAT_G  ! holds HTW
       endif
 
+     if(my_task == master_task .and. trim(horiz_grid_opt) == 'lat_lon') then
+        open(35,file="DYT.DAT",form="unformatted")
+        read(35) temp_xxx
+        close(35)
+      do j=1,jmt_global
+         do i=1,imt_global
+            TLAT_G(i,j) = temp_xxx(j)
+         end do
+      end do
+     end if
+!
       call scatter_global(HTW, TLAT_G, master_task, distrb_clinic, &
                           field_loc_Wface, field_type_scalar)
 
       do j=1,jmt_global
       do i=1,imt_global
          ip1 = i+1
-         if (i == imt_global + 1 ) ip1 = 1 ! assume cyclic. non-cyclic
+         if (i == imt_global ) ip1 = 1 ! assume cyclic. non-cyclic
                                      ! will be handled during scatter
          !DYT
          TLON_G(i,j) = p5*(TLAT_G(i,j) + TLAT_G(ip1,j))
       end do
       end do
+!
       call scatter_global(DYT, TLON_G, master_task, distrb_clinic, &
                           field_loc_center, field_type_scalar)
 
@@ -823,6 +863,16 @@
             TLON_G(i,j) = p5*(TLAT_G(i,j) + TLAT_G(i,jp1))
          end do
       end do
+     if(my_task == master_task .and. trim(horiz_grid_opt) == 'lat_lon') then
+        open(35,file="DYU.DAT",form="unformatted")
+        read(35) temp_xxx
+        close(35)
+      do j=1,jmt_global
+         do i=1,imt_global
+            TLON_G(i,j) = temp_xxx(j)
+         end do
+      end do
+     end if
 
       call scatter_global(DYU, TLON_G, master_task, distrb_clinic, &
                           field_loc_SWcorner, field_type_scalar)
@@ -836,7 +886,12 @@
                           field_loc_Wface, field_type_scalar)
       call scatter_global(HUE, TLON_G, master_task, distrb_clinic, &
                           field_loc_Sface, field_type_scalar)
-
+!
+      if (trim(horiz_grid_opt) == 'lat_lon') then
+         hun = dxt
+         hue = dyu
+      end if
+!
       if (my_task == master_task) then
          read(25,rec=7,iostat=ioerr) TLAT_G
          close(25)
@@ -963,10 +1018,8 @@
 !     ODZT   1/DZT
 
    if (my_task == master_task) then
-      open (25, file=trim(vert_grid_file),form='formatted')
-      do k = 1,km+1
-         read(25,*) zkp(k)
-      end do 
+      open (25, file=trim(vert_grid_file),form='unformatted')
+      read(25) zkp
       close(25)
    endif
 
@@ -1454,10 +1507,12 @@
    ATE  = ATE *p25*TAREA_R
    ATNE = ATNE*p25*TAREA_R
 !YU
-   AT0 = P25
-   ATN = P25
-   ATE = P25
-   ATNE= P25
+   if (trim(horiz_grid_opt) == 'lat_lon') then
+      AT0 = P25
+      ATN = P25
+      ATE = P25
+      ATNE= P25
+   end if
 !YU
 
 !-----------------------------------------------------------------------
@@ -1596,7 +1651,19 @@
 
    end do
 !  !$OMP END PARALLEL DO
-
+!
+!
+   if (trim(horiz_grid_opt) == 'lat_lon') then
+      do n = 1, nblocks_clinic
+      do j = 1, jmt-1
+      do i = 2, imt-1
+         ulat(i,j,n) = p5*(tlat(i,j,n)+tlat(i,j+1,n))
+         ulon(i,j,n) = p5*(tlon(i-1,j,n)+tlon(i,j,n))
+      end do
+      end do
+      end do
+   end if
+!
 !-----------------------------------------------------------------------
 !
 !  Update boundaries
@@ -1824,12 +1891,10 @@
    do iblock =1, nblocks_clinic
    do j=2,ny_block-1
    do i=2,nx_block-1
-      if (k <= KMU(i,j,iblock)) then
-         hbx(i,j,iblock) = DXUR(i,j,iblock)*p5*(ht(i  ,j+1,iblock) - ht(i-1,j,iblock) - &
-                                                ht(i-1,j+1,iblock) + ht(i  ,j,iblock))
-         hby(i,j,iblock) = DYUR(i,j,iblock)*p5*(ht(i  ,j+1,iblock) - ht(i-1,j,iblock) + &
-                                                ht(i-1,j+1,iblock) - ht(i  ,j,iblock))
-      endif
+       hbx(i,j,iblock) = DXUR(i,j,iblock)*p5*(ht(i  ,j+1,iblock) - ht(i-1,j,iblock) - &
+                                              ht(i-1,j+1,iblock) + ht(i  ,j,iblock))
+       hby(i,j,iblock) = DYUR(i,j,iblock)*p5*(ht(i  ,j+1,iblock) - ht(i-1,j,iblock) + &
+                                              ht(i-1,j+1,iblock) - ht(i  ,j,iblock))
    end do
    end do
    end do

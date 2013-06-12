@@ -12,18 +12,18 @@ use param_mod
       integer,dimension(imt):: i_global
       integer :: ix,iy
       real(r8),dimension(imt,jmt,km,max_blocks_clinic):: vit,viv 
-      real(r8),dimension(imt_global,jmt,km):: vit_1d,viv_1d
+!     real(r8),dimension(imt_global,jmt,km):: vit_1d,viv_1d
       real(r8),dimension(jmt_global):: ahv_back
-      integer,dimension(imt_global,jmt_global):: basin
-      integer,dimension(imt,jmt,max_blocks_clinic):: itnu
+!     integer,dimension(imt_global,jmt_global):: basin
+!     integer,dimension(imt,jmt,max_blocks_clinic):: itnu
 !lhl1204
       integer,dimension(imt,jmt,max_blocks_clinic):: na
       real(r8) :: dfricmx,dwndmix
       ! lihuimin, 2012.7.15
-      integer :: i_num   ! actual grid number in i direction in this process
-      integer :: j_num   ! actual grid number in j direction in this process
-      integer :: i_f_num ! formal grid number in i dircetion 
-      integer :: j_f_num ! formal grid number in j direction !lhl1204
+!     integer :: i_num   ! actual grid number in i direction in this process
+!     integer :: j_num   ! actual grid number in j direction in this process
+!     integer :: i_f_num ! formal grid number in i dircetion 
+!     integer :: j_f_num ! formal grid number in j direction !lhl1204
 !
 !
 !     -----------------------------------------------------------
@@ -41,38 +41,11 @@ use param_mod
 !lhl090729
       real(r8),dimension(km):: zkt,dzp,odzp,odzt
       real(r8),dimension(kmp1):: zkp
-
-
-      real(r4),dimension(jmt)::DYR_IN
       real(r8),dimension(imt,jmt,max_blocks_clinic):: EBEA,EBEB,EBLA,EBLB,EPEA,EPEB,EPLA,EPLB
-      real(r8),dimension(jmt)::OUY,OTX,OUX,SOTX,SOUX, &
-                    CV1,CV2,SINT, &
-                    SINU,DYR,DXDYU,DXDYT, &
-                    R1A,R1B,R2A,R2B,R1C, &
-                    R1D,R2C,R2D
-!lhl060506
       real(r8),dimension(imt,jmt,max_blocks_clinic):: RRD1,RRD2
 !lhl060506
 
-
-      real(r4),dimension(jmt_global)::DYR_IN_global
-      real(r8),dimension(jmt_global)::OUY_global,OTX_global,OUX_global,SOTX_global,SOUX_global, &
-                    CV1_global,CV2_global,SNLAT_global,SINT_global, &
-                    SINU_global,DYT_global,DYR_global,DXDYU_global,DXDYT_global, &
-                    R1A_global,R1B_global,R2A_global,R2B_global,R1C_global, &
-                    R1D_global,R2C_global,R2D_global,EBEA_global,EBEB_global, &
-                    EBLA_global,EBLB_global,EPEA_global,EPEB_global,EPLA_global,EPLB_global
-
-!XC
-
-
 #if ( defined SMAG)
-      real(r8),dimension(jmt):: CXT,CXU,CYT,CYU &
-                   ,R1E,R1F,R2E,R2F &
-                   ,R3E,R3F,R4E,R4F
-      real(r8),dimension(:),allocatable:: CXT_global,CXU_global,CYT_global,CYU_global &
-                   ,R1E_global,R1F_global,R2E_global,R2F_global &
-                   ,R3E_global,R3F_global,R4E_global,R4F_global
 
 #endif
 
@@ -80,10 +53,10 @@ use param_mod
 
       real(r8),dimension(imt,jmt,max_blocks_clinic)::ohbt,ohbu,dzph,hbx,hby
       real(r8),dimension(imt,jmt,max_blocks_clinic):: SNLAT
-      real(r8),dimension(jmt):: COSU,COST
-      real(r8),dimension(:),allocatable::COSU_global,COST_global
+!     real(r8),dimension(jmt):: COSU,COST
+!     real(r8),dimension(:),allocatable::COSU_global,COST_global
       integer,dimension(:),allocatable:: i_start,j_start
-      real(r8),dimension(imt)::CF1,CF2,SF1,SF2
+!     real(r8),dimension(imt)::CF1,CF2,SF1,SF2
 !
 !
 !     -----------------------------------------------------------
@@ -138,7 +111,10 @@ use param_mod
       INTEGER :: NUMBER,NSTART,IY0,IYFM,MON0,MEND,IMD,IDAY,II,JJ,IO_HIST,IO_REST,rest_freq,hist_freq,REFDATE
       integer :: klv
 !
-      REAL(r8):: RADIUS
-!
       character (len=80) :: adv_momentum, adv_tracer
+      integer(kind(1))   :: curr_ymd_licom     ! Current date YYYYMMDD
+      integer(kind(1))   :: curr_ymd_cpl     ! Current date YYYYMMDD
+      integer(kind(1))   :: yy_licom,mm_licom,dd_licom,tod_licom     ! year, month, day
+      integer(kind(1))   :: yy_cpl,mm_cpl,dd_cpl,tod_cpl     ! year, month, day
+      integer:: ocn_cpl_dt
 end module pconst_mod

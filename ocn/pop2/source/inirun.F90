@@ -161,7 +161,7 @@ use hmix_del4
       do k=1,km !km
 !
        if (mytid == 0) then
-        start(1)=1 ; count(1)=imt_global
+        start(1)=1 ; count(1)=imt_global+2
         start(2)=1 ; count(2)=jmt_global
         start(3)=k ; count(3)=1
         start(4)=1 ; count(4)=1
@@ -233,7 +233,7 @@ use hmix_del4
       do k=1,km
 !
       if (mytid == 0) then
-      start(1)=1 ; count(1)=imt_global
+      start(1)=1 ; count(1)=imt_global+2
       start(2)=1 ; count(2)=jmt_global
       start(3)=k ; count(3)=1
       start(4)=1 ; count(4)=1
@@ -246,7 +246,7 @@ use hmix_del4
                           field_loc_center, field_type_scalar)
 !
       if (mytid == 0 ) then
-      start(1)=1 ; count(1)=imt_global
+      start(1)=1 ; count(1)=imt_global+2
       start(2)=1 ; count(2)=jmt_global
       start(3)=k ; count(3)=1
       start(4)=1 ; count(4)=1

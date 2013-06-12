@@ -13,7 +13,7 @@ use domain
  
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
-      DO J = JST,JET
+      DO J = 1, JMT
          DO I = 1,IMT
             WK2 (I,J,IBLOCK)= 0.0D0
          END DO
@@ -24,7 +24,7 @@ use domain
 !$OMP PARALLEL DO PRIVATE (IBLOCK)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM
-        DO J = JST,JET
+        DO J = 1,JMT
          DO I = 1,IMT
                WK2 (I,J,IBLOCK)= WK2 (I,J,IBLOCK) + DZP (K)* OHBU(I,J,IBLOCK)*  &
                                  WK3(I,J,K,IBLOCK) *VIV (I,J,K,IBLOCK)

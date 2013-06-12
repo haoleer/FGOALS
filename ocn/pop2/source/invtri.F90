@@ -8,6 +8,7 @@
 use param_mod
 use pconst_mod
 use domain
+use grid, only : kmt
       IMPLICIT NONE
       REAL    :: WK (IMT,JMT,KM,max_blocks_clinic),TOPBC (IMT,JMT,max_blocks_clinic),DCB (IMT,JMT,KM,max_blocks_clinic)
       REAL    :: A8 (KM),B8 (KM),C8 (KM),D8 (KM),E8 (0:KM),F8 (0:KM)
@@ -16,9 +17,9 @@ use domain
  
 !$OMP PARALLEL DO PRIVATE ( iblock, j, i)
   do iblock = 1, nblocks_clinic
-      JJJ: DO J = 2,JMM
-         III: DO I = 2,IMM
-            IF (ITNU (I,J,iblock) == 0) cycle III
+      JJJ: DO J = 3, jmt-2
+         III: DO I = 3, imt-2
+            IF (kmt (I,J,iblock) == 0) cycle III
             DO K = 2,KM  !lyc
                A8 (K) = DCB (I,J,K -1,iblock)* ODZT (K )* ODZP (K)* C2DTTS * AIDIF
                D8 (K) = WK (I,J,K,iblock)
@@ -39,7 +40,7 @@ use domain
             E8 (K -1) = 0.0
             F8 (K -1) = 0.0
 !     B. C. AT BOTTOM
-            KZ = ITNU (I,J,iblock)
+            KZ = kmt (I,J,iblock)
             IF (KZ /= 0) THEN
                B8 (KZ) = 1.0+ A8 (KZ)
                C8 (KZ) = ODZP (KZ)* C2DTTS * AIDIF
@@ -49,7 +50,7 @@ use domain
  
 !     NOW INVERT
             DO K = KM,1, -1
-               IF (K <= ITNU (I,J,iblock)) THEN
+               IF (K <= KMT (I,J,iblock)) THEN
                   G0 = 1.0/ (B8 (K) - C8 (K)* E8 (K))
                   E8 (K -1) = A8 (K)* G0
                   F8 (K -1) = (D8 (K) + C8 (K)* F8 (K))* G0

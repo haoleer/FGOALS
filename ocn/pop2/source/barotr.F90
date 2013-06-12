@@ -17,12 +17,14 @@ use smuvh
 use POP_GridHorzMod
 use POP_HaloMod
 use global_reductions
+use gather_scatter
 use distribution
 use constant_mod
       IMPLICIT NONE
 
       INTEGER :: IEB,NC,IEB_LOOP
-      real(r8)    :: gstar ,am_viv,fil_lat1,fil_lat2
+      real(r8)    :: gstar ,am_viv,fil_lat1,fil_lat2, ek0
+!     real(r8)  ::  ttt(imt_global,jmt_global)
       integer :: iblock
       real(r8):: hduk(imt,jmt) , hdvk(imt,jmt), gradx(imt,jmt),grady(imt,jmt), div_out(imt,jmt)
       type(block):: this_block
@@ -46,7 +48,6 @@ use constant_mod
       END IF
 !
       baro_loop : DO NC = 1,NBB+IEB_LOOP
-
       if (IEB==1.or.ISB>1) then
 
 !---------------------------------------------------------------------
@@ -54,9 +55,6 @@ use constant_mod
 !---------------------------------------------------------------------
 
 #if ( defined SMAG1)
-#if (defined SMAG_FZ)
-#else
-#endif
 #else
 #if (defined BIHAR)
 !$OMP PARALLEL DO PRIVATE (IBLOCK)
@@ -87,6 +85,31 @@ use constant_mod
 
 #endif
 #endif
+!
+!       call gather_global(ttt, wka(:,:,5,:), master_task,distrb_clinic)
+!       if (mytid == 0) then
+!          write(221,*) ((ttt(i,j),i=1,imt_global),j=1,jmt_global)
+!          close(221)
+!       end if
+!
+!       call chk_var2d(dlub,ek0,0)
+!       if ( mytid == 0) then
+!           write(164,*) ek0
+!       end if
+!       call chk_var2d(dlvb,ek0,0)
+!       if ( mytid == 0) then
+!           write(164,*) ek0
+!       end if
+!       call chk_var2d(wka(:,:,5,:),ek0,0)
+!       if ( mytid == 0) then
+!           write(164,*) ek0
+!       end if
+!       call chk_var2d(wka(:,:,6,:),ek0,0)
+!       if ( mytid == 0) then
+!           write(164,*) ek0
+!       end if
+!       close(164)
+!       stop
 
             IF (mod(isb,36)  == 1 ) THEN
 !$OMP PARALLEL DO PRIVATE (J,I)
@@ -138,6 +161,7 @@ use constant_mod
    do iblock = 1, nblocks_clinic
         call tgrid_to_ugrid(work(:,:,iblock),h0(:,:,iblock),iblock)
    end do
+!
 !---------------------------------------------------------------------
 !     COMPUTING DU & DV
 !---------------------------------------------------------------------
@@ -159,7 +183,7 @@ use constant_mod
          END DO
      END DO
 
-     if (mytid ==0) close(124)
+!    if (mytid ==0) close(124)
 !---------------------------------------------------------------------
 !     CORIOLIS ADJUSTMENT
 !---------------------------------------------------------------------
@@ -271,6 +295,7 @@ use constant_mod
             END DO
          END DO
      END DO
+
 
 
 !---------------------------------------------------------------------

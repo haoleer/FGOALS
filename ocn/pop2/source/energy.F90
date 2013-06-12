@@ -19,7 +19,7 @@ use blocks
 
       IMPLICIT NONE
 
-      real (r8) :: ek0,ea0,eb0,et0,es0
+      real (r8) :: ek0,ea0,eb0,et0,es0,volume, volume0, nnp, nnp0
       REAL (r8) :: EK,EA,EB,ET,ES
       real(r8)::t0,t1,clock0f,nst
       save t0
@@ -98,7 +98,7 @@ use blocks
 !!$OMP PARALLEL DO PRIVATE (K,J,I),reduction(+:ET,ES)
       DO iblock= 1, nblocks_clinic
       this_block = get_block(blocks_clinic(iblock),iblock)
-      DO K = 1,KM
+      DO K = 1,km
          DO J = this_block%jb, this_block%je
             DO I = this_block%ib, this_block%ie
                ET = ET + DZP (K)*tarea(i,j,iblock)* VIT (I,J,K,iblock)* AT(I,J,K,1,iblock)
@@ -133,118 +133,101 @@ use blocks
       END SUBROUTINE ENERGY
 
 
-      SUBROUTINE chk_var3d(var,ch,a)
+      SUBROUTINE chk_var3d(var,ek0,a,kk)
 !     =======================
 
 #include <def-undef.h>
 use precision_mod
 use param_mod
 use pconst_mod
-#ifdef SPMD
+use tracer_mod
+use dyn_mod
+use work_mod
+use grid
+use constant_mod
 use msg_mod, only: tag_1d,tag_2d,tag_3d,tag_4d,nproc,status,mpi_comm_ocn
-#endif
+use shr_sys_mod
+use domain
+use blocks
 
       IMPLICIT NONE
 
-      real (r8) :: ek0,ea0,eb0
-      REAL (r8) :: EK,EA,EB
-      real(r8)  :: var(imt,jmt,km)
-      integer :: a
-      character :: ch*2
+      real (r8) :: ek0,ea0,eb0,et0,es0,volume, volume0, nnp, nnp0
+      REAL (r8) :: EK,EA,EB,ET,ES
+      real(r8)::t0,t1,clock0f,nst
+      save t0
+      integer :: nnn,iblock, a,kk
+      real(r8) :: var(imt,jmt,kk,max_blocks_clinic)
+      type (block) :: this_block
 
-      EA = 0.0
-      EB = 0.0
+      ek = 0.0D0
+!!$OMP PARALLEL DO PRIVATE (J,I),reduction(+:EA)
+      do iblock= 1, nblocks_clinic
+         this_block = get_block(blocks_clinic(iblock),iblock)
+         DO K = 1, kk
+         DO J = this_block%jb, this_block%je
+            DO I = this_block%ib, this_block%ie
+              if ( a == 1) then
+                ek = ek+tarea(i,j,iblock)*VIT(I,J,k,iblock)*var(I,J,k,iblock)*var(I,J,k,iblock)*dzp(k)
+              else
+                ek = ek+uarea(i,j,iblock)*VIV(I,J,k,iblock)*var(I,J,k,iblock)*var(I,J,k,iblock)*dzp(k)
+              end if
+            END DO
+          END DO
+          END DO
+      END DO
+
+      call mpi_reduce(ek,ek0,1,MPI_PR,mpi_sum,0,mpi_comm_ocn,ierr)
 !
-      if (mytid==0 )then
-      WRITE (6,FMT='(a2,I5,I3,D25.15)') ch,MONTH,IDAY,EK0
-      end if
-!
+
       RETURN
       END SUBROUTINE chk_var3d
 
-      SUBROUTINE chk_var3d1(var,ch,a)
+      SUBROUTINE chk_var2d(var,ek0,a)
 !     =======================
-
 #include <def-undef.h>
 use precision_mod
 use param_mod
 use pconst_mod
-#ifdef SPMD
+use tracer_mod
+use dyn_mod
+use work_mod
+use grid
+use constant_mod
 use msg_mod, only: tag_1d,tag_2d,tag_3d,tag_4d,nproc,status,mpi_comm_ocn
-#endif
+use shr_sys_mod
+use domain
+use blocks
 
       IMPLICIT NONE
 
-      real (r8) :: ek0,ea0,eb0
-      REAL (r8) :: EK,EA,EB
-      real(r8)  :: var(imt,jmt,km)
-      integer :: a
-      character :: ch*2
+      real (r8) :: ek0,ea0,eb0,et0,es0,volume, volume0, nnp, nnp0
+      REAL (r8) :: EK,EA,EB,ET,ES
+      real(r8)::t0,t1,clock0f,nst
+      real(r8):: var(imt,jmt,max_blocks_clinic)
+      save t0
+      integer :: nnn,iblock, a
 
-      EA = 0.0
-      EB = 0.0
-      if (mytid==0 )then
-      WRITE (6,FMT='(a2,I5,I3,D25.15)') ch,MONTH,IDAY,EK0
-      end if
+      type (block) :: this_block
+
+
+      ek = 0.0D0
+!!$OMP PARALLEL DO PRIVATE (J,I),reduction(+:EA)
+      do iblock= 1, nblocks_clinic
+         this_block = get_block(blocks_clinic(iblock),iblock)
+         DO J = this_block%jb, this_block%je
+            DO I = this_block%ib, this_block%ie
+              if ( a == 1) then
+                ek = ek + tarea(i,j,iblock)* VIT (I,J,1,iblock)* var (I,J,iblock)* var (I,J,iblock)
+              else
+                ek = ek + uarea(i,j,iblock)* VIV (I,J,1,iblock)* var (I,J,iblock)* var (I,J,iblock)
+              end if
+         END DO
+      END DO
+      END DO
+
+      call mpi_reduce(ek,ek0,1,MPI_PR,mpi_sum,0,mpi_comm_ocn,ierr)
 !
-      RETURN
-      END SUBROUTINE chk_var3d1
-
-      SUBROUTINE chk_var1(var,ch,a)
-!     =======================
-
-#include <def-undef.h>
-use precision_mod
-use param_mod
-use pconst_mod
-#ifdef SPMD
-use msg_mod, only: tag_1d,tag_2d,tag_3d,tag_4d,nproc,status,mpi_comm_ocn
-#endif
-
-      IMPLICIT NONE
-
-      real (r8) :: ek0,ea0,eb0
-      REAL (r8) :: EK,EA,EB
-      real(r8)  :: var(imt,jmt,km)
-      integer :: a
-      character :: ch*2
-
-      EB = 0.0
-
-      EK = 0.0
-      if (mytid==0 )then
-      WRITE (6,FMT='(a2,I5,I3,D25.15)') ch,MONTH,IDAY,EK0
-      end if
-
-      RETURN
-      END SUBROUTINE chk_var1
-
-
-      SUBROUTINE chk_var2d(var,ch,a)
-!     =======================
-
-#include <def-undef.h>
-use precision_mod
-use param_mod
-use pconst_mod
-#ifdef SPMD
-use msg_mod, only: tag_1d,tag_2d,tag_3d,tag_4d,nproc,status,mpi_comm_ocn
-#endif
-
-      IMPLICIT NONE
-
-      REAL (r8) :: EK,EA,EB
-      REAL (r8) :: EK0,EA0,EB0
-      REAL(r8)  :: var(imt,jmt)
-      integer :: a
-      character :: ch*2
-
-      EA = 0.0
-      EB = 0.0
-      if (mytid==0)then
-      WRITE (6,FMT='(a2,I5,I3,D25.15)') ch,MONTH,IDAY,EK0
-      end if
-
       RETURN
       END SUBROUTINE chk_var2d
 

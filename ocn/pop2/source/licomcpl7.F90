@@ -34,6 +34,8 @@ module licom_comp_mct
    use domain
    use grid
    use blocks
+   use gather_scatter
+   use distribution
 
 #include <def-undef.h>
 use param_mod
@@ -325,6 +327,8 @@ use cforce_mod
          call shr_sys_flush(6)
 #endif
 
+    call licom_export_mct(o2x_o)
+
       if (mytid == 0) then
       write(111,*)"OK------8.0"
       close(111)
@@ -473,6 +477,7 @@ use cforce_mod
       end if
             CALL TRACER
       call energy
+      stop
       if (mytid == 0) then
       write(111,*)"OK------18.0"
       close(111)
@@ -643,6 +648,7 @@ use cforce_mod
     ! local
     integer :: j_begin,j_end, iblock
     type (block) :: this_block          ! block information for current block
+    real (r8) :: ek0
 
        n=0
 ! lihuimin, 2012.8.7, consider jst_global
@@ -664,7 +670,6 @@ use cforce_mod
        enddo
        enddo
    end do
-
 !       write(*,*) 'n= export',n
   end subroutine licom_export_mct
 
@@ -752,7 +757,89 @@ use cforce_mod
 
     type (block) :: this_block          ! block information for current block
 
+!
+  integer            :: fid    ! nc domain file ID
+  integer            :: dimid  ! nc dimension id
+  integer            :: vid    ! nc variable ID
+  integer            :: rcode  ! nc return code
+  integer            :: ntim   ! temporary
+ 
+!
+!     Define Variables.
+      integer*4   :: ncid, iret
+      integer*4,  dimension(4) :: start(4)
+      integer*4,  dimension(4) :: count(4)
+      character (len=18) :: fname
+      real(r8), allocatable :: data1(:,:),data2(:,:), temp1(:,:,:),temp2(:,:,:),temp3(:,:,:)
+      INTEGER :: NMFF
 
+!
+  if (trim(horiz_grid_opt) == 'lat_lon') then
+  if (mytid==0 ) then
+     call wrap_open ('domain_licom.nc', NF_NOWRITE, fid)
+
+     ! obtain dimensions
+     call wrap_inq_dimid  (fid, 'ni' , dimid)
+     call wrap_inq_dimlen (fid, dimid, nx   )
+     call wrap_inq_dimid  (fid, 'nj' , dimid)
+     call wrap_inq_dimlen (fid, dimid, ny   )
+     call wrap_inq_dimid  (fid, 'nv' , dimid)
+     call wrap_inq_dimlen (fid, dimid, nv   )
+
+     if (nx/=imt_global) then
+        write(6,*)"nx=",nx,"imt=",imt_global
+        stop
+     end if
+  end if
+
+
+  call shr_mpi_bcast(nx,mpi_comm_ocn,"nx")
+  call shr_mpi_bcast(ny,mpi_comm_ocn,"ny")
+
+     ! obtain grid variables
+     allocate(data1(nx,ny), data2(nx,ny))
+     allocate(temp1(imt,jmt,max_blocks_clinic),temp2(imt,jmt,max_blocks_clinic),temp3(imt,jmt,max_blocks_clinic))
+
+  if (mytid==0 ) then
+     call wrap_inq_varid(fid, 'xc' ,vid)
+     call wrap_get_var_realx(fid, vid, data1)
+     do j=1, ny
+     do i=1, nx
+        data2(i,j) = data1(i,1+ny-j)
+     end do
+     end do
+  end if
+      call scatter_global(temp1, data2, master_task, distrb_clinic, &
+                          field_loc_center, field_type_scalar)
+
+  if (mytid==0 ) then
+     call wrap_inq_varid(fid, 'yc' ,vid)
+     call wrap_get_var_realx(fid, vid, data1)
+     do j=1, ny
+     do i=1, nx
+        data2(i,j) = data1(i,1+ny-j)
+     end do
+     end do
+  end if
+      call scatter_global(temp2, data2, master_task, distrb_clinic, &
+                          field_loc_center, field_type_scalar)
+!
+  if (mytid==0 ) then
+     call wrap_inq_varid(fid, 'area' ,vid)
+     call wrap_get_var_realx(fid, vid, data1)
+     do j=1, ny
+     do i=1, nx
+        data2(i,j) = data1(i,1+ny-j)
+     end do
+     end do
+     call wrap_close(fid)
+  end if
+      call scatter_global(temp3, data2, master_task, distrb_clinic, &
+                          field_loc_center, field_type_scalar)
+
+     deallocate(data1,data2)
+  end if
+!
     call mct_gGrid_init( GGrid=dom_o, CoordChars=trim(seq_flds_dom_coord), &
        OtherChars=trim(seq_flds_dom_other), lsize=lsize )
     call mct_aVect_zero(dom_o%data)
@@ -789,19 +876,27 @@ use cforce_mod
        do j=this_block%jb,this_block%je
        do i=this_block%ib,this_block%ie
           n=n+1
-          data(n) = TLON(i,j,iblock)/DEGtoRAD
+          if (trim(horiz_grid_opt) == 'lat_lon') then
+            data(n) = temp1(i,j,iblock)
+          else
+            data(n) = TLON(i,j,iblock)/DEGtoRAD
+          end if
        enddo
        enddo
     enddo
     call mct_gGrid_importRattr(dom_o,"lon",data,lsize)
-
+!
     n=0
     do iblock = 1, nblocks_clinic
        this_block = get_block(blocks_clinic(iblock),iblock)
        do j=this_block%jb,this_block%je
        do i=this_block%ib,this_block%ie
           n=n+1
-          data(n) = TLAT(i,j,iblock)/DEGtoRAD
+          if (trim(horiz_grid_opt) == 'lat_lon') then
+            data(n) = temp2(i,j,iblock)
+          else
+            data(n) = TLAT(i,j,iblock)/DEGtoRAD
+          end if
        enddo
        enddo
     enddo
@@ -813,7 +908,11 @@ use cforce_mod
        do j=this_block%jb,this_block%je
        do i=this_block%ib,this_block%ie
           n=n+1
-          data(n) = TAREA(i,j,iblock)/(radius*radius)
+          if (trim(horiz_grid_opt) == 'lat_lon') then
+            data(n) = temp3(i,j,iblock)
+          else
+            data(n) = TAREA(i,j,iblock)/(radius*radius)
+          end if
        enddo
        enddo
     enddo
@@ -836,7 +935,7 @@ use cforce_mod
 
     deallocate(data)
     deallocate(idata)
-!   deallocate(mask_r)
+    if (trim(horiz_grid_opt) == 'lat_lon') deallocate (temp1, temp2, temp3)
 
   end subroutine licom_domain_mct
 

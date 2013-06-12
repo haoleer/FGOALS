@@ -22,6 +22,9 @@ use operators
 use hmix_del2
 use hmix_del4
 use msg_mod 
+use gather_scatter
+use distribution
+
       IMPLICIT NONE
 !      REAL(r8)  :: WKP (KMP1)
       INTEGER   :: IWK,n2, iblock
@@ -34,9 +37,10 @@ use msg_mod
       REAL(r8)  :: riv1,riv2,epsln,RKV,RKV1
       REAL(r8)  :: adv_x1,adv_x2,adv_x,adv_y1,adv_y2,adv_z,diff_u1,diff_u2,diff_v1,diff_v2
       REAL(r8)  :: dlux,dlvx,dluy,dlvy,dluz,dlvz,adv_z1,adv_z2,adv_z3,adv_z4
-      REAL(r6)  :: xxx, c0
+      REAL(r6)  :: xxx, c0,ek0
       real(r8)  :: hdvk(imt,jmt), hduk(imt,jmt), adv_uu(imt,jmt,km), adv_vv(imt,jmt,km)
 !
+!     real (r8) :: ttt(imt_global, jmt_global)
       type (block) :: this_block          ! block information for current block
        
 #if (defined CANUTO)
@@ -91,14 +95,18 @@ use msg_mod
       END DO
    END DO
 !
+!     call chk_var3d(wp12,ek0,1,km)
+!     if (mytid==0) write(222,*) "wp12", ek0
+!     call chk_var3d(wp13,ek0,1,km)
+!     if (mytid==0) write(222,*) "wp13", ek0
  
 !$OMP PARALLEL DO PRIVATE (K,J,I,riv1,riv2)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KMM1
          DO J = 2, JMT
             DO I = 1,IMT-1
-               riv1 = wp12 (I,J,K,iblock) - wp12 (I,J,K +1,iblock)
-               riv2 = wp13 (I,J,K,iblock) - wp13 (I,J,K +1,iblock)
+               riv1 = wp12 (I,J,K,iblock)*vit(i,j,k,iblock) - wp12 (I,J,K +1,iblock)*vit(i,j,k+1,iblock)
+               riv2 = wp13 (I,J,K,iblock)*vit(i,j,k,iblock) - wp13 (I,J,K +1,iblock)*vit(i,j,k+1,iblock)
                s2t (i,j,k,iblock) =vit(i,j,k+1,iblock)*(riv1*riv1+riv2*riv2)*ODZT(K+1)*ODZT(K+1)
                ridt(i,j,k,iblock) =vit(i,j,k+1,iblock)*ricdt(i,j,k,iblock)/(s2t(i,j,k,iblock)+epsln)
 #ifdef CANUTO  
@@ -107,11 +115,20 @@ use msg_mod
                rit (i,j,k,iblock)= rit (i,j,k,iblock,iblock) +VIT (I,J,K +1,iblock,iblock)* &
                                    rict(i,j,k,iblock,iblock)/(s2t(i,j,k,iblock,iblock)+epsln)
 #endif
+!              if (mytid == 12 .and. k==15 .and. j == 35 .and. i == 88 ) then
+!                 write(228,*) i,j,k, wp12(i,j,k,1), wp13(i,j,k,1), wp12(i,j,k+1,1), wp13(i,j,k+1,1)
+!                 write(228,*) riv1, riv2, s2t(i,j,k,1)
+!                 write(228,*) ricdt(i,j,k,1), ridt(i,j,k,1)
+!                 write(228,*) at(i,j,k,1,1), at(i,j,k,2,1)
+!              end if
             END DO
          END DO
       END DO
    END DO
+!    if (mytid ==0) close(228)
 !
+!     call chk_var3d(s2t,ek0,1,kmm1)
+!     if (mytid==0) write(222,*) "s2t", ek0
 !$OMP PARALLEL DO PRIVATE (K,J,I,riv1,riv2)
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KMM1
@@ -225,6 +242,16 @@ use msg_mod
          AKT(I,J,K,1,iblock)=AKT(I,J,K,1,iblock)+(WK2(K)+dmin1(AKT_BACK(K),1d-3))/NCC*1.d-4
          AKT(I,J,K,2,iblock)=AKT(I,J,K,2,iblock)+(WK3(K)+dmin1(AKS_BACK(K),1d-3))/NCC*1.d-4
          END DO
+
+!               k=6
+!              if (mytid == 7  .and. j == 25 .and. i == 18 ) then
+!                 write(229,*) i,j,k
+!                 write(229,*) wp8(k), wp1(k), wp2(k), wp3(k), wp4(k), wp5(k), wp6(k), DFRICMX, DWNDMIX
+!                 write(229,*) akm_back(k), akt_back(k), aks_back(k)
+!                 write(229,*) wp7(k), wp9, wp10, wp11, FCORT(i,j,1)
+!                 write(229,*) amld(i,j,1), wk1(k), wk2(k), wk3(k), iwk, kmt(i,j,1)-1, km
+!                 write(229,*) akmt(i,j,k,1)
+!              end if
 !
         endif
          END DO
@@ -236,6 +263,11 @@ use msg_mod
    do iblock = 1, nblocks_clinic
       DO K = 1,KMM1
          call tgrid_to_ugrid(akmu(:,:,k,iblock), akmt(:,:,k,iblock),iblock)
+         do j= 1,jmt
+         do i= 1,imt
+            akmu(i,j,k,iblock) = akmu(i,j,k,iblock) * viv(i,j,k+1,iblock)
+         end do
+         end do
       END DO
    end do
 !lhl241204
@@ -272,6 +304,11 @@ use msg_mod
          dlv(:,:,:,IBLOCK)=adv_vv
    END DO
 
+!     call chk_var3d(dlu,ek0,0,km)
+!     if (mytid==0) write(222,*) ek0
+!     call chk_var3d(dlv,ek0,0,km)
+!     if (mytid==0) write(222,*) ek0
+!
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
     DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM
@@ -283,6 +320,35 @@ use msg_mod
          END DO
       END DO
    END DO
+!     call chk_var3d(wka,ek0,0,km)
+!     if (mytid==0) write(222,*) "WKA", ek0
+!     call chk_var3d(akmt,ek0,1,kmm1)
+!     if (mytid==0) write(222,*) "akmt", ek0
+!     call chk_var3d(akmu,ek0,0,kmm1)
+!     if (mytid==0) write(222,*) "akmu", ek0
+!     call chk_var2d(ustar,ek0,1)
+!     if (mytid==0) write(222,*) "AT1", ek0
+!     call chk_var3d(at(:,:,:,2,:),ek0,1,km)
+!     if (mytid==0) write(222,*) "AT2", ek0
+!     call chk_var3d(pdensity,ek0,1,km)
+!     if (mytid==0) write(222,*) "pdensity", ek0
+!     call chk_var3d(rit,ek0,1,kmm1)
+!     if (mytid==0) write(222,*) "rit", ek0
+!     call chk_var3d(ridt,ek0,1,kmm1)
+!     if (mytid==0) write(222,*) "ridt", ek0
+!     call chk_var3d(s2t,ek0,1,kmm1)
+!     if (mytid==0) write(222,*) "s2t", ek0
+!     call chk_var3d(rict,ek0,1,kmm1)
+!     if (mytid==0) write(222,*) "rict", ek0
+!     call chk_var3d(ricdt,ek0,1,kmm1)
+!     if (mytid==0) write(222,*) "ricdt", ek0
+
+!    do k=1, kmm1
+!        call gather_global(ttt, akmt(:,:,k,:), master_task,distrb_clinic)
+!        if (mytid==0) write(227,*) ((ttt(i,j),i=1,imt_global),j=1,jmt_global)
+!    end do
+!        if (mytid==0) close(227)
+
  
  
 !$OMP PARALLEL DO PRIVATE (IBLOCK,k,J,I,diff_u1,diff_v1,diff_u2,diff_v2,rkv,riv1,rkv1)
@@ -385,6 +451,11 @@ use msg_mod
       END DO
    END DO
 
+!     call chk_var3d(dlu,ek0,0,km)
+!     if (mytid==0) write(222,*) ek0
+!     call chk_var3d(dlv,ek0,0,km)
+!     if (mytid==0) write(222,*) ek0
+!
       deallocate(riu) 
  
  
@@ -436,6 +507,11 @@ use msg_mod
 #endif
 #endif
  
+!     call chk_var3d(dlu,ek0,0,km)
+!     if (mytid==0) write(222,*) ek0
+!     call chk_var3d(dlv,ek0,0,km)
+!     if (mytid==0) write(222,*) ek0
+!     if (mytid==0) close(222)
 !---------------------------------------------------------------------
 !     SET CYCLIC CONDITIONS ON EASTERN AND WESTERN BOUNDARY
 !---------------------------------------------------------------------

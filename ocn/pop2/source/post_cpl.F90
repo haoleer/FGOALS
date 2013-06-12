@@ -25,11 +25,13 @@ use grid
 use blocks
 use POP_HaloMod
 use POP_GridHorzMod
-
+use distribution
+use gather_scatter
 
 !
       implicit none
       real(r8),dimension(:,:,:),allocatable::tmp_su,tmp_sv
+      real(r8) :: ek0, ttt(imt_global,jmt_global)
       integer :: iblock, ErrorCode
 !
     type (block) :: this_block          ! block information for current block
@@ -88,6 +90,7 @@ use POP_GridHorzMod
             lwv = lwup + lwdn   !long wave flux
             fresh = ssf
             runoff=roff
+!
 
 !!linpf 2012Jul26 !2012Jul28
         where(vit(:,:,1,:)<0.5) tsf=spval
@@ -111,7 +114,6 @@ use POP_GridHorzMod
        call POP_HaloUpdate(sv(:,:,:) , POP_haloClinic, POP_gridHorzLocSwcorner,&
                        POP_fieldKindVector, errorCode, fillValue = 0.0_r8)
 !
-
         ! lihuimin, 2012.7.23, ft. lpf
 !!linpf 2012Jul29
         where(viv(:,:,1,:)<0.5) su=spval

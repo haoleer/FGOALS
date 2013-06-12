@@ -22,7 +22,7 @@ use operators
 
 !
       IMPLICIT NONE
-      REAL(r8)   :: ABCD,TUP,SUP,TLO,SLO,RHOUP,RHOLO
+      REAL(r8)   :: ABCD,TUP,SUP,TLO,SLO,RHOUP,RHOLO,ek0
       REAL(r8)   :: DENS
       real(r8),dimension(imt,jmt,km,max_blocks_clinic)::ALPHA,BETA,pp
       real(r8),dimension(imt,jmt,km,max_blocks_clinic)::ppa,ppb,ppc
@@ -213,6 +213,8 @@ use operators
          END DO
       END DO
    END DO
+
+
 
 !$OMP PARALLEL DO PRIVATE (K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC

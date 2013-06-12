@@ -53,8 +53,8 @@
      adv_vv = c0
 !
       do k=1, km
-      do j= 2,jmt-1
-      do i= 2,imt-1
+      do j= 1,jmt-1
+      do i= 2,imt
          if ( trim(adv_momentum) == 'centered' ) then
             u_wface(i,j,k) = (uuu(i-1,j,k) + uuu(i,j,k))*P25*hue(i-1,j,iblock)
             v_sface(i,j,k) = (vvv(i,j,k) + vvv(i,j+1,k))*P25*hun(i,j+1,iblock)
@@ -153,14 +153,21 @@
      adv_tt=0.0_r8
 !
       do k=1, km
-      do j= 2,jmt-1
-      do i= 2,imt-1
+      do j=1, jmt
+      do i=2, imt-1
          if ( trim(adv_tracer) == 'centered' .or. trim(adv_tracer) == 'tspas') then
-            u_wface(i,j,k) = (uuu(i,j-1,k) + uuu(i,j,k))*htw(i,j,iblock)*P25
             v_sface(i,j,k) = (vvv(i,j,k) + vvv(i+1,j,k))*hts(i,j,iblock)*P25
          else if ( trim(adv_tracer) == 'flux' ) then
-            u_wface(i,j,k) = (uuu(i,j-1,k)*dyu(i,j-1,iblock) + uuu(i,j,k)*dyu(i,j,iblock))*P25
             v_sface(i,j,k) = (vvv(i,j,k)*dxu(i,j,iblock) + vvv(i+1,j,k)*dxu(i+1,j,iblock))*P25
+         end if
+      end do
+      end do
+      do j= 2,jmt-1
+      do i= 1,imt
+         if ( trim(adv_tracer) == 'centered' .or. trim(adv_tracer) == 'tspas') then
+            u_wface(i,j,k) = (uuu(i,j-1,k) + uuu(i,j,k))*htw(i,j,iblock)*P25
+         else if ( trim(adv_tracer) == 'flux' ) then
+            u_wface(i,j,k) = (uuu(i,j-1,k)*dyu(i,j-1,iblock) + uuu(i,j,k)*dyu(i,j,iblock))*P25
          end if
       end do
       end do
@@ -226,8 +233,8 @@
 !
 !$OMP PARALLEL DO PRIVATE (K,J,I)
       DO K = 1,km
-        DO J = 3, jmt-2
-          DO I = 3, imt-2
+        DO J = 2, jmt-1
+          DO I = 2, imt-1
             adv_x0(i,j,k)=((ttt(i+1,j,k)+ttt(i,j,k))*u_wface(i+1,j,k) &
                        -(ttt(i,j,k)+ttt(i-1,j,k))*u_wface(i,j,k))*tarea_r(i,j,iblock)
             adv_y0(i,j,k)=((ttt(i,j+1,k)+ttt(i,j,k))*v_sface(i,j,k) &
@@ -236,10 +243,10 @@
                                   u_wface(i+1,j,k)*u_wface(i+1,j,k)*tarea_r(i,j,iblock)*tarea_r(i,j,iblock)
             adv_xy2(i,j,k)= dts*(ttt(i,j,k)-ttt(i-1,j,k))*2.0_r8* &
                                   u_wface(i,j,k)*u_wface(i,j,k)*tarea_r(i,j,iblock)*tarea_r(i,j,iblock)
-            adv_xy3(i,j,k)=-dts*(ttt(i,j+1,k)-ttt(i,j,k))*2.0_r8* &
-                                  v_sface(i,j,k)*v_sface(i,j,k)*tarea_r(i,j,iblock)*tarea_r(i,j,iblock)
-            adv_xy4(i,j,k)= dts*(ttt(i,j,k)-ttt(i,j-1,k))*2.0_r8* &
-                                  v_sface(i,j-1,k)*v_sface(i,j-1,k)*tarea_r(i,j,iblock)*tarea_r(i,j,iblock)
+            adv_xy3(i,j,k)=-dts*(ttt(i,j+1,k)-ttt(i,j,k))*2.0_r8*dytr(i,j,iblock)*dyur(i,j,iblock)* &
+                                  v_sface(i,j,k)*v_sface(i,j,k)*dxtr(i,j,iblock)*dxtr(i,j,iblock)
+            adv_xy4(i,j,k)= dts*(ttt(i,j,k)-ttt(i,j-1,k))*2.0_r8*dytr(i,j,iblock)*dyur(i,j-1,iblock)* &
+                                  v_sface(i,j-1,k)*v_sface(i,j-1,k)*dxtr(i,j,iblock)*dxtr(i,j,iblock)
             adv_c1(i,j,k)=-ttt(i,j,k)*(u_wface(i+1,j,k)-u_wface(i,j,k))*tarea_r(i,j,iblock)*2.0_r8
             adv_c2(i,j,k)=-ttt(i,j,k)*(v_sface(i,j,k)-v_sface(i,j-1,k))*tarea_r(i,j,iblock)*2.0_r8
 
@@ -247,7 +254,7 @@
             adv_yy(i,j,k)=-(adv_y0(i,j,k)+adv_xy3(i,j,k)+adv_xy4(i,j,k)+adv_c2(i,j,k))
 
             at00(i,j,k)=ttt(i,j,k)+(adv_xx(i,j,k)+adv_yy(i,j,k))*dts
-            if (mytid == 0 .and. k==3 .and. i == 32  .and. j ==6 ) then
+            if (mytid == 5 .and. k==1 .and. i == 35  .and. j ==25 ) then
                write(128,*) adv_x0(i,j,k), adv_y0(i,j,k), adv_xy1(i,j,k), adv_xy2(i,j,k)
                write(128,*) adv_xy3(i,j,k), adv_xy4(i,j,k), adv_c1(i,j,k), adv_c2(i,j,k)
                write(128,*) adv_xx(i,j,k), adv_yy(i,j,k), at00(i,j,k)
@@ -266,8 +273,8 @@
 
 !$OMP PARALLEL DO PRIVATE (K,J,I)
       DO K = 1,km
-        DO J = 3, jmt-2
-          DO I = 3,imt-2
+        DO J = 2, jmt-1
+          DO I = 2,imt-1
             atmax(i,j,k)=max(ttt(i,j,k),ttt(i,j-1,k),ttt(i,j+1,k),ttt(i-1,j,k),ttt(i+1,j,k))
             atmin(i,j,k)=min(ttt(i,j,k),ttt(i,j-1,k),ttt(i,j+1,k),ttt(i-1,j,k),ttt(i+1,j,k))
           ENDDO
@@ -316,7 +323,7 @@
                write(125,*) adv_xx(i,j,k), adv_yy(i,j,k), at00(i,j,k), adv_tt(i,j,k)
                write(125,*) atmax(i,j,k), atmin(i,j,k)
             end if
-            if (mytid == 0 .and. k==3 .and. i == 32  .and. j ==6 ) then
+            if (mytid == 5 .and. k==1 .and. i == 35  .and. j ==25 ) then
                write(129,*) adv_x0(i,j,k), adv_y0(i,j,k), adv_xy1(i,j,k), adv_xy2(i,j,k)
                write(129,*) adv_xy3(i,j,k), adv_xy4(i,j,k), adv_c1(i,j,k), adv_c2(i,j,k)
                write(129,*) adv_xx(i,j,k), adv_yy(i,j,k), at00(i,j,k), adv_tt(i,j,k)
@@ -337,7 +344,7 @@
             if (k==1) then
               adv_za (i,j,k)=-0.5*ODZP(1)*WWW(I,J,2)*(ttt(I,J,2)+ttt(I,J,1))
               adv_zb1(i,j,k)=0
-              adv_zb2(i,j,k)= 0.5*ODZP(1)*WWW(I,J,2)*ttt(I,J,2)*ODZT(2) &
+              adv_zb2(i,j,k)= 0.5*ODZP(1)*WWW(I,J,2)*WWW(I,J,2)*ODZT(2) &
                                 *(ttt(I,J,1)-ttt(I,J,2))
               adv_zc (i,j,k)=     ODZP(1)*ttt(I,J,1)*WWW(I,J,2)
               atmaxz(i,j,k)=max(ttt(i,j,1),ttt(i,j,2))
@@ -367,9 +374,12 @@
               atz(i,j,k)=ttt(i,j,k)-(adv_za(i,j,k)+adv_zb1(i,j,k) &
                                    +adv_zb2(i,j,k)+adv_zc(i,j,k))*dts
             endif
-            if (mytid == 0 .and. k==3 .and. i == 32  .and. j ==6 ) then
-               write(130,*) www(i,j,k),www(i,j,k-1),www(i,j,k+1)
-               write(130,*) ttt(i,j,k),ttt(i,j,k-1),ttt(i,j,k+1)
+            if (mytid == 5 .and. k==1 .and. i == 35  .and. j ==25 ) then
+!              write(130,*) www(i,j,k),www(i,j,k-1),www(i,j,k+1)
+!              write(130,*) ttt(i,j,k),ttt(i,j,k-1),ttt(i,j,k+1)
+               write(130,*) www(i,j,k),www(i,j,k+1)
+               write(130,*) ttt(i,j,k),ttt(i,j,k+1)
+               write(130,*) odzp(1), odzt(2), www(i,j,2), ttt(i,j,1)-ttt(i,j,2)
                write(130,*) adv_za(i,j,k), adv_zb1(i,j,k), adv_zb2(i,j,k)
                write(130,*) adv_zc(i,j,k), atmaxz(i,j,k), atminz(i,j,k), atz(i,j,k)
             end if
@@ -419,7 +429,7 @@
              atz(i,j,k)=ttt(i,j,k)+adv_zz(i,j,k)*dts
              adv_tt(I,J,K)= adv_tt(I,J,K)+adv_zz(i,j,k)
 !
-            if (mytid == 0 .and. k==3 .and. i == 32  .and. j ==6 ) then
+            if (mytid == 5 .and. k==1 .and. i == 35  .and. j ==25 ) then
                write(131,*) adv_za(i,j,k), adv_zb1(i,j,k), adv_zb2(i,j,k)
                write(131,*) adv_zc(i,j,k), atmaxz(i,j,k), atminz(i,j,k), atz(i,j,k)
                write(131,*) adv_zz(i,j,k), adv_tt(i,j,k)
