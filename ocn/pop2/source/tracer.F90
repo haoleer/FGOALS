@@ -24,7 +24,7 @@ use distribution
  
       integer     :: n2, iblock
       REAL(r8)    :: AIDIF,C2DTTS,AA,FAW,FIW,ALF,RNCC,ABC,fil_lat1,fil_lat2
-      REAL(r8)    :: HDTK(imt,jmt), adv_tt(imt,jmt,km),ek0, tttt(imt_global,jmt_global)
+      REAL(r8)    :: HDTK(imt,jmt), adv_tt(imt,jmt,km),ek0 
 
 !Xiao Chan (Hereinafter XC for short)
       real(r8)    :: LAMDA(imt,jmt,km,max_blocks_clinic),wt1,wt2,adv_y,adv_x,adv_z,adv_x1,adv_x2
@@ -186,11 +186,6 @@ use distribution
       end do
    end do
 !
-      do k=1, km
-         call gather_global(tttt, tf(:,:,k,:), master_task,distrb_clinic)
-         if (mytid ==0) write(161,*) ((tttt(i,j), i=1,imt_global), j=1,jmt_global)
-      end do
-         if (mytid ==0) close(161)
      write(170+mytid,*) "OK-------6"
      close(170+mytid)
      call chk_var3d(wkd,ek0,0,km)

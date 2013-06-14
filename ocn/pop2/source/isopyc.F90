@@ -55,8 +55,9 @@ use domain
 !     Redi/Cox and Gent/McWilliams options
 !-----------------------------------------------------------------------
  
-      allocate(e(imt,kmp1,jmt,3,iblock),rhoi(imt,0:km,jmt,nrpl,iblock))
-      allocate(K1(imt,0:km,jmt,3:3,iblock),K2(imt,0:km,jmt,3:3,iblock),K3(imt,0:km,jmt,1:3,iblock))
+      allocate(e(imt,kmp1,jmt,3,max_blocks_clinic),rhoi(imt,0:km,jmt,nrpl,max_blocks_clinic))
+      allocate(K1(imt,0:km,jmt,3:3,max_blocks_clinic),K2(imt,0:km,jmt,3:3,max_blocks_clinic), & 
+               K3(imt,0:km,jmt,1:3,max_blocks_clinic))
 
 
     rhoi(:,0,:,:,:) = 0.0D0

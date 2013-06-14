@@ -223,11 +223,25 @@ use constant_mod
                + vit(i,j-1,k-1,iblock)*(atb(i,j,k-1,m,iblock)-atb(i,j-1,k-1,m,iblock))/hue(i,j-1,iblock) &
                + vit(i,j+1,k ,iblock)*(atb(i,j+1,k,m,iblock)-atb (i,j,k,m,iblock))/hue(i,j,iblock) &
                + vit (i,j+1,k-1,iblock)*(atb(i,j+1,k-1,m,iblock)-atb (i,j,k-1,m,iblock))/hue(i,j,iblock)) )  
+               if (mytid == 5 .and. i==25 .and. j==31 .and. k ==2 ) then
+                  write(138,*)  K3(i,k-1,j,1,iblock)* &
+               (vit(i-1,j,k ,iblock)*(atb(i,j,k,m,iblock)-atb (i-1,j,k,m,iblock))/hun(i,j,iblock) &
+               + vit(i-1,j,k-1,iblock)*(atb(i,j,k-1,m,iblock)-atb (i-1,j,k-1,m,iblock))/hun(i,j,iblock)  &
+               + vit(i+1,j,k ,iblock)*(atb(i+1,j,k,m,iblock)- atb(i,j,k,m,iblock))/hun(i+1,j,iblock)  &
+               + vit(i+1,j,k-1,iblock)*(atb(i+1,j,k-1,m,iblock)-atb(i,j,k-1,m,iblock))/hun(i+1,j,iblock)) 
+                  write(138,*) K3 (i,k -1,j,2,iblock)* &
+               (vit (i,j-1,k ,iblock)*(atb(i,j,k,m,iblock)-atb(i,j-1,k,m,iblock))/hue(i,j-1,iblock) &
+               + vit(i,j-1,k-1,iblock)*(atb(i,j,k-1,m,iblock)-atb(i,j-1,k-1,m,iblock))/hue(i,j-1,iblock) &
+               + vit(i,j+1,k ,iblock)*(atb(i,j+1,k,m,iblock)-atb (i,j,k,m,iblock))/hue(i,j,iblock) &
+               + vit (i,j+1,k-1,iblock)*(atb(i,j+1,k-1,m,iblock)-atb (i,j,k-1,m,iblock))/hue(i,j,iblock))
+                  write(138,*) k3(i,k-1,j,1,iblock), k3(i,k-1,j,2,iblock)
+                  write(138,*) 1.0/hue(i,j-1,iblock), 1.0/hue(i,j,iblock), work_3(i,j,k,iblock)
+              end if
             END DO
          END DO
       END DO
    end do
- 
+     if (mytid == 4) close(138) 
  
 !-----------------------------------------------------------------------
 !     at ocean surface the flux is set to zero to reflect the no tracer
@@ -252,29 +266,20 @@ use constant_mod
                dy_iso(i,j,k,m,iblock)= tarea_r (i,j,iblock)*(work_1 (i,j,k,iblock) - work_1 (i,j -1,k,iblock))
                dz_iso(i,j,k,m,iblock)= dzr (k) * (work_3(i,j,k -1,iblock) - work_3 (i,j,k,iblock))
 !
+               if (mytid == 5 .and. i==25 .and. j==31 .and. k ==1 ) then
+                  write(136,*) work_1(i,j,k,iblock)*tarea_r(i,j,iblock), work_1(i,j-1,k,iblock)*tarea_r(i,j,iblock)
+                  write(136,*) work_2(i,j,k,iblock)*tarea_r(i,j,iblock), work_2(i-1,j,k,iblock)*tarea_r(i,j,iblock)
+                  write(136,*) work_3(i,j,k-1,iblock)*dzr(k), work_3(i,j,k,iblock)*dzr(k)
+                  write(136,*) tf(i,j,k,iblock)
+               end if
+
 !
             END DO
          END DO
       END DO
    end do
+      if (mytid ==4) close(136)
  
- 
-               if (mytid == 0) then
-                  write(133,*) ((dx_iso(i,j,1,1,1),i=3, imt-2), j=6,8)
-                  close(133)
-               end if
-               if (mytid == 0) then
-                  write(134,*) ((dy_iso(i,j,1,1,1),i=3, imt-2), j=6,8)
-                  close(134)
-               end if
-               if (mytid == 0) then
-                  write(135,*) ((dz_iso(i,j,1,1,1),i=3, imt-2), j=6,8)
-                  close(135)
-               end if
-               if (mytid == 0) then
-                  write(136,*) ((tf(i,j,1,1),i=3, imt-2), j=6,8)
-                  close(136)
-               end if
 !-----------------------------------------------------------------------
 !     compute the meridional component of the isopycnal velocity mixing
 !-----------------------------------------------------------------------
@@ -348,32 +353,24 @@ use constant_mod
                +work_2(i,j,k,iblock)-work_2(i-1,j,k,iblock))*tarea_r(i,j,iblock) &
                - p5*dzr(k)*(work_3(i,j,k-1,iblock) - work_3 (i,j,k,iblock)) 
 !
+               if (mytid == 5 .and. i==25 .and. j==31 .and. k ==1 ) then
+                  write(137,*) work_1(i,j,k,iblock)*tarea_r(i,j,iblock), work_1(i,j-1,k,iblock)*tarea_r(i,j,iblock)
+                  write(137,*) work_2(i,j,k,iblock)*tarea_r(i,j,iblock), work_2(i-1,j,k,iblock)*tarea_r(i,j,iblock)
+                  write(137,*) work_3(i,j,k-1,iblock)*dzr(k), work_3(i,j,k,iblock)*dzr(k)
+                  write(137,*) tf(i,j,k,iblock)
+               end if
 !
             END DO
          END DO
       END DO
    end do
+   if (mytid ==4) close(137)
 !
-               if (mytid == 0) then
-                  write(137,*) ((work_1(i,j,1,1)*P5*tarea_r(i,j,1),i=3, imt-2), j=6,8)
-                  close(137)
-               end if
-               if (mytid == 0) then
-                  write(138,*) ((work_2(i,j,1,1)*P5*tarea_r(i,j,1),i=3, imt-2), j=6,8)
-                  close(138)
-               end if
-               if (mytid == 0) then
-                  write(139,*) ((work_3(i,j,1,1)*P5*dzr(3) ,i=3, imt-2), j=6,8)
-                  close(139)
-               end if
-               if (mytid == 0) then
-                  write(140,*) ((tf(i,j,1,1),i=3, imt-2), j=6,8)
-                  close(140)
-               end if
-   if (mytid == 0) then
-       write(132,*) ((tf(i,j,1,1), i=3,imt-2),j=6,8)
-       close(132)
-   end if
+     do k=1, km
+         call write_global(tf(:,:,k,:),161)
+     end do
+     if (mytid==0) close(161)
+!
 !
       deallocate (work_1,work_2,work_3,temp)
  

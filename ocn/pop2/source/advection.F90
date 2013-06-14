@@ -235,8 +235,8 @@
       DO K = 1,km
         DO J = 2, jmt-1
           DO I = 2, imt-1
-            adv_x0(i,j,k)=((ttt(i+1,j,k)+ttt(i,j,k))*u_wface(i+1,j,k) &
-                       -(ttt(i,j,k)+ttt(i-1,j,k))*u_wface(i,j,k))*tarea_r(i,j,iblock)
+            adv_x0(i,j,k)=(ttt(i+1,j,k)+ttt(i,j,k))*u_wface(i+1,j,k)*tarea_r(i,j,iblock) &
+                       -(ttt(i,j,k)+ttt(i-1,j,k))*u_wface(i,j,k)*tarea_r(i,j,iblock)
             adv_y0(i,j,k)=((ttt(i,j+1,k)+ttt(i,j,k))*v_sface(i,j,k) &
                        -(ttt(i,j,k)+ttt(i,j-1,k))*v_sface(i,j-1,k))*tarea_r(i,j,iblock)
             adv_xy1(i,j,k)=-dts*(ttt(i+1,j,k)-ttt(i,j,k))*2.0_r8* &
@@ -247,14 +247,15 @@
                                   v_sface(i,j,k)*v_sface(i,j,k)*dxtr(i,j,iblock)*dxtr(i,j,iblock)
             adv_xy4(i,j,k)= dts*(ttt(i,j,k)-ttt(i,j-1,k))*2.0_r8*dytr(i,j,iblock)*dyur(i,j-1,iblock)* &
                                   v_sface(i,j-1,k)*v_sface(i,j-1,k)*dxtr(i,j,iblock)*dxtr(i,j,iblock)
-            adv_c1(i,j,k)=-ttt(i,j,k)*(u_wface(i+1,j,k)-u_wface(i,j,k))*tarea_r(i,j,iblock)*2.0_r8
+            adv_c1(i,j,k)=-ttt(i,j,k)*(u_wface(i+1,j,k)*tarea_r(i,j,iblock)-u_wface(i,j,k)*tarea_r(i,j,iblock))*2.0_r8
             adv_c2(i,j,k)=-ttt(i,j,k)*(v_sface(i,j,k)-v_sface(i,j-1,k))*tarea_r(i,j,iblock)*2.0_r8
 
             adv_xx(i,j,k)=-(adv_x0(i,j,k)+adv_xy1(i,j,k)+adv_xy2(i,j,k)+adv_c1(i,j,k))
             adv_yy(i,j,k)=-(adv_y0(i,j,k)+adv_xy3(i,j,k)+adv_xy4(i,j,k)+adv_c2(i,j,k))
 
             at00(i,j,k)=ttt(i,j,k)+(adv_xx(i,j,k)+adv_yy(i,j,k))*dts
-            if (mytid == 5 .and. k==1 .and. i == 35  .and. j ==25 ) then
+            if (mytid == 10 .and. k==9 .and. i == 4  .and. j == 11 ) then
+               write(128,*) ttt(i,j,k), ttt(i-1,j,k),ttt(i+1,j,k)
                write(128,*) adv_x0(i,j,k), adv_y0(i,j,k), adv_xy1(i,j,k), adv_xy2(i,j,k)
                write(128,*) adv_xy3(i,j,k), adv_xy4(i,j,k), adv_c1(i,j,k), adv_c2(i,j,k)
                write(128,*) adv_xx(i,j,k), adv_yy(i,j,k), at00(i,j,k)
@@ -323,7 +324,7 @@
                write(125,*) adv_xx(i,j,k), adv_yy(i,j,k), at00(i,j,k), adv_tt(i,j,k)
                write(125,*) atmax(i,j,k), atmin(i,j,k)
             end if
-            if (mytid == 5 .and. k==1 .and. i == 35  .and. j ==25 ) then
+            if (mytid == 10 .and. k==9 .and. i == 4  .and. j == 11 ) then
                write(129,*) adv_x0(i,j,k), adv_y0(i,j,k), adv_xy1(i,j,k), adv_xy2(i,j,k)
                write(129,*) adv_xy3(i,j,k), adv_xy4(i,j,k), adv_c1(i,j,k), adv_c2(i,j,k)
                write(129,*) adv_xx(i,j,k), adv_yy(i,j,k), at00(i,j,k), adv_tt(i,j,k)
@@ -374,11 +375,11 @@
               atz(i,j,k)=ttt(i,j,k)-(adv_za(i,j,k)+adv_zb1(i,j,k) &
                                    +adv_zb2(i,j,k)+adv_zc(i,j,k))*dts
             endif
-            if (mytid == 5 .and. k==1 .and. i == 35  .and. j ==25 ) then
-!              write(130,*) www(i,j,k),www(i,j,k-1),www(i,j,k+1)
-!              write(130,*) ttt(i,j,k),ttt(i,j,k-1),ttt(i,j,k+1)
-               write(130,*) www(i,j,k),www(i,j,k+1)
-               write(130,*) ttt(i,j,k),ttt(i,j,k+1)
+            if (mytid == 10 .and. k==9 .and. i == 4  .and. j == 11 ) then
+               write(130,*) www(i,j,k),www(i,j,k-1),www(i,j,k+1)
+               write(130,*) ttt(i,j,k),ttt(i,j,k-1),ttt(i,j,k+1)
+!              write(130,*) www(i,j,k),www(i,j,k+1)
+!              write(130,*) ttt(i,j,k),ttt(i,j,k+1)
                write(130,*) odzp(1), odzt(2), www(i,j,2), ttt(i,j,1)-ttt(i,j,2)
                write(130,*) adv_za(i,j,k), adv_zb1(i,j,k), adv_zb2(i,j,k)
                write(130,*) adv_zc(i,j,k), atmaxz(i,j,k), atminz(i,j,k), atz(i,j,k)
@@ -429,7 +430,7 @@
              atz(i,j,k)=ttt(i,j,k)+adv_zz(i,j,k)*dts
              adv_tt(I,J,K)= adv_tt(I,J,K)+adv_zz(i,j,k)
 !
-            if (mytid == 5 .and. k==1 .and. i == 35  .and. j ==25 ) then
+            if (mytid == 10 .and. k==9 .and. i == 4  .and. j == 11 ) then
                write(131,*) adv_za(i,j,k), adv_zb1(i,j,k), adv_zb2(i,j,k)
                write(131,*) adv_zc(i,j,k), atmaxz(i,j,k), atminz(i,j,k), atz(i,j,k)
                write(131,*) adv_zz(i,j,k), adv_tt(i,j,k)

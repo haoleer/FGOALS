@@ -18,7 +18,6 @@ use forc_mod
 use buf_mod
 use control_mod
 use shr_sys_mod
-use work_mod,only : wkj
 use output_mod,only:spval
 use domain
 use grid

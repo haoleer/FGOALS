@@ -231,4 +231,20 @@ use blocks
       RETURN
       END SUBROUTINE chk_var2d
 
-
+      subroutine write_global(var,nfile)
+!
+      use precision_mod
+      use param_mod
+      use gather_scatter
+      use domain
+      use work_mod
+!
+      real(r8) :: var(imt,jmt,max_blocks_clinic)
+      integer :: nfile
+!
+      allocate( work_global(imt_global,jmt_global))
+         call gather_global(work_global, var, master_task,distrb_clinic)
+         if (mytid ==0) write(nfile,*) ((work_global(i,j), i=1,imt_global), j=1,jmt_global)
+      deallocate( work_global)
+!
+      end subroutine write_global

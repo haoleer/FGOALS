@@ -24,14 +24,17 @@ use operators
       IMPLICIT NONE
       REAL(r8)   :: ABCD,TUP,SUP,TLO,SLO,RHOUP,RHOLO,ek0
       REAL(r8)   :: DENS
-      real(r8),dimension(imt,jmt,km,max_blocks_clinic)::ALPHA,BETA,pp
-      real(r8),dimension(imt,jmt,km,max_blocks_clinic)::ppa,ppb,ppc
-      real(r8),dimension(imt,jmt,km):: adv_tt
+      real(r8),dimension(:,:,:,:),allocatable:: alpha, beta, pp, ppa, ppb, ppc
+      real(r8),dimension(:,:,:),allocatable:: work1, work2, adv_tt
       integer :: iblock
       EXTERNAL DENS
       type (block) :: this_block          ! block information for current block
  
  
+      allocate ( alpha(imt,jmt,km,max_blocks_clinic), beta(imt,jmt,km,max_blocks_clinic))
+      allocate ( pp(imt,jmt,km,max_blocks_clinic), ppa(imt,jmt,km,max_blocks_clinic))
+      allocate ( ppb(imt,jmt,km,max_blocks_clinic), ppc(imt,jmt,km,max_blocks_clinic))
+      allocate ( work1(imt,jmt,max_blocks_clinic), work2(imt,jmt,max_blocks_clinic),adv_tt(imt,jmt,km))
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
     do iblock = 1, nblocks_clinic
       DO J = JST,JET
@@ -295,6 +298,9 @@ use operators
       pax = -OD0*work1
    END DO
 !!
+      deallocate ( alpha, beta)
+      deallocate ( pp, ppa, ppb,ppc)
+      deallocate ( work1, work2, adv_tt)
   call mpi_barrier(mpi_comm_ocn,ierr)
       RETURN
       END SUBROUTINE READYT
