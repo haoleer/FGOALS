@@ -111,11 +111,7 @@ use distribution
       END DO
   END DO
 
-     write(170+mytid,*) "OK-------1"
-     close(170+mytid)
       CALL UPWELL (WKD,WKB,STF)
-     write(170+mytid,*) "OK-------2"
-     close(170+mytid)
  
 #if (defined NODIAG)
  
@@ -127,13 +123,9 @@ use distribution
 !-----------------------------------------------------------------------
 !     PREPARATION FOR ISOPYCNAL DIFFUSION & ADVECTION
 !-----------------------------------------------------------------------
-     write(170+mytid,*) "OK-------3"
-     close(170+mytid)
 #if (defined ISO)
       CALL ISOPYC
 #endif
-     write(170+mytid,*) "OK-------4"
-     close(170+mytid)
  
 !@@@  COMPUTING DIFFUSION COEFFICIENT
     
@@ -169,14 +161,10 @@ use distribution
 !---------------------------------------------------------------------
 !     COMPUTE THE ADVECTIVE TERM 
 !---------------------------------------------------------------------
-     write(170+mytid,*) "OK-------5"
-     close(170+mytid)
 
    do iblock = 1, nblocks_clinic
       adv_tt = 0.0_r8
       call advection_tracer(wkd(:,:,:,iblock),wkb(:,:,:,iblock),ws(:,:,:,iblock),at(:,:,:,n,iblock),adv_tt,iblock)
-     write(170+mytid,*) "OK-------6"
-     close(170+mytid)
       do k=1, km
       do j =3, jmt-2
       do i =3, imt-2
@@ -186,8 +174,6 @@ use distribution
       end do
    end do
 !
-     write(170+mytid,*) "OK-------6"
-     close(170+mytid)
      call chk_var3d(wkd,ek0,0,km)
      if ( mytid ==0) write(160,*) "wkd", ek0
      call chk_var3d(wkb,ek0,0,km)
@@ -361,6 +347,8 @@ use distribution
          END IF
  
 !     EDDY-DIFFUSION
+     call chk_var2d(swv,ek0,1)
+     if ( mytid ==0) write(160,*) ek0, pen
      call chk_var3d(tf,ek0,1,km)
      if ( mytid ==0) write(160,*) ek0
  
@@ -591,7 +579,11 @@ use distribution
             END DO
        END DO
                   
+     call chk_var3d(vtl,ek0,1,km)
+     if ( mytid ==0) write(160,*) ek0
            CALL SMTS (VTL,VIT,fil_lat1)
+     call chk_var3d(vtl,ek0,1,km)
+     if ( mytid ==0) write(160,*) ek0
 !
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
          DO IBLOCK = 1, NBLOCKS_CLINIC

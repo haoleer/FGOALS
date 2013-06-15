@@ -28,32 +28,13 @@ use msg_mod, only: tag_1d,tag_2d,tag_3d,tag_4d,nproc,status,mpi_comm_ocn
 #include <netcdf.inc>
 
 !
-!     Define Variables.
-      integer*4   :: ncid, iret
-!
-      REAL(r4)    :: ZKP_IN (KMP1)
-!      REAL(r8)    :: ZKP (KMP1)
-      REAL(r8)    :: ABCD,YU,CURU
       REAL(r8)    :: rpart,efold1,efold2,swarg1,swarg2
       REAL(r8)    :: AJQ,rscl1,rscl2
-      INTEGER :: IREC
-
 
 
       if (mytid==0)then
       write(6,*)"Beginning------GRIDS !"
       endif
-
-!--------------------------------------------------------------
-!     SET LOCAL CONSTANTS
-!--------------------------------------------------------------
-!     AM_TRO=2.0E+3
-!     AM_EXT=2.0E+5
-!     DLAM  =0.5
-
-!--------------------------------------------------------------
-!     ZONAL RESOULTION
-!--------------------------------------------------------------
 
 #if (defined SOLAR)
       rpart = 0.58D0
@@ -68,10 +49,8 @@ use msg_mod, only: tag_1d,tag_2d,tag_3d,tag_4d,nproc,status,mpi_comm_ocn
          pen (k) = rpart * exp (swarg1) + (1.0D0- rpart)* exp (swarg2)
       END DO
 
-!      if (mytid==0) print*,pen
 
       DO k = 1,kmm1
-!lhl        pen(k) = pen(k)*solar0*OD0CP
          pen (k) = pen (k)* OD0CP
       END DO
 

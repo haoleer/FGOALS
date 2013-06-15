@@ -136,15 +136,18 @@ use POP_HaloMod
 !lhl      fil_lat=56.D0
 !
 
-      MAX_NN = 14
-      do j =jst,jmt
+      MAX_NN = 15
+      nn =0
+      do j =3, jmt-2
          if (cos(tlat(1,j,1)).le.cos(fil_lat*DEGtoRAD)) then
             NN(j) = int(cos(fil_lat*DEGtoRAD)/abs(cos(tlat(1,j,1)))*1.2D0)
-         else
-            NN(j) = 0
          endif
       enddo
-
+      if (mytid ==0 ) then
+          write(170,*) max_nn
+          write(170,*) nn
+      end if
+      if(mytid ==0) close(170)
 !!$OMP PARALLEL DO PRIVATE (iblocks,K,J,xs)
    DO NCY = 1,MAX_NN
          do iblock = 1, nblocks_clinic

@@ -216,11 +216,11 @@ use cforce_mod
 !     PARAMETERS RELATED TO LATITUDES (J)
 !---------------------------------------------------------------------
     LOGMSG()
-   CALL GRIDS
    call init_domain_blocks
    call init_grid1
    call init_domain_distribution(KMT_G)
    call init_grid2
+   CALL GRIDS
    call calc_coeff
       if (mytid == 0) then
       write(111,*)"OK------4"
