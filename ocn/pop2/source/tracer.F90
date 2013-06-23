@@ -22,7 +22,7 @@ use gather_scatter
 use distribution
       IMPLICIT NONE
  
-      integer     :: n2, iblock
+      integer     :: n2, iblock,kt
       REAL(r8)    :: AIDIF,C2DTTS,AA,FAW,FIW,ALF,RNCC,ABC,fil_lat1,fil_lat2
       REAL(r8)    :: HDTK(imt,jmt), adv_tt(imt,jmt,km),ek0 
 
@@ -52,6 +52,8 @@ use distribution
 #else
       AIDIF = 0.0D0
 #endif
+
+
  
       LAMDA=1.0D0/(15.D0*86400.D0)
       RNCC = 1.0D0/ FLOAT (NCC)
@@ -157,10 +159,20 @@ use distribution
 !     NTRA = 1 => TEMPERATURE
 !     NTRA = 2 => SALINITY
  
+     call chk_var3d(wkd,ek0,0,km)
+     if ( mytid ==0) write(160,*) "wkd", ek0
+     call chk_var3d(wkb,ek0,0,km)
+     if ( mytid ==0) write(160,*) "wkb", ek0
+     call chk_var3d(ws,ek0,1,km)
+     if ( mytid ==0) write(160,*) "ws", ek0
+     call chk_var3d(at(:,:,:,1,:),ek0,1,km)
+     if ( mytid ==0) write(160,*) "AT", ek0
       DO N = 1,NTRA
 !---------------------------------------------------------------------
 !     COMPUTE THE ADVECTIVE TERM 
 !---------------------------------------------------------------------
+
+
 
    do iblock = 1, nblocks_clinic
       adv_tt = 0.0_r8
@@ -174,21 +186,15 @@ use distribution
       end do
    end do
 !
-     call chk_var3d(wkd,ek0,0,km)
-     if ( mytid ==0) write(160,*) "wkd", ek0
-     call chk_var3d(wkb,ek0,0,km)
-     if ( mytid ==0) write(160,*) "wkb", ek0
-     call chk_var3d(ws,ek0,1,km)
-     if ( mytid ==0) write(160,*) "ws", ek0
-     call chk_var3d(at(:,:,:,1,:),ek0,1,km)
-     if ( mytid ==0) write(160,*) "AT", ek0
      call chk_var3d(tf,ek0,1,km)
      if ( mytid ==0) write(160,*) ek0
     
-     if (mytid ==0 ) then
-        write(123,*)((tf(i,j,1,1), i=3,imt-2),j=6,8)
-        close(123)
-     end if
+!     if (ist ==2) then 
+!        do kt= 1, km
+!        call write_global(tf(:,:,kt,:),161)
+!        end do
+!        if (mytid==0) close(161)
+!     end if
 #ifdef CANUTO      
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
@@ -216,6 +222,8 @@ use distribution
  
 #if (defined ISO)
          CALL ISOFLUX (N)
+
+      
 #else 
  
 #if ( defined SMAG)
@@ -347,8 +355,6 @@ use distribution
          END IF
  
 !     EDDY-DIFFUSION
-     call chk_var2d(swv,ek0,1)
-     if ( mytid ==0) write(160,*) ek0, pen
      call chk_var3d(tf,ek0,1,km)
      if ( mytid ==0) write(160,*) ek0
  
@@ -402,8 +408,8 @@ use distribution
  
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)    
         DO IBLOCK = 1, NBLOCKS_CLINIC
-            DO J = 3,JMT-2
-               DO I = 3,IMT-2
+            DO J = 1, JMT
+               DO I = 1, IMT
                   IF (KMT(I,J,IBLOCK) > 0)THEN
 #ifdef COUP
 !                     STF (I,J,IBLOCK) = SSF(I,J,IBLOCK)
@@ -429,17 +435,11 @@ use distribution
             END DO
       END DO
 !
-               if (mytid == 0 ) then
-                     write(144,*) odzp(1), AIDIF
-                     write(144,*) ((stf(i,j,1), i=3,imt-2),j=6,8)
-                     close(144)
-               end if
-!
   ELSE
 !$OMP PARALLEL DO PRIVATE (J,I)
         DO IBLOCK = 1, NBLOCKS_CLINIC
-            DO J = 3,JMT-2
-               DO I = 3,IMT-2
+            DO J = 1, JMT
+               DO I = 1, IMT
                 IF (KMT(I,J,IBLOCK) > 0)THEN
 #ifdef COUP
                  STF (I,J,IBLOCK) = TSF(I,J,IBLOCK)
@@ -495,15 +495,9 @@ use distribution
 !-----------------------------------------------------------------------
 !     SOLVE FOR "TAU+1" TRACER AT CENTER OF "T" CELLS
 !-----------------------------------------------------------------------
+
+
  
-       if (mytid == 0) then
-          write(141,*) ((tf(i,j,1,1),i=3,imt-2),j=6,8)
-          close(141)
-       end if
-       if (mytid == 0) then
-          write(142,*) ((tf(i,j,3,1),i=3,imt-2),j=6,8)
-          close(142)
-       end if
      call chk_var3d(tf,ek0,1,km)
      if ( mytid ==0) write(160,*) ek0
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
@@ -526,28 +520,37 @@ use distribution
 !-----------------------------------------------------------------------
 !     ADD DT/DT COMPONENT DUE TO IMPLICIT VERTICAL DIFFUSION
 !-----------------------------------------------------------------------
+
  
 #if (defined ISO)
          CALL INVTRI (VTL,STF,WKC,AIDIF,C2DTTS)
 #endif
 !
-       if (mytid == 0) then
-          write(143,*) ((vtl(i,j,3,1),i=3,imt-2),j=6,8)
-          close(143)
-       end if
+
+
      call chk_var3d(vtl,ek0,1,km)
      if ( mytid ==0) write(160,*) ek0
      call POP_HaloUpdate(VTL , POP_haloClinic, POP_gridHorzLocCenter,&
                          POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
+
+
+
 !
+!     if (ist ==2) then 
+!        do kt= 1, km
+!        call write_global(vtl(:,:,kt,:),161)
+!        end do
+!        if (mytid==0) close(161)
+!        stop
+!     end if
 !---------------------------------------------------------------------
 !     SET CYCLIC CONDITIONS ON EASTERN AND WESTERN BOUNDARY
 !---------------------------------------------------------------------
  
                
-         if (mod(ist,180) == 1) then
+    if (mod(ist,180) == 1) then
             CALL SMTS (VTL,VIT,fil_lat2)
-         else
+    else
              DO IBLOCK = 1, NBLOCKS_CLINIC
              DO J=1, JMT
              DO I=1,IMT  
@@ -584,6 +587,8 @@ use distribution
            CALL SMTS (VTL,VIT,fil_lat1)
      call chk_var3d(vtl,ek0,1,km)
      if ( mytid ==0) write(160,*) ek0
+
+
 !
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
          DO IBLOCK = 1, NBLOCKS_CLINIC
@@ -615,7 +620,8 @@ use distribution
             END DO
             END DO
         END DO
-        end if  
+   end if  
+
 !
 !-----------------------------------------------------------------------
 !     SOLVE FOR "TAU+1" TRACER AT CENTER OF "T" CELLS
@@ -631,8 +637,6 @@ use distribution
          END DO
      END DO
  
-                     VTL (I,J,K,iblock) = AT (I,J,K,N,iblock) + DTS * TF (I,J,K,iblock)
-                     VTL (I,J,K,iblock) = ATB (I,J,K,N,iblock) + C2DTTS * TF (I,J,K,iblock)
 
   if (trim(adv_tracer) == 'tspas') then
 !$OMP PARALLEL DO PRIVATE (K,J,I)
@@ -676,17 +680,18 @@ use distribution
   end if
  call chk_var3d(vtl,ek0,1,km)
      if ( mytid ==0) write(160,*) ek0
-   stop
    END DO
 !XC
+
 
 #else
          atb(:,:,:,1,:)= 12.0D0
          atb(:,:,:,2,:)= c0
          at (:,:,:,:,:)= atb(:,:,1:km,:,:)
 #endif
- 
       IST = IST +1
+!
+
  
 #ifdef ISO
       deallocate(K1,K2,K3,adv_vetiso,adv_vbtiso,adv_vntiso)

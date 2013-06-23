@@ -36,6 +36,7 @@ module licom_comp_mct
    use blocks
    use gather_scatter
    use distribution
+   use dyn_mod, only: vb
 
 #include <def-undef.h>
 use param_mod
@@ -422,11 +423,16 @@ use cforce_mod
       write(111,*)"OK------12.0"
       close(111)
       end if
+
+
+
             CALL READYT
       if (mytid == 0) then
       write(111,*)"OK------13.0"
       close(111)
       end if
+
+
 
 !----------------------------------------------------
 !     BAROCLINIC & BAROTROPIC CYCLE
@@ -442,6 +448,8 @@ use cforce_mod
       close(111)
       end if
 
+
+
 !     PREDICTION OF BAROTROPIC MODE
     LOGMSG()
       call energy
@@ -453,6 +461,8 @@ use cforce_mod
       end if
 
 
+
+
 !     PREDICTION OF BAROCLINIC MODE
     LOGMSG()
                CALL BCLINC
@@ -461,6 +471,8 @@ use cforce_mod
       write(111,*)"OK------16.0"
       close(111)
       end if
+
+
 
 
 
@@ -476,8 +488,10 @@ use cforce_mod
       close(111)
       end if
             CALL TRACER
+
+
+
       call energy
-      stop
       if (mytid == 0) then
       write(111,*)"OK------18.0"
       close(111)
@@ -485,6 +499,9 @@ use cforce_mod
 
     LOGMSG()
             CALL ICESNOW
+      call energy
+
+
 
       if (mytid == 0) then
       write(111,*)"OK------19.0"
@@ -498,6 +515,9 @@ use cforce_mod
 !#if (!defined CANUTO)
     LOGMSG()
             CALL CONVADJ
+
+
+      call energy
 !#endif
       if (mytid == 0) then
       write(111,*)"OK------20.0"
@@ -522,6 +542,7 @@ use cforce_mod
 
     LOGMSG()
          CALL ADDPS
+      call energy
       if (mytid == 0) then
       write(111,*)"OK------23.0"
       close(111)

@@ -16,11 +16,12 @@ use msg_mod, only: tag_1d,tag_2d,tag_3d,tag_4d,nproc,status,mpi_comm_ocn
 use shr_sys_mod
 use domain
 use blocks
+use constant_mod
 
       IMPLICIT NONE
 
       real (r8) :: ek0,ea0,eb0,et0,es0,volume, volume0, nnp, nnp0
-      REAL (r8) :: EK,EA,EB,ET,ES
+      REAL (r8) :: EK,EA,EB,ET,ES, dxx
       real(r8)::t0,t1,clock0f,nst
       save t0
       integer :: nnn,iblock

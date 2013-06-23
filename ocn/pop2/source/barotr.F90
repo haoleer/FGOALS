@@ -48,6 +48,10 @@ use constant_mod
       END IF
 !
       baro_loop : DO NC = 1,NBB+IEB_LOOP
+
+
+
+
       if (IEB==1.or.ISB>1) then
 
 !---------------------------------------------------------------------
@@ -195,9 +199,6 @@ use constant_mod
                DO I = 3, imt-2
                   WKA (I,J,3,IBLOCK)= EBEA(I,J,IBLOCK)* WKA (I,J,1,IBLOCK) - EBEB(I,J,IBLOCK)* WKA (I,J,2,IBLOCK)
                   WKA (I,J,4,IBLOCK)= EBEA(I,J,IBLOCK)* WKA (I,J,2,IBLOCK) + EBEB(I,J,IBLOCK)* WKA (I,J,1,IBLOCK)
-!     if (mytid ==0 .and. i > 3 .and. i < 20 .and. j >5 .and. j < 8 ) then
-!     write(170+isb,*) i,j, wka(i,j,3,1), wka(i,j,4,1),ebea(i,j,1), ebeb(i,j,1)
-!     end if
                END DO
             END DO
      END DO
@@ -208,16 +209,12 @@ use constant_mod
                DO I = 3, imt-2
                   WKA (I,J,3,IBLOCK)= EBLA (I,J,Iblock)* WKA (I,J,1,IBLOCK) - EBLB (I,J,Iblock)* WKA (I,J,2,IBLOCK)
                   WKA (I,J,4,IBLOCK)= EBLA (I,J,Iblock)* WKA (I,J,2,IBLOCK) + EBLB (I,J,Iblock)* WKA (I,J,1,IBLOCK)
-!     if (mytid ==0 .and. i > 3 .and. i < 20 .and. j >5 .and. j < 8 ) then
-!     write(170+isb,*) i,j, wka(i,j,3,1), wka(i,j,4,1),ebea(i,j,1), ebeb(i,j,1)
-!     end if
                END DO
             END DO
      END DO
          END IF
 
 
-!    if (mytid==0) close(170+isb)
 
 !---------------------------------------------------------------------
 !     COMPUTING DH0

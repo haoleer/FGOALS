@@ -75,6 +75,12 @@ use domain
                   sq = atb (i,j,k,2,iblock) - sref0
                   kq = krplin (m)
                   rhoi (i,k,j,m,iblock) = dens (tq, sq, kq,iblock)
+               if (mytid == 0 .and. i==55 .and. j==6 .and. k ==2 ) then
+                  write(121,*) atb(i,j,k,1,1),atb(i,j,k,2,1)
+                  write(121,*) tq,sq,kq,rhoi(i,k,j,m,1)
+                  write(121,*) atb(i,j+1,k,1,1),atb(i,j+1,k,2,1)
+                  write(121,*) tq,sq,kq,rhoi(i,k,j,m,1)
+               end if
                END DO
             END DO
          END DO
@@ -86,10 +92,7 @@ use domain
 !     evaluate K2(,,3) centered on the northern face of "T" cells
 !-----------------------------------------------------------------------
  
-       if (mytid == 0) then
-       write(121,*) ((rhoi(i,3,j,3,1), i=3,imt-2),j=6,8)
-       close(121)
-       end if
+       if (mytid == 0) close(121)
       CALL k2_3
  
 !-----------------------------------------------------------------------

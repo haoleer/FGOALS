@@ -313,6 +313,15 @@ use operators
       END DO
    END DO
 
+  
+     if (mytid == 11) then
+      write(164,*) ((dlv(i,j,2,1),i=91,94),j=1,3)
+      write(164,*) ((wka(i,j,2,1),i=91,94),j=1,3)
+      write(164,*) ((vp(i,j,2,1),i=91,94),j=1,3)
+      write(164,*) ((vb(i,j,1),i=91,94),j=1,3)
+      close(164)
+     end if
+
  
       CALL VINTEG (WKA,WORK)
  
