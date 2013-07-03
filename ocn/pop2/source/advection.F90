@@ -173,13 +173,6 @@
       end do
       end do
 !
-      if (mytid == 11) then
-         write(124,*) vvv(92,1,2), vvv(93,1,2)
-         write(124,*) vvv(92,2,2), vvv(93,2,2)
-         write(124,*) vvv(92,3,2), vvv(93,3,2)
-         close(124)
-      end if
-!
       if ( trim(adv_tracer) == 'centered' ) then
         do k = 1,km
         do j= 3,jmt-2
@@ -261,17 +254,9 @@
             adv_yy(i,j,k)=-(adv_y0(i,j,k)+adv_xy3(i,j,k)+adv_xy4(i,j,k)+adv_c2(i,j,k))
 
             at00(i,j,k)=ttt(i,j,k)+(adv_xx(i,j,k)+adv_yy(i,j,k))*dts
-            if (mytid == 11 .and. k==2 .and. i == 92  .and. j == 2 ) then
-               write(128,*) ttt(i,j,k), ttt(i-1,j,k),ttt(i+1,j,k)
-               write(128,*) ttt(i,j-1,k), v_sface(i,j,k), v_sface(i,j-1,k)
-               write(128,*) adv_x0(i,j,k), adv_y0(i,j,k), adv_xy1(i,j,k), adv_xy2(i,j,k)
-               write(128,*) adv_xy3(i,j,k), adv_xy4(i,j,k), adv_c1(i,j,k), adv_c2(i,j,k)
-               write(128,*) adv_xx(i,j,k), adv_yy(i,j,k), at00(i,j,k)
-            end if
           ENDDO
         ENDDO
       ENDDO
-      if(mytid == 11) close(128)
 
 !$OMP PARALLEL DO PRIVATE (K,J,I)
       DO K = 1,km
@@ -318,24 +303,9 @@
             adv_xx(i,j,k)=-(adv_x0(i,j,k)+adv_xy1(i,j,k)+adv_xy2(i,j,k)+adv_c1(i,j,k))
             adv_yy(i,j,k)=-(adv_y0(i,j,k)+adv_xy3(i,j,k)+adv_xy4(i,j,k)+adv_c2(i,j,k))
             adv_tt (I,J,K)= adv_xx(i,j,k)+adv_yy(i,j,k)
-            if (mytid == 0 .and. k==2 .and. i > 2 .and. i < imt-1 .and. j > 5 .and. j< 9) then
-               write(125,*) i,j,k
-               write(125,*) adv_x0(i,j,k), adv_y0(i,j,k), adv_xy1(i,j,k), adv_xy2(i,j,k)
-               write(125,*) adv_xy3(i,j,k), adv_xy4(i,j,k), adv_c1(i,j,k), adv_c2(i,j,k)
-               write(125,*) adv_xx(i,j,k), adv_yy(i,j,k), at00(i,j,k), adv_tt(i,j,k)
-               write(125,*) atmax(i,j,k), atmin(i,j,k)
-            end if
-            if (mytid == 11 .and. k==2 .and. i == 92  .and. j == 3 ) then
-               write(129,*) adv_x0(i,j,k), adv_y0(i,j,k), adv_xy1(i,j,k), adv_xy2(i,j,k)
-               write(129,*) adv_xy3(i,j,k), adv_xy4(i,j,k), adv_c1(i,j,k), adv_c2(i,j,k)
-               write(129,*) adv_xx(i,j,k), adv_yy(i,j,k), at00(i,j,k), adv_tt(i,j,k)
-               write(129,*) atmax(i,j,k), atmin(i,j,k)
-            end if
           END DO
         END DO
       END DO
-      if (mytid ==0) close(125)
-      if (mytid ==11) close(129)
 
       allocate (adv_zz(imt,jmt,km), adv_za(imt,jmt,km),adv_zb1(imt,jmt,km) )
       allocate (adv_zb2(imt,jmt,km), adv_zc(imt,jmt,km), atmaxz(imt,jmt,km), atminz(imt,jmt,km), atz(imt,jmt,km))
@@ -376,28 +346,9 @@
               atz(i,j,k)=ttt(i,j,k)-(adv_za(i,j,k)+adv_zb1(i,j,k) &
                                    +adv_zb2(i,j,k)+adv_zc(i,j,k))*dts
             endif
-            if (mytid == 11 .and. k==2 .and. i == 92  .and. j == 3 ) then
-               write(130,*) www(i,j,k),www(i,j,k-1),www(i,j,k+1)
-               write(130,*) ttt(i,j,k),ttt(i,j,k-1),ttt(i,j,k+1)
-!              write(130,*) www(i,j,k),www(i,j,k+1)
-!              write(130,*) ttt(i,j,k),ttt(i,j,k+1)
-               write(130,*) odzp(1), odzt(2), www(i,j,2), ttt(i,j,1)-ttt(i,j,2)
-               write(130,*) adv_za(i,j,k), adv_zb1(i,j,k), adv_zb2(i,j,k)
-               write(130,*) adv_zc(i,j,k), atmaxz(i,j,k), atminz(i,j,k), atz(i,j,k)
-            end if
-            if (mytid == 0 .and. k==2 .and. i > 2 .and. i < imt-1 .and. j > 5 .and. j< 9) then
-               write(126,*) i,j,k
-               write(126,*) odzp(k), www(i,j,k),www(i,j,k-1),www(i,j,k+1)
-               write(126,*) ttt(i,j,k),ttt(i,j,k-1),ttt(i,j,k+1)
-               write(126,*) adv_za(i,j,k), adv_zb1(i,j,k), adv_zb2(i,j,k)
-               write(126,*) adv_zc(i,j,k), atmaxz(i,j,k), atminz(i,j,k), atz(i,j,k)
-               write(126,*) adv_xx(i,j,k), adv_yy(i,j,k), at00(i,j,k)
-            end if
           END DO
         END DO
       END DO
-      if (mytid ==0) close(126)
-      if (mytid ==11) close(130)
 
 !$OMP PARALLEL DO PRIVATE (K,J,I)
       DO K = 1,km
@@ -431,28 +382,9 @@
              atz(i,j,k)=ttt(i,j,k)+adv_zz(i,j,k)*dts
              adv_tt(I,J,K)= adv_tt(I,J,K)+adv_zz(i,j,k)
 !
-            if (mytid == 11 .and. k==2 .and. i == 92  .and. j == 3 ) then
-               write(131,*) adv_za(i,j,k), adv_zb1(i,j,k), adv_zb2(i,j,k)
-               write(131,*) adv_zc(i,j,k), atmaxz(i,j,k), atminz(i,j,k), atz(i,j,k)
-               write(131,*) adv_zz(i,j,k), adv_tt(i,j,k)
-               write(131,*) atz(i,j,k-1),atmaxz(i,j,k-1), atminz(i,j,k-1)
-               write(131,*) atz(i,j,k+1),atmaxz(i,j,k+1), atminz(i,j,k+1)
-            end if
-            if (mytid == 0 .and. k==2 .and. i > 2 .and. i < imt-1 .and. j > 5 .and. j< 9) then
-               write(127,*) i,j,k
-               write(127,*) adv_za(i,j,k), adv_zb1(i,j,k), adv_zb2(i,j,k)
-               write(127,*) adv_zc(i,j,k), atmaxz(i,j,k), atminz(i,j,k), atz(i,j,k)
-               write(127,*) adv_zz(i,j,k), adv_tt(i,j,k)
-               write(127,*) atz(i,j,k-1),atmaxz(i,j,k-1), atminz(i,j,k-1)
-               write(127,*) atz(i,j,k+1),atmaxz(i,j,k+1), atminz(i,j,k+1)
-            end if
-
           END DO
         END DO
       END DO
-!
-     if (mytid ==0) close(127)
-     if (mytid ==11) close(131)
 !
       deallocate ( adv_x0, adv_y0, adv_c1)
       deallocate ( adv_c2, adv_xx, adv_yy)

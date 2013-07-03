@@ -23,7 +23,7 @@ use operators
 !
       IMPLICIT NONE
       REAL(r8)   :: ABCD,TUP,SUP,TLO,SLO,RHOUP,RHOLO,ek0
-      REAL(r8)   :: DENS
+      REAL(r8)   :: DENS, zzz1,zzz2
       real(r8),dimension(:,:,:,:),allocatable:: alpha, beta, pp, ppa, ppb, ppc
       real(r8),dimension(:,:,:),allocatable:: work1, work2, adv_tt
       integer :: iblock
@@ -184,7 +184,6 @@ use operators
 !
 !      CALL THERMAL(AT(1,1,1,1),AT(1,1,1,2),PP,ALPHA,BETA,VIT)
       CALL THERMAL(PPB,PPC,PPA,ALPHA,BETA,VIT)
-!
 !
 ! calculate the surface buoyancy fluxes at T-grid
 

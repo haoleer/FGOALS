@@ -1061,6 +1061,7 @@
 	      WRITE(*,*) "n_theta_r_oct=",n_theta_r_oct 
 	      WRITE(*,*) " "
 	      WRITE(*,*) "Program will stop."
+	      WRITE(*,*) "ii,jj,mytid", ii, jj, mytid
 	      WRITE(*,*) &
          "************************************************"
        endif
@@ -1251,6 +1252,7 @@
 	      WRITE(*,*) "n_theta_r_oct=",n_theta_r_oct 
 	      WRITE(*,*) " "
 	      WRITE(*,*) "Program will stop."
+              WRITE(*,*) "ii,jj,mytid", ii, jj, mytid
 	      WRITE(*,*) & 
         "************************************************"
        endif

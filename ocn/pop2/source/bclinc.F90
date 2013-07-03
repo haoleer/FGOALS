@@ -19,7 +19,7 @@ use operators
 
       IMPLICIT NONE
       REAL(r8)    :: AA,GGU,WK1,WK2,fil_lat1,fil_lat2
-      integer     :: iblock
+      integer     :: iblock,kt
       REAL(r8)    :: gradx(imt,jmt), grady(imt,jmt)
       type (block) :: this_block
 
@@ -75,13 +75,6 @@ use operators
 !     PRESSURE GRADIENT FORCES
 !---------------------------------------------------------------------
  
-!     if (mytid ==0 ) then
-!        write(120,*) ((dlu(i,j,2,1),i=3,jmt-2),j=6,7)
-!        write(121,*) ((dlv(i,j,2,1),i=3,jmt-2),j=6,7)
-!        close(120)
-!        close(121)
-!     end if
-
 !!@@@@ DP'/DX
  
       AA = 0.0
@@ -134,14 +127,6 @@ use operators
          END DO
       END DO
   END DO
-!     if (mytid ==0 ) then
-!        write(122,*) ((dlu(i,j,2,1),i=3,jmt-2),j=6,7)
-!        write(123,*) ((dlv(i,j,2,1),i=3,jmt-2),j=6,7)
-!        write(124,*) ((wka(i,j,2,1)*2.0D0,i=3,jmt-2),j=6,7)
-!        close(122)
-!        close(123)
-!        close(124)
-!     end if
 
  
 !!@@@@ G'DH/DX
@@ -175,15 +160,6 @@ use operators
       END DO
    END DO
 
-!     if (mytid ==0 ) then
-!        write(125,*) ((dlu(i,j,2,1),i=3,jmt-2),j=6,7)
-!        write(126,*) ((dlv(i,j,2,1),i=3,jmt-2),j=6,7)
-!        write(127,*) ((wka(i,j,2,1),i=3,jmt-2),j=6,7)
-!        close(125)
-!        close(126)
-!        close(127)
-!     end if
- 
 !---------------------------------------------------------------------
 !     CORIOLIS ADJUSTMENT
 !---------------------------------------------------------------------
@@ -218,14 +194,6 @@ use operators
   END DO
       END IF
  
-!     if (mytid ==0 ) then
-!        write(128,*) ((dlu(i,j,2,1),i=3,jmt-2),j=6,7)
-!        write(129,*) ((dlv(i,j,2,1),i=3,jmt-2),j=6,7)
-!        close(128)
-!        close(129)
-!     end if
-
- 
 !---------------------------------------------------------------------
 !     SET CYCLIC CONDITIONS ON EASTERN AND WESTERN BOUNDARY
 !---------------------------------------------------------------------
@@ -241,14 +209,6 @@ use operators
       CALL SMUV_3D (DLV,VIV,fil_lat1)
 !YU 
 
-!     if (mytid ==0 ) then
-!        write(130,*) ((dlu(i,j,2,1),i=3,jmt-2),j=6,7)
-!        write(131,*) ((dlv(i,j,2,1),i=3,jmt-2),j=6,7)
-!        close(130)
-!        close(131)
-!     end if
-
- 
 !---------------------------------------------------------------------
 !     PREDICTING VC & UC
 !---------------------------------------------------------------------
@@ -314,14 +274,7 @@ use operators
    END DO
 
   
-     if (mytid == 11) then
-      write(164,*) ((dlv(i,j,2,1),i=91,94),j=1,3)
-      write(164,*) ((wka(i,j,2,1),i=91,94),j=1,3)
-      write(164,*) ((vp(i,j,2,1),i=91,94),j=1,3)
-      write(164,*) ((vb(i,j,1),i=91,94),j=1,3)
-      close(164)
-     end if
-
+ 
  
       CALL VINTEG (WKA,WORK)
  
@@ -404,17 +357,9 @@ use operators
         CALL SMUV_3D (VP,VIV,fil_lat2)
      END IF
 !YU 
- 
       ISC = ISC +1
       END IF
 
-!     if (mytid ==0 ) then
-!        write(132,*) ((u(i,j,2,1),i=3,jmt-2),j=6,7)
-!        write(133,*) ((v(i,j,2,1),i=3,jmt-2),j=6,7)
-!        close(132)
-!        close(133)
-!     end if
- 
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I) 
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM

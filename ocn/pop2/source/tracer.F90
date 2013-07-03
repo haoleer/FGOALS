@@ -159,14 +159,6 @@ use distribution
 !     NTRA = 1 => TEMPERATURE
 !     NTRA = 2 => SALINITY
  
-     call chk_var3d(wkd,ek0,0,km)
-     if ( mytid ==0) write(160,*) "wkd", ek0
-     call chk_var3d(wkb,ek0,0,km)
-     if ( mytid ==0) write(160,*) "wkb", ek0
-     call chk_var3d(ws,ek0,1,km)
-     if ( mytid ==0) write(160,*) "ws", ek0
-     call chk_var3d(at(:,:,:,1,:),ek0,1,km)
-     if ( mytid ==0) write(160,*) "AT", ek0
       DO N = 1,NTRA
 !---------------------------------------------------------------------
 !     COMPUTE THE ADVECTIVE TERM 
@@ -186,15 +178,15 @@ use distribution
       end do
    end do
 !
-     call chk_var3d(tf,ek0,1,km)
-     if ( mytid ==0) write(160,*) ek0
-    
-!     if (ist ==2) then 
+!     if (ist ==0 .and. n==1) then 
 !        do kt= 1, km
 !        call write_global(tf(:,:,kt,:),161)
 !        end do
 !        if (mytid==0) close(161)
+!        stop
 !     end if
+!
+    
 #ifdef CANUTO      
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
@@ -271,9 +263,6 @@ use distribution
 !-----------------------------------------------------------------------
 !     VERTICAL COMPONENT
 !-----------------------------------------------------------------------
-     call chk_var3d(tf,ek0,1,km)
-     if ( mytid ==0) write(160,*) ek0
- 
 
          IF (N == 1)THEN
 #if (defined SOLAR)
@@ -355,8 +344,6 @@ use distribution
          END IF
  
 !     EDDY-DIFFUSION
-     call chk_var3d(tf,ek0,1,km)
-     if ( mytid ==0) write(160,*) ek0
  
         wt1=0
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I,wt1,wt2)
@@ -374,10 +361,6 @@ use distribution
            END DO
         END DO
   END DO
-               if (mytid == 0 ) then
-                     write(145,*) ((tf(i,j,1,1), i=3,imt-2),j=6,8)
-                     close(145)
-               end if
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I,wt1,wt2)
    DO IBLOCK = 1, NBLOCKS_CLINIC
        DO J = 3,JMT-2
@@ -392,17 +375,16 @@ use distribution
 !
        END DO
        END DO
-  END DO
+  END DO        
+       if (mytid == 3 .and. ist < 8) then
+           i=83
+           j=24
+           write(145,*) tf(i,j,1,1), tf(i,j,2,1)
+        end if
     
-               if (mytid == 0 ) then
-                     write(146,*) ((wkc(i,j,1,1), i=3,imt-2),j=6,8)
-                     close(146)
-               end if
 !-----------------------------------------------------------------------
 !     SET NEWTONIAN SURFACE BOUNDARY CONDITION
 !-----------------------------------------------------------------------
-     call chk_var3d(tf,ek0,1,km)
-     if ( mytid ==0) write(160,*) ek0
  
          IF (N == 2)THEN
  
@@ -497,9 +479,13 @@ use distribution
 !-----------------------------------------------------------------------
 
 
+       if (mytid == 3 .and. ist < 8) then
+           i=83
+           j=24
+           write(145,*) tf(i,j,1,1), tf(i,j,2,1)
+        end if
+
  
-     call chk_var3d(tf,ek0,1,km)
-     if ( mytid ==0) write(160,*) ek0
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
       DO IBLOCK = 1, NBLOCKS_CLINIC
          DO K = 1,KM
@@ -528,8 +514,6 @@ use distribution
 !
 
 
-     call chk_var3d(vtl,ek0,1,km)
-     if ( mytid ==0) write(160,*) ek0
      call POP_HaloUpdate(VTL , POP_haloClinic, POP_gridHorzLocCenter,&
                          POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
 
@@ -582,11 +566,7 @@ use distribution
             END DO
        END DO
                   
-     call chk_var3d(vtl,ek0,1,km)
-     if ( mytid ==0) write(160,*) ek0
            CALL SMTS (VTL,VIT,fil_lat1)
-     call chk_var3d(vtl,ek0,1,km)
-     if ( mytid ==0) write(160,*) ek0
 
 
 !
@@ -678,8 +658,6 @@ use distribution
   else 
       call exit_licom(sigAbort,'The false advection option for tracer')
   end if
- call chk_var3d(vtl,ek0,1,km)
-     if ( mytid ==0) write(160,*) ek0
    END DO
 !XC
 
@@ -691,8 +669,6 @@ use distribution
 #endif
       IST = IST +1
 !
-
- 
 #ifdef ISO
       deallocate(K1,K2,K3,adv_vetiso,adv_vbtiso,adv_vntiso)
 #endif

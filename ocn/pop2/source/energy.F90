@@ -245,7 +245,7 @@ use blocks
 !
       allocate( work_global(imt_global,jmt_global))
          call gather_global(work_global, var, master_task,distrb_clinic)
-         if (mytid ==0) write(nfile,*) ((work_global(i,j), i=1,imt_global), j=1,jmt_global)
+         if (mytid ==0) write(nfile) ((work_global(i,j), i=1,imt_global), j=4,jmt_global)
       deallocate( work_global)
 !
       end subroutine write_global

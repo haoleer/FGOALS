@@ -410,6 +410,7 @@ use cforce_mod
       write(111,*)"OK------11.0"
       close(111)
       end if
+    call energy
 !---------------------------------------------------------------------
 !     THERMAL CYCLE
 !---------------------------------------------------------------------
@@ -452,9 +453,7 @@ use cforce_mod
 
 !     PREDICTION OF BAROTROPIC MODE
     LOGMSG()
-      call energy
                CALL BAROTR
-      call energy
       if (mytid == 0) then
       write(111,*)"OK------15.0"
       close(111)
@@ -466,7 +465,6 @@ use cforce_mod
 !     PREDICTION OF BAROCLINIC MODE
     LOGMSG()
                CALL BCLINC
-      call energy
       if (mytid == 0) then
       write(111,*)"OK------16.0"
       close(111)
@@ -491,7 +489,6 @@ use cforce_mod
 
 
 
-      call energy
       if (mytid == 0) then
       write(111,*)"OK------18.0"
       close(111)
@@ -499,7 +496,6 @@ use cforce_mod
 
     LOGMSG()
             CALL ICESNOW
-      call energy
 
 
 
@@ -552,7 +548,7 @@ use cforce_mod
 !
 !     MONITOR THE MODEL INTEGRATION
 
-!         CALL ACCUMM
+          CALL ACCUMM
 
 !*********************************************************************
 !      ACCUMULATE SOME VARIABLES IN CARBON MODEL
@@ -572,7 +568,7 @@ use cforce_mod
       end if
 
     LOGMSG()
-!   CALL SSAVEINS
+    CALL SSAVEINS
       if (mytid == 0) then
       write(111,*)"OK------25.0"
       close(111)
@@ -580,14 +576,14 @@ use cforce_mod
 
 !     ACCUMULATE SOME VARIABLES FOR MONTHLY OUTPUT
 
-    CALL ACCUMM
+!   CALL ACCUMM
       if (mytid == 0) then
       write(111,*)"OK------26.0"
       close(111)
       end if
 
     if (iday==imd) then
-!     CALL SSAVEMON
+      CALL SSAVEMON
     endif
       if (mytid == 0) then
       write(111,*)"OK------27.0"
@@ -598,7 +594,6 @@ use cforce_mod
 !----------------------------------------------------------------------
     LOGMSG()
     call licom_export_mct(o2x_o)
-    if ( iday == 5) stop
     LOGMSG()
       if (mytid == 0) then
       write(111,*)"OK------28.0"
@@ -972,11 +967,6 @@ use cforce_mod
 
     ! allocated in inirun.F90
     deallocate(h0, u, v, at)
-
-    ! allocated in rdriver.F90
-    deallocate(su3,sv3,psa3,tsa3,qar3,uva3,swv3,cld3,sss3,sst3 ,nswv3,dqdt3,chloro3)
-    deallocate(seaice3,runoff3)
-    deallocate(wspd3,wspdu3,wspdv3,lwv3,rain3,snow3) 
 
   end subroutine cleanup
 

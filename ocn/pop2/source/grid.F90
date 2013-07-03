@@ -749,6 +749,14 @@
          read(25,rec=1,iostat=ioerr) TLAT_G
          read(25,rec=2,iostat=ioerr) TLON_G
       endif
+!
+      do j=1, jmt_global
+         lat(j) = tlat_g(1,j)/DEGtoRAD
+      end do
+      do i=1, imt_global
+         lon(i) = tlon_g(i,1)/DEGtoRAD
+      end do
+!
 
       call scatter_global(TLAT, TLAT_G, master_task, distrb_clinic, &
                           field_loc_center, field_type_scalar)
@@ -1025,15 +1033,11 @@
 
 
       call broadcast_array(zkp, master_task)
-#if (defined NETCDF) || (defined ALL)
       lev1=zkp
-#endif
       DO K = 1,KM
          DZP (K) = ZKP (K) - ZKP (K +1)
          ZKT (K) = (ZKP (K) + ZKP (K +1))*0.5D0
-#if (defined NETCDF) || (defined ALL)
          lev (k)= (ZKP (K) + ZKP (K +1))*0.5D0
-#endif
          ODZP (K)= 1.0D0/ DZP (K)
       END DO
 

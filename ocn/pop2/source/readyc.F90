@@ -33,8 +33,8 @@ use distribution
       REAL(r8)  :: WP4 (KM) ,WP5 (KM), WP6 (KM)
       REAL(r8)  :: WP7 (KM) ,WP8(KM*2)
       REAL(r8)  :: WP9 ,WP10, WP11
-      REAL(r8),dimension(IMT,JMT,KM,MAX_BLOCKS_CLINIC) :: WP12,WP13
-      REAL(r8)  :: riv1,riv2,epsln,RKV,RKV1
+      REAL(r8),dimension(IMT,JMT,KM,MAX_BLOCKS_CLINIC) :: WP12,WP13,riv1,riv2
+      REAL(r8)  :: epsln,RKV,RKV1
       REAL(r8)  :: adv_x1,adv_x2,adv_x,adv_y1,adv_y2,adv_z,diff_u1,diff_u2,diff_v1,diff_v2
       REAL(r8)  :: dlux,dlvx,dluy,dlvy,dluz,dlvz,adv_z1,adv_z2,adv_z3,adv_z4
       REAL(r6)  :: xxx, c0,ek0
@@ -105,9 +105,9 @@ use distribution
       DO K = 1,KMM1
          DO J = 2, JMT
             DO I = 1,IMT-1
-               riv1 = wp12 (I,J,K,iblock)*vit(i,j,k,iblock) - wp12 (I,J,K +1,iblock)*vit(i,j,k+1,iblock)
-               riv2 = wp13 (I,J,K,iblock)*vit(i,j,k,iblock) - wp13 (I,J,K +1,iblock)*vit(i,j,k+1,iblock)
-               s2t (i,j,k,iblock) =vit(i,j,k+1,iblock)*(riv1*riv1+riv2*riv2)*ODZT(K+1)*ODZT(K+1)
+               riv1(i,j,k,iblock) = wp12 (I,J,K,iblock)*vit(i,j,k,iblock) - wp12 (I,J,K +1,iblock)*vit(i,j,k+1,iblock)
+               riv2(i,j,k,iblock) = wp13 (I,J,K,iblock)*vit(i,j,k,iblock) - wp13 (I,J,K +1,iblock)*vit(i,j,k+1,iblock)
+               s2t (i,j,k,iblock) =vit(i,j,k+1,iblock)*(riv1(i,j,k,iblock)*riv1(i,j,k,iblock)+riv2(i,j,k,iblock)*riv2(i,j,k,iblock))*ODZT(K+1)*ODZT(K+1)
                ridt(i,j,k,iblock) =vit(i,j,k+1,iblock)*ricdt(i,j,k,iblock)/(s2t(i,j,k,iblock)+epsln)
 #ifdef CANUTO  
                rit (i,j,k,iblock)= VIT (I,J,K +1,iblock)*rict(i,j,k,iblock)/(s2t(i,j,k,iblock)+epsln)
@@ -115,18 +115,10 @@ use distribution
                rit (i,j,k,iblock)= rit (i,j,k,iblock,iblock) +VIT (I,J,K +1,iblock,iblock)* &
                                    rict(i,j,k,iblock,iblock)/(s2t(i,j,k,iblock,iblock)+epsln)
 #endif
-!              if (mytid == 12 .and. k==15 .and. j == 35 .and. i == 88 ) then
-!                 write(228,*) i,j,k, wp12(i,j,k,1), wp13(i,j,k,1), wp12(i,j,k+1,1), wp13(i,j,k+1,1)
-!                 write(228,*) riv1, riv2, s2t(i,j,k,1)
-!                 write(228,*) ricdt(i,j,k,1), ridt(i,j,k,1)
-!                 write(228,*) at(i,j,k,1,1), at(i,j,k,2,1)
-!              end if
             END DO
          END DO
       END DO
    END DO
-!    if (mytid ==0) close(228)
-!
 !     call chk_var3d(s2t,ek0,1,kmm1)
 !     if (mytid==0) write(222,*) "s2t", ek0
 !$OMP PARALLEL DO PRIVATE (K,J,I,riv1,riv2)
@@ -134,9 +126,9 @@ use distribution
       DO K = 1,KMM1
          DO J = 1, JMT
             DO I = 1, IMT
-               riv1 = UP (I,J,K,iblock) - UP (I,J,K +1,iblock)
-               riv2 = VP (I,J,K,iblock) - VP (I,J,K +1,iblock)
-               s2u (i,j,k,iblock) =viv(i,j,k+1,iblock)*(riv1*riv1+riv2*riv2)*ODZT(K+1)*ODZT(K+1)
+               riv1(i,j,k,iblock) = UP (I,J,K,iblock) - UP (I,J,K +1,iblock)
+               riv2(i,j,k,iblock) = VP (I,J,K,iblock) - VP (I,J,K +1,iblock)
+               s2u (i,j,k,iblock) =viv(i,j,k+1,iblock)*(riv1(i,j,k,iblock)*riv1(i,j,k,iblock)+riv2(i,j,k,iblock)*riv2(i,j,k,iblock))*ODZT(K+1)*ODZT(K+1)
 ! calculate the shear square and the T component minus S component of Richardson Number
 !lhl1204
                riu (i,j,k,iblock) = VIV (I,J,K +1,iblock)*ric (i,j,k,iblock)/(s2u(i,j,k,iblock)+epsln)
@@ -156,8 +148,8 @@ use distribution
 
 !$OMP PARALLEL DO PRIVATE (iblock,wp1,wp2,wp3,wp4,wp5,wp6,wp7,wp8,wp9,wp10,wp11,akt_back,akm_back,aks_back,iwk,wk1,wk2,wk3,xxx)
    do iblock = 1, nblocks_clinic
-      DO J = 2, JMT
-         DO I = 1, IMT-1
+      DO J = 2, JMT-1
+         DO I = 2, IMT-1
 
         if (VIT(I,J,1,iblock).gt.0.5) then
 !
@@ -187,12 +179,10 @@ use distribution
                wp3(K)= VIT (I,J,K+1,iblock)* (pdensity (I,J,K,iblock)-(pdensity (I,J,K,iblock)- &
                        pdensity(I,J,K+1,iblock))* DZP (K)/(DZP(K)+DZP(K+1)))*1.d-3
                wp8(k)=-vit(i,j,k+1,iblock)*ZKP(k+1)*1.d+2
-         END DO
-         DO K = 1,KMT(i,j,iblock)-1
-         wp4(k)=vit(i,j,k+1,iblock)*RIT(i,j,k,iblock)
-         wp5(k)=vit(i,j,k+1,iblock)*RIDT(i,j,k,iblock)
-         wp6(k)=vit(i,j,k+1,iblock)*S2T(i,j,k,iblock)
-         wp7(k)=vit(i,j,k+1,iblock)*RICT(i,j,k,iblock)
+               wp4(k)=vit(i,j,k+1,iblock)*RIT(i,j,k,iblock)
+               wp5(k)=vit(i,j,k+1,iblock)*RIDT(i,j,k,iblock)
+               wp6(k)=vit(i,j,k+1,iblock)*S2T(i,j,k,iblock)
+               wp7(k)=vit(i,j,k+1,iblock)*RICT(i,j,k,iblock)
          END DO
          wp9=vit(i,j,1,iblock)*USTAR(I,J,iblock)*1.0d+2
          wp10=vit(i,j,1,iblock)*BUOYTUR(I,J,iblock)*1.0d+4
@@ -201,11 +191,33 @@ use distribution
          IWK=KMT(I,J,iblock)-1
 !
 !input ZKT in cm, AT(1) in C, AT(2) in (s-35)/1000., PDENSITY in g/cm^3
-
-
+!        if (mytid ==0 .and. iday == 1 .and. isc == 0) then
+!           write(180,*) i,j, iblock
+!           write(180,*) wp1,wp2,wp3, wp8
+!           write(180,*) wp4,wp5,wp6, wp7
+!           write(180,*) wp9, wp10, wp11
+!           write(180,*) 
+!           write(180,*) (wp12(i,j,k,1),k=1,30)
+!           write(180,*) (wp13(i,j,k,1),k=1,30)
+!           write(180,*) 
+!           write(180,*) (up(i,j,k,1),k=1,30)
+!           write(180,*) (vp(i,j,k,1),k=1,30)
+!           write(180,*) 
+!           write(180,*) (up(i+1,j,k,1),k=1,30)
+!           write(180,*) (vp(i+1,j,k,1),k=1,30)
+!           write(180,*) 
+!           write(180,*) (up(i,j-1,k,1),k=1,30)
+!           write(180,*) (vp(i,j-1,k,1),k=1,30)
+!           write(180,*) 
+!           write(180,*) (up(i+1,j-1,k,1),k=1,30)
+!           write(180,*) (vp(i+1,j-1,k,1),k=1,30)
+!           write(180,*) 
+!           write(180,*) (s2t(i,j,k,1),k=1,29)
+!           close(180)
+!        end if
          CALL  TURB_2(wp8,wp1,wp2,wp3,&
 !input RIT and RIDT no unit, S2T in 1/s^2, DFRICMX and DWNDMIX in cm^2/s
-                wp4,wp5,wp6, DFRICMX*1.0d+4,DWNDMIX*1.0d+4,&
+                wp4,wp5,wp6, DFRICMX*1.0d-4, DWNDMIX*1.0d+4,&
 !output in cm^2/s, so 1d-4 should be multipled
                AKM_BACK,AKT_BACK,AKS_BACK,&
 !input  RICT in 1/s^2 USTAR in cm/s, BUOYTUR,BUOYSOL in cm^2/s^3,FF in 1/s
@@ -215,29 +227,14 @@ use distribution
                AMLD(I,J,iblock),WK1,WK2,WK3,&
 !input int
                IWK,kmt(I,J,iblock)-1,KM,1,0,0,i,j) !OK!
-!           if (mytid == 0 .and. j > 44 .and. j < 47  .and. i > 2 .and. i < 10) then
-!              write(122,*) i,j,fcor(i,j,1), amld(i,j,1)
-!              write(122,*) "WP1", wp1(1:10)
-!              write(122,*) "WP2", wp2(1:10)
-!              write(122,*) "WP3", wp3(1:10)
-!              write(122,*) "WP4", wp4(1:10)
-!              write(122,*) "WP5", wp5(1:10)
-!              write(122,*) "WP6", wp6(1:10)
-!              write(122,*) "WP7", wp7(1:10)
-!              write(122,*) "WP8", wp8(1:10)
-!              write(122,*) "WP9", wp9,wp10, wp11
-!              write(122,*) "WK1", WK1(1:10)
-!              write(122,*) "WK2", WK2(1:10)
-!              write(122,*) "WK3", WK3(1:10)
-!           end if
 
          DO K = 1,KM
-         xxx = WK1(K)
-         WK1(K) = xxx
-         xxx = WK2(K)
-         WK2(K) = xxx
-         xxx = WK3(K)
-         WK3(K) = xxx
+!        xxx = WK1(K)
+!        WK1(K) = xxx
+!        xxx = WK2(K)
+!        WK2(K) = xxx
+!        xxx = WK3(K)
+!        WK3(K) = xxx
          AKMT(I,J,K,iblock)=+(WK1(K)+dmin1(AKM_BACK(K),1d-3))*1.d-4
          AKT(I,J,K,1,iblock)=AKT(I,J,K,1,iblock)+(WK2(K)+dmin1(AKT_BACK(K),1d-3))/NCC*1.d-4
          AKT(I,J,K,2,iblock)=AKT(I,J,K,2,iblock)+(WK3(K)+dmin1(AKS_BACK(K),1d-3))/NCC*1.d-4
@@ -304,11 +301,6 @@ use distribution
          dlv(:,:,:,IBLOCK)=adv_vv
    END DO
 
-!     call chk_var3d(dlu,ek0,0,km)
-!     if (mytid==0) write(222,*) ek0
-!     call chk_var3d(dlv,ek0,0,km)
-!     if (mytid==0) write(222,*) ek0
-!
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
     DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KM
@@ -320,35 +312,6 @@ use distribution
          END DO
       END DO
    END DO
-!     call chk_var3d(wka,ek0,0,km)
-!     if (mytid==0) write(222,*) "WKA", ek0
-!     call chk_var3d(akmt,ek0,1,kmm1)
-!     if (mytid==0) write(222,*) "akmt", ek0
-!     call chk_var3d(akmu,ek0,0,kmm1)
-!     if (mytid==0) write(222,*) "akmu", ek0
-!     call chk_var2d(ustar,ek0,1)
-!     if (mytid==0) write(222,*) "AT1", ek0
-!     call chk_var3d(at(:,:,:,2,:),ek0,1,km)
-!     if (mytid==0) write(222,*) "AT2", ek0
-!     call chk_var3d(pdensity,ek0,1,km)
-!     if (mytid==0) write(222,*) "pdensity", ek0
-!     call chk_var3d(rit,ek0,1,kmm1)
-!     if (mytid==0) write(222,*) "rit", ek0
-!     call chk_var3d(ridt,ek0,1,kmm1)
-!     if (mytid==0) write(222,*) "ridt", ek0
-!     call chk_var3d(s2t,ek0,1,kmm1)
-!     if (mytid==0) write(222,*) "s2t", ek0
-!     call chk_var3d(rict,ek0,1,kmm1)
-!     if (mytid==0) write(222,*) "rict", ek0
-!     call chk_var3d(ricdt,ek0,1,kmm1)
-!     if (mytid==0) write(222,*) "ricdt", ek0
-
-!    do k=1, kmm1
-!        call gather_global(ttt, akmt(:,:,k,:), master_task,distrb_clinic)
-!        if (mytid==0) write(227,*) ((ttt(i,j),i=1,imt_global),j=1,jmt_global)
-!    end do
-!        if (mytid==0) close(227)
-
  
  
 !$OMP PARALLEL DO PRIVATE (IBLOCK,k,J,I,diff_u1,diff_v1,diff_u2,diff_v2,rkv,riv1,rkv1)
@@ -363,10 +326,12 @@ use distribution
                diff_v1 = SV (I,J,IBLOCK)* OD0*(1-AIDIF)
                diff_u1 = SU (I,J,IBLOCK)* OD0*(1-AIDIF)
             else
-               diff_v1= AKMU(I,J,K-1,IBLOCK)*(1-AIDIF)*(VP(I,J,K-1,IBLOCK)- VP(I,J,K,IBLOCK))*ODZT(K)*VIV(I,J,K,IBLOCK)+ &
+               diff_v1= AKMU(I,J,K-1,IBLOCK)*(1-AIDIF)*(VP(I,J,K-1,IBLOCK)- VP(I,J,K,IBLOCK))* &
+                        ODZT(K)*VIV(I,J,K,IBLOCK)+ &
                         (1.0D0- VIV (I,J,K,IBLOCK))* WKA (I,J,K -1,IBLOCK)*(1-AIDIF) &
                       * (-SNLAT(I,J,IBLOCK)*UP(I,J,K-1,IBLOCK)*SAG+VP(I,J,K-1,IBLOCK)*CAG)
-               diff_u1= AKMU(I,J,K-1,IBLOCK)*(1-AIDIF)* (UP(I,J,K-1,IBLOCK)-UP(I,J,K,IBLOCK))* ODZT (K)*VIV (I,J,K,IBLOCK) + &
+               diff_u1= AKMU(I,J,K-1,IBLOCK)*(1-AIDIF)* (UP(I,J,K-1,IBLOCK)-UP(I,J,K,IBLOCK))*  &
+                        ODZT (K)*VIV (I,J,K,IBLOCK) + &
                        (1.0D0- VIV (I,J,K,IBLOCK))* WKA (I,J,K -1,IBLOCK)*(1-AIDIF) &
                       *(UP(I,J,K-1,IBLOCK)*CAG+SNLAT(I,J,IBLOCK)*VP(I,J,K-1,IBLOCK)* SAG)
             end if
@@ -376,10 +341,12 @@ use distribution
                diff_u2= WKA (I,J,KM,IBLOCK)* ( UP (I,J,KM,IBLOCK)* CAG + SNLAT (I,J,IBLOCK)    &
                         * VP (I,J,KM,IBLOCK)* SAG)*(1-AIDIF)
             else
-               diff_v2= AKMU(I,J,K,IBLOCK)*(1-AIDIF)*(VP(I,J,K,IBLOCK)- VP(I,J,K+1,IBLOCK))*ODZT(K+1)*VIV(I,J,K+1,IBLOCK)+ &
+               diff_v2= AKMU(I,J,K,IBLOCK)*(1-AIDIF)*(VP(I,J,K,IBLOCK)- VP(I,J,K+1,IBLOCK))* &
+                        ODZT(K+1)*VIV(I,J,K+1,IBLOCK)+ &
                         (1.0D0- VIV (I,J,K+1,IBLOCK))* WKA (I,J,K,IBLOCK)*(1-AIDIF) &
                       * (-SNLAT(I,J,IBLOCK)*UP(I,J,K,IBLOCK)*SAG+VP(I,J,K,IBLOCK)*CAG)
-               diff_u2= AKMU(I,J,K,IBLOCK)*(1-AIDIF)*(UP(I,J,K,IBLOCK)-UP(I,J,K+1,IBLOCK))* ODZT(K+1)*VIV (I,J,K+1,IBLOCK) + &
+               diff_u2= AKMU(I,J,K,IBLOCK)*(1-AIDIF)*(UP(I,J,K,IBLOCK)-UP(I,J,K+1,IBLOCK))*  & 
+                        ODZT(K+1)*VIV (I,J,K+1,IBLOCK) + &
                        (1.0D0- VIV (I,J,K+1,IBLOCK))* WKA (I,J,K,IBLOCK)*(1-AIDIF) &
                       *(UP(I,J,K,IBLOCK)*CAG+SNLAT(I,J,IBLOCK)*VP(I,J,K,IBLOCK)* SAG)
             end if
@@ -441,20 +408,14 @@ use distribution
 !lhl1204
             DLV (I,J,K,IBLOCK) = DLV (I,J,K,IBLOCK) + ODZP (K)* (diff_v1-diff_v2)
             DLU (I,J,K,IBLOCK) = DLU (I,J,K,IBLOCK) + ODZP (K)* (diff_u1-diff_u2)
-!           if (mytid == 1 .and. k==3 .and.j > 44 .and. j < 47  .and. i >62 .and. i < 70) then
-!               write(123,*) i,j,k
-!               write(123,*) diff_u1, diff_u2, akmu(i,j,k-1,1), akmu(i,j,k,1),akmu(i,j,k+1,1)
-!               write(123,*) akmt(i-1,j,k,1),akmt(i,j,k,1),akmt(i-1,j+1,k,1),akmt(i,j+1,k,1)
-!           end if
         END DO
       END DO
       END DO
    END DO
+      if (mytid == 3) then
+         write(162,*) dlu(84,24,2,1), dlv(84,24,2,1)
+      end if
 
-!     call chk_var3d(dlu,ek0,0,km)
-!     if (mytid==0) write(222,*) ek0
-!     call chk_var3d(dlv,ek0,0,km)
-!     if (mytid==0) write(222,*) ek0
 !
       deallocate(riu) 
  
@@ -519,15 +480,6 @@ use distribution
       allocate(dlub(imt,jmt,max_blocks_clinic),dlvb(imt,jmt,max_blocks_clinic),stat=ierr)
       CALL VINTEG (DLU,DLUB)
       CALL VINTEG (DLV,DLVB)
-!    if ( mytid == 0 ) then
-!        write(120,*) ((dlub(i,j,1),i=3,92),j=6,7)
-!        write(121,*) ((dlvb(i,j,1),i=3,92),j=6,7)
-!        close(120)
-!        close(121)
-!        close(122)
-!        close(123)
-!    end if
-!
 !---------------------------------------------------------------------
 !     VERTICAL INTEGRATION
 !---------------------------------------------------------------------
