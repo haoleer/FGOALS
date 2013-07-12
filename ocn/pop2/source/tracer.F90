@@ -376,11 +376,6 @@ use distribution
        END DO
        END DO
   END DO        
-       if (mytid == 3 .and. ist < 8) then
-           i=83
-           j=24
-           write(145,*) tf(i,j,1,1), tf(i,j,2,1)
-        end if
     
 !-----------------------------------------------------------------------
 !     SET NEWTONIAN SURFACE BOUNDARY CONDITION
@@ -477,15 +472,6 @@ use distribution
 !-----------------------------------------------------------------------
 !     SOLVE FOR "TAU+1" TRACER AT CENTER OF "T" CELLS
 !-----------------------------------------------------------------------
-
-
-       if (mytid == 3 .and. ist < 8) then
-           i=83
-           j=24
-           write(145,*) tf(i,j,1,1), tf(i,j,2,1)
-        end if
-
- 
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
       DO IBLOCK = 1, NBLOCKS_CLINIC
          DO K = 1,KM

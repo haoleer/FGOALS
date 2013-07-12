@@ -217,7 +217,7 @@ use distribution
 !        end if
          CALL  TURB_2(wp8,wp1,wp2,wp3,&
 !input RIT and RIDT no unit, S2T in 1/s^2, DFRICMX and DWNDMIX in cm^2/s
-                wp4,wp5,wp6, DFRICMX*1.0d-4, DWNDMIX*1.0d+4,&
+                wp4,wp5,wp6, DFRICMX*1.0d+4, DWNDMIX*1.0d+4,&
 !output in cm^2/s, so 1d-4 should be multipled
                AKM_BACK,AKT_BACK,AKS_BACK,&
 !input  RICT in 1/s^2 USTAR in cm/s, BUOYTUR,BUOYSOL in cm^2/s^3,FF in 1/s
