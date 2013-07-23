@@ -200,14 +200,5 @@ use grid, only : kmt
       END DO
    end if
 !
-        if (mytid == 3 .and. isc < 8) then
-           i=83
-           j=24
-           write(169,*) "ISC=", ISC
-           write(169,*) at(i,j,1,1,1),at(i,j,2,1,1)
-           write(169,*) at(i,j,1,2,1),at(i,j,2,2,1)
-           if(isc==7) close(169)
-        end if
-
       RETURN
       END SUBROUTINE CONVADJ

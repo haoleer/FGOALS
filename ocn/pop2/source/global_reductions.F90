@@ -183,8 +183,8 @@
    local_sum = c0
 
    !call timer_start(timer_local)
-   if (ltripole_grid .and. (field_loc == field_loc_Sface .or. &
-                            field_loc == field_loc_SWcorner)) then
+   if (ltripole_grid .and. (field_loc == field_loc_Wface .or. &
+                            field_loc == field_loc_Center)) then
       !*** must remove redundant points from sum
       do n=1,nblocks_tot
          if (dist%proc(n) == my_task+1) then
@@ -201,18 +201,18 @@
                   do k=1,nfields
                   do i=ib,ie
                      if (this_block%i_glob(i) <= imt_global/2) &
-                     local_sum(k) = local_sum(k) + X(i,je,k,bid)*MASK(i,je,bid)
+                     local_sum(k) = local_sum(k) + X(i,jb,k,bid)*MASK(i,jb,bid)
                   end do
                   end do
                else ! no mask
                   do k=1,nfields
                   do i=ib,ie
                      if (this_block%i_glob(i) <= imt_global/2) &
-                     local_sum(k) = local_sum(k) + X(i,je,k,bid)
+                     local_sum(k) = local_sum(k) + X(i,jb,k,bid)
                   end do
                   end do
                endif
-               je = je - 1
+               jb = jb + 1
             endif
             if (present(MASK)) then
                do k=1,nfields
@@ -415,8 +415,8 @@
    local_sum = c0
 
    !call timer_start(timer_local)
-   if (ltripole_grid .and. (field_loc == field_loc_Sface .or. &
-                            field_loc == field_loc_SWcorner)) then
+   if (ltripole_grid .and. (field_loc == field_loc_Wface .or. &
+                            field_loc == field_loc_Center)) then
       !*** must remove redundant points from sum
       do n=1,nblocks_tot
          if (dist%proc(n) == my_task+1) then
@@ -426,21 +426,21 @@
             ie = this_block%ie
             jb = this_block%jb
             je = this_block%je
-            if (this_block%jblock == nblocks_y) then
+            if (this_block%jblock == 1 ) then
                !*** for topmost row in tripole only sum
                !*** 1st half of domain - others are redundant
                if (present(MASK)) then
                   do i=ib,ie
                      if (this_block%i_glob(i) <= imt_global/2) &
-                     local_sum = local_sum + X(i,je,bid)*MASK(i,je,bid)
+                     local_sum = local_sum + X(i,jb,bid)*MASK(i,jb,bid)
                   end do
                else ! no mask
                   do i=ib,ie
                      if (this_block%i_glob(i) <= imt_global/2) &
-                     local_sum = local_sum + X(i,je,bid)
+                     local_sum = local_sum + X(i,jb,bid)
                   end do
                endif
-               je = je - 1
+               jb = jb + 1
             endif
             if (present(MASK)) then
                do j=jb,je
@@ -632,8 +632,8 @@
    local_sum = c0
 
    !call timer_start(timer_local)
-   if (ltripole_grid .and. (field_loc == field_loc_Sface .or. &
-                            field_loc == field_loc_SWcorner)) then
+   if (ltripole_grid .and. (field_loc == field_loc_Wface .or. &
+                            field_loc == field_loc_Center)) then
       !*** must remove redundant points from sum
       do n=1,nblocks_tot
          if (dist%proc(n) == my_task+1) then
@@ -643,21 +643,21 @@
             ie = this_block%ie
             jb = this_block%jb
             je = this_block%je
-            if (this_block%jblock == nblocks_y) then
+            if (this_block%jblock == 1) then
                !*** for topmost row in tripole only sum
                !*** 1st half of domain - others are redundant
                if (present(MASK)) then
                   do i=ib,ie
                      if (this_block%i_glob(i) <= imt_global/2) &
-                     local_sum = local_sum + X(i,je,bid)*MASK(i,je,bid)
+                     local_sum = local_sum + X(i,jb,bid)*MASK(i,jb,bid)
                   end do
                else ! no mask
                   do i=ib,ie
                      if (this_block%i_glob(i) <= imt_global/2) &
-                     local_sum = local_sum + X(i,je,bid)
+                     local_sum = local_sum + X(i,jb,bid)
                   end do
                endif
-               je = je - 1
+               jb = jb + 1
             endif
             if (present(MASK)) then
                do j=jb,je
@@ -843,8 +843,8 @@
    local_sum = c0
 
    !call timer_start(timer_local)
-   if (ltripole_grid .and. (field_loc == field_loc_Sface .or. &
-                            field_loc == field_loc_SWcorner)) then
+   if (ltripole_grid .and. (field_loc == field_loc_Wface .or. &
+                            field_loc == field_loc_Center)) then
       !*** must remove redundant points from sum
       do n=1,nblocks_tot
          if (dist%proc(n) == my_task+1) then
@@ -854,21 +854,21 @@
             ie = this_block%ie
             jb = this_block%jb
             je = this_block%je
-            if (this_block%jblock == nblocks_y) then
+            if (this_block%jblock == 1) then
                !*** for topmost row in tripole only sum
                !*** 1st half of domain - others are redundant
                if (present(MASK)) then
                   do i=ib,ie
                      if (this_block%i_glob(i) <= imt_global/2) &
-                     local_sum = local_sum + X(i,je,bid)*MASK(i,je,bid)
+                     local_sum = local_sum + X(i,jb,bid)*MASK(i,jb,bid)
                   end do
                else ! no mask
                   do i=ib,ie
                      if (this_block%i_glob(i) <= imt_global/2) &
-                     local_sum = local_sum + X(i,je,bid)
+                     local_sum = local_sum + X(i,jb,bid)
                   end do
                endif
-               je = je - 1
+               jb = jb + 1
             endif
             if (present(MASK)) then
                do j=jb,je
@@ -1184,8 +1184,8 @@
    local_sum = c0
 
    !call timer_start(timer_local)
-   if (ltripole_grid .and. (field_loc == field_loc_Sface .or. &
-                            field_loc == field_loc_SWcorner)) then
+   if (ltripole_grid .and. (field_loc == field_loc_Wface .or. &
+                            field_loc == field_loc_Center)) then
       !*** must remove redundant points from sum
       do n=1,nblocks_tot
          if (dist%proc(n) == my_task+1) then
@@ -1195,22 +1195,22 @@
             ie = this_block%ie
             jb = this_block%jb
             je = this_block%je
-            if (this_block%jblock == nblocks_y) then
+            if (this_block%jblock == 1 ) then
                !*** for topmost row in tripole only sum
                !*** 1st half of domain - others are redundant
                if (present(MASK)) then
                   do i=ib,ie
                      if (this_block%i_glob(i) <= imt_global/2) &
                      local_sum = local_sum + &
-                                 X(i,je,bid)*Y(i,je,bid)*MASK(i,je,bid)
+                                 X(i,jb,bid)*Y(i,jb,bid)*MASK(i,jb,bid)
                   end do
                else ! no mask
                   do i=ib,ie
                      if (this_block%i_glob(i) <= imt_global/2) &
-                     local_sum = local_sum + X(i,je,bid)*Y(i,je,bid)
+                     local_sum = local_sum + X(i,jb,bid)*Y(i,jb,bid)
                   end do
                endif
-               je = je - 1
+               jb = jb + 1
             endif
             if (present(MASK)) then
                do j=jb,je
@@ -1400,8 +1400,8 @@
    local_sum = c0
 
    !call timer_start(timer_local)
-   if (ltripole_grid .and. (field_loc == field_loc_Sface .or. &
-                            field_loc == field_loc_SWcorner)) then
+   if (ltripole_grid .and. (field_loc == field_loc_Wface .or. &
+                            field_loc == field_loc_Center)) then
       !*** must remove redundant points from sum
       do n=1,nblocks_tot
          if (dist%proc(n) == my_task+1) then
@@ -1411,22 +1411,22 @@
             ie = this_block%ie
             jb = this_block%jb
             je = this_block%je
-            if (this_block%jblock == nblocks_y) then
+            if (this_block%jblock ==  1 ) then
                !*** for topmost row in tripole only sum
                !*** 1st half of domain - others are redundant
                if (present(MASK)) then
                   do i=ib,ie
                      if (this_block%i_glob(i) <= imt_global/2) &
                      local_sum = local_sum + &
-                                 X(i,je,bid)*Y(i,je,bid)*MASK(i,je,bid)
+                                 X(i,jb,bid)*Y(i,jb,bid)*MASK(i,jb,bid)
                   end do
                else ! no mask
                   do i=ib,ie
                      if (this_block%i_glob(i) <= imt_global/2) &
-                     local_sum = local_sum + X(i,je,bid)*Y(i,je,bid)
+                     local_sum = local_sum + X(i,jb,bid)*Y(i,jb,bid)
                   end do
                endif
-               je = je - 1
+               jb = jb + 1
             endif
             if (present(MASK)) then
                do j=jb,je
@@ -1617,8 +1617,8 @@
    local_sum = c0
 
    !call timer_start(timer_local)
-   if (ltripole_grid .and. (field_loc == field_loc_Sface .or. &
-                            field_loc == field_loc_SWcorner)) then
+   if (ltripole_grid .and. (field_loc == field_loc_Wface .or. &
+                            field_loc == field_loc_Center)) then
       !*** must remove redundant points from sum
       do n=1,nblocks_tot
          if (dist%proc(n) == my_task+1) then
@@ -1628,22 +1628,22 @@
             ie = this_block%ie
             jb = this_block%jb
             je = this_block%je
-            if (this_block%jblock == nblocks_y) then
+            if (this_block%jblock ==  1 ) then
                !*** for topmost row in tripole only sum
                !*** 1st half of domain - others are redundant
                if (present(MASK)) then
                   do i=ib,ie
                      if (this_block%i_glob(i) <= imt_global/2) &
                      local_sum = local_sum + &
-                                 X(i,je,bid)*Y(i,je,bid)*MASK(i,je,bid)
+                                 X(i,jb,bid)*Y(i,jb,bid)*MASK(i,jb,bid)
                   end do
                else ! no mask
                   do i=ib,ie
                      if (this_block%i_glob(i) <= imt_global/2) &
-                     local_sum = local_sum + X(i,je,bid)*Y(i,je,bid)
+                     local_sum = local_sum + X(i,jb,bid)*Y(i,jb,bid)
                   end do
                endif
-               je = je - 1
+               jb = jb + 1
             endif
             if (present(MASK)) then
                do j=jb,je
@@ -1812,8 +1812,8 @@
 !-----------------------------------------------------------------------
 
    local_count = 0
-   if (ltripole_grid .and. (field_loc == field_loc_Sface .or. &
-                            field_loc == field_loc_SWcorner)) then
+   if (ltripole_grid .and. (field_loc == field_loc_Wface .or. &
+                            field_loc == field_loc_Center)) then
       !*** must remove redundant points from sum
       do n=1,nblocks_tot
          if (dist%proc(n) == my_task+1) then
@@ -1823,15 +1823,15 @@
             ie = this_block%ie
             jb = this_block%jb
             je = this_block%je
-            if (this_block%jblock == nblocks_y) then
+            if (this_block%jblock ==  1 ) then
                !*** for topmost row in tripole only sum
                !*** 1st half of domain - others are redundant
                do i=ib,ie
                   if (this_block%i_glob(i) <= imt_global/2 .and. &
-                      MASK(i,je,bid) /= c0) &
+                      MASK(i,jb,bid) /= c0) &
                      local_count = local_count + 1
                end do
-               je = je - 1
+               jb = jb + 1
             endif
             local_count = local_count &
                         + count(MASK(ib:ie,jb:je,bid) /= c0)
@@ -1899,8 +1899,8 @@
 !-----------------------------------------------------------------------
 
    local_count = 0
-   if (ltripole_grid .and. (field_loc == field_loc_Sface .or. &
-                            field_loc == field_loc_SWcorner)) then
+   if (ltripole_grid .and. (field_loc == field_loc_Wface .or. &
+                            field_loc == field_loc_Center)) then
       !*** must remove redundant points from sum
       do n=1,nblocks_tot
          if (dist%proc(n) == my_task+1) then
@@ -1910,15 +1910,15 @@
             ie = this_block%ie
             jb = this_block%jb
             je = this_block%je
-            if (this_block%jblock == nblocks_y) then
+            if (this_block%jblock ==  1 ) then
                !*** for topmost row in tripole only sum
                !*** 1st half of domain - others are redundant
                do i=ib,ie
                   if (this_block%i_glob(i) <= imt_global/2 .and. &
-                      MASK(i,je,bid) /= c0) &
+                      MASK(i,jb,bid) /= c0) &
                      local_count = local_count + 1
                end do
-               je = je - 1
+               jb = jb + 1
             endif
             local_count = local_count &
                         + count(MASK(ib:ie,jb:je,bid) /= c0)
@@ -1986,8 +1986,8 @@
 !-----------------------------------------------------------------------
 
    local_count = 0
-   if (ltripole_grid .and. (field_loc == field_loc_Sface .or. &
-                            field_loc == field_loc_SWcorner)) then
+   if (ltripole_grid .and. (field_loc == field_loc_Wface .or. &
+                            field_loc == field_loc_Center)) then
       !*** must remove redundant points from sum
       do n=1,nblocks_tot
          if (dist%proc(n) == my_task+1) then
@@ -1997,15 +1997,15 @@
             ie = this_block%ie
             jb = this_block%jb
             je = this_block%je
-            if (this_block%jblock == nblocks_y) then
+            if (this_block%jblock ==  1 ) then
                !*** for topmost row in tripole only sum
                !*** 1st half of domain - others are redundant
                do i=ib,ie
                   if (this_block%i_glob(i) <= imt_global/2 .and. &
-                      MASK(i,je,bid) /= 0) &
+                      MASK(i,jb,bid) /= 0) &
                      local_count = local_count + 1
                end do
-               je = je - 1
+               jb = jb + 1
             endif
             local_count = local_count &
                         + count(MASK(ib:ie,jb:je,bid) /= 0)
@@ -2075,8 +2075,8 @@
 !-----------------------------------------------------------------------
 
    local_count = 0
-   if (ltripole_grid .and. (field_loc == field_loc_Sface .or. &
-                            field_loc == field_loc_SWcorner)) then
+   if (ltripole_grid .and. (field_loc == field_loc_Wface .or. &
+                            field_loc == field_loc_Center)) then
       !*** must remove redundant points from sum
       do n=1,nblocks_tot
          if (dist%proc(n) == my_task+1) then
@@ -2086,15 +2086,15 @@
             ie = this_block%ie
             jb = this_block%jb
             je = this_block%je
-            if (this_block%jblock == nblocks_y) then
+            if (this_block%jblock == 1 ) then
                !*** for topmost row in tripole only sum
                !*** 1st half of domain - others are redundant
                do i=ib,ie
                   if (this_block%i_glob(i) <= imt_global/2 .and. &
-                      MASK(i,je,bid)) &
+                      MASK(i,jb,bid)) &
                      local_count = local_count + 1
                end do
-               je = je - 1
+               jb = jb + 1
             endif
             local_count = local_count &
                         + count(MASK(ib:ie,jb:je,bid))

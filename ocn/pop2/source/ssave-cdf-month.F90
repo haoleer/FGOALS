@@ -75,7 +75,7 @@ use gather_scatter
        if (mytid==0) then
          iret = nf_create (fname1, NF_CLOBBER, ncid)
          CALL check_err (iret)
-          write(*,*)'ok generate,ncid=',ncid
+          write(*,*)'ok generate,ncid=',ncid, time_len
 ! define dimensions
          iret = nf_def_dim (ncid, 'lat', lat_len, lat_dim)
          CALL check_err (iret)
@@ -490,7 +490,7 @@ use gather_scatter
          iret = nf_put_var_real (ncid, lev1_id, lev1)
          CALL check_err (iret)
          start1 (1)= 1
-         count1 (1)= time_len
+         count1 (1)= 1
          iret = nf_put_vara_double (ncid, time_id,start1,count1,t0_cdf)
          CALL check_err (iret)
  
@@ -502,7 +502,7 @@ use gather_scatter
          start3 (3)= 1
          count3 (1)= lon_len
          count3 (2)= lat_len
-         count3 (3)= time_len
+         count3 (3)= 1
  
          allocate(buffer_r4_global(imt_global,jmt_global), buffer_r4_local(imt,jmt,max_blocks_clinic))
 !
@@ -559,7 +559,7 @@ use gather_scatter
          start4 (4)= 1
          count4 (1)= lon_len
          count4 (2)= lat_len
-         count4 (4)= time_len
+         count4 (4)= 1
 
          do k = 1, klv
             start4 (3)= k
@@ -568,8 +568,8 @@ use gather_scatter
             buffer_r4_local = akmmon(:,:,k,:)
             call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic) 
             if(mytid==0) then
-               iret = nf_put_vara_real (ncid,akm_id,start4, count4, buffer_r4_global)
-               CALL check_err (iret)
+!              iret = nf_put_vara_real (ncid,akm_id,start4, count4, buffer_r4_global)
+!              CALL check_err (iret)
             endif !mytid==0
 !
          end do
@@ -670,42 +670,42 @@ use gather_scatter
          buffer_r4_local = sumon
          call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
          if(mytid==0) then
-            iret = nf_put_vara_real (ncid,su_id,start4, count4, buffer_r4_global)
+            iret = nf_put_vara_real (ncid,su_id,start3, count3, buffer_r4_global)
             CALL check_err (iret)
          endif !mytid==0
 !
          buffer_r4_local = svmon
          call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
          if(mytid==0) then
-            iret = nf_put_vara_real (ncid,sv_id,start4, count4, buffer_r4_global)
+            iret = nf_put_vara_real (ncid,sv_id,start3, count3, buffer_r4_global)
             CALL check_err (iret)
          endif !mytid==0
 !
          buffer_r4_local = lthfmon
          call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
          if(mytid==0) then
-            iret = nf_put_vara_real (ncid,lthf_id,start4, count4, buffer_r4_global)
+            iret = nf_put_vara_real (ncid,lthf_id,start3, count3, buffer_r4_global)
             CALL check_err (iret)
          endif !mytid==0
 !
          buffer_r4_local = sshfmon
          call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
          if(mytid==0) then
-            iret = nf_put_vara_real (ncid,sshf_id,start4, count4, buffer_r4_global)
+            iret = nf_put_vara_real (ncid,sshf_id,start3, count3, buffer_r4_global)
             CALL check_err (iret)
          endif !mytid==0
 !
          buffer_r4_local = lwvmon
          call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
          if(mytid==0) then
-            iret = nf_put_vara_real (ncid,lwv_id,start4, count4, buffer_r4_global)
+            iret = nf_put_vara_real (ncid,lwv_id,start3, count3, buffer_r4_global)
             CALL check_err (iret)
          endif !mytid==0
 !
          buffer_r4_local = swvmon
          call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
          if(mytid==0) then
-            iret = nf_put_vara_real (ncid,swv_id,start4, count4, buffer_r4_global)
+            iret = nf_put_vara_real (ncid,swv_id,start3, count3, buffer_r4_global)
             CALL check_err (iret)
          endif !mytid==0
 !

@@ -32,9 +32,6 @@ use domain
 !linpf091126 
             mldmon (I,J,iblock)= mldmon (I,J,iblock) + amld (I,J,iblock)/100.
 !
-            akmmon (I,J,K,iblock)= akmmon (I,J,K,iblock) + akmu(I,J,K,iblock)
-            aktmon (I,J,K,iblock)= aktmon (I,J,K,iblock) + akt(I,J,K,1,iblock)
-            aksmon (I,J,K,iblock)= aksmon (I,J,K,iblock) + akt(I,J,K,2,iblock)
             netmon (I,J,1,iblock)= netmon (I,J,1,iblock) + net (I,J,1,iblock)
             netmon (I,J,2,iblock)= netmon (I,J,2,iblock) + net (I,J,2,iblock)
          END DO
@@ -47,10 +44,13 @@ use domain
          DO J = 1,JMT
             DO I = 1,IMT
                WSMON (I,J,K,iblock)= WSMON (I,J,K,iblock) + WS (I,J,K,iblock)
-               TSMON (I,J,K,iblock)= TSMON (I,J,K,iblock) + AT (I,J,K,1,iblock)
-               SSMON (I,J,K,iblock)= SSMON (I,J,K,iblock) + (AT (I,J,K,2,iblock)*1000.+35.)
+               TSMON (I,J,K,iblock)= TSMON (I,J,K,iblock) + AT (I,J,K,1,iblock)*vit(i,j,k,iblock)
+               SSMON (I,J,K,iblock)= SSMON (I,J,K,iblock) + (AT (I,J,K,2,iblock)*1000.+35.)*vit(i,j,k,iblock)
                USMON (I,J,K,iblock)= USMON (I,J,K,iblock) + U (I,J,K,iblock)
                VSMON (I,J,K,iblock)= VSMON (I,J,K,iblock) - V (I,J,K,iblock)
+               akmmon (I,J,K,iblock)= akmmon (I,J,K,iblock) + akmu(I,J,K,iblock)
+               aktmon (I,J,K,iblock)= aktmon (I,J,K,iblock) + akt(I,J,K,1,iblock)
+               aksmon (I,J,K,iblock)= aksmon (I,J,K,iblock) + akt(I,J,K,2,iblock)
 #if (defined SMAG_OUT)
                AM3MON (I,J,K,iblock)= AM3MON (I,J,K,iblock) + AM3 (I,J,K,iblock)
 #endif

@@ -263,10 +263,10 @@
       !*** must eliminate redundant points from global sum
 
       if (thisBlock%tripole) then
-         if (fieldLoc == POP_gridHorzLocsface .or. &
-             fieldLoc == POP_gridHorzLocSWcorner) then
+         if (fieldLoc == POP_gridHorzLocWface .or. &
+             fieldLoc == POP_gridHorzLocCenter) then
 
-            j = je
+            j = jb
 
             if (present(mMask)) then
                do i=ib,ie
@@ -478,10 +478,10 @@
       !*** must eliminate redundant points from global sum
 
       if (thisBlock%tripole) then
-         if (fieldLoc == POP_gridHorzLocsface .or. &
-             fieldLoc == POP_gridHorzLocSWcorner) then
+         if (fieldLoc == POP_gridHorzLocWface .or. &
+             fieldLoc == POP_gridHorzLocCenter) then
 
-            j = je
+            j = jb
 
             if (present(mMask)) then
                do i=ib,ie
@@ -678,10 +678,10 @@
       !*** must eliminate redundant points from global sum
 
       if (thisBlock%tripole) then
-         if (fieldLoc == POP_gridHorzLocsface .or. &
-             fieldLoc == POP_gridHorzLocSWcorner) then
+         if (fieldLoc == POP_gridHorzLocWface .or. &
+             fieldLoc == POP_gridHorzLocCenter) then
 
-            j = je
+            j = jb
 
             if (present(mMask)) then
                do i=ib,ie
@@ -896,10 +896,10 @@
       !*** must eliminate redundant points from global sum
 
       if (thisBlock%tripole) then
-         if (fieldLoc == POP_gridHorzLocsface .or. &
-             fieldLoc == POP_gridHorzLocSWcorner) then
+         if (fieldLoc == POP_gridHorzLocWface .or. &
+             fieldLoc == POP_gridHorzLocCenter) then
 
-            j = je
+            j = jb
 
             if (present(mMask)) then
                do n=1,numFields
@@ -1393,10 +1393,10 @@
       !*** must eliminate redundant points from global sum
 
       if (thisBlock%tripole) then
-         if (fieldLoc == POP_gridHorzLocsface .or. &
-             fieldLoc == POP_gridHorzLocSWcorner) then
+         if (fieldLoc == POP_gridHorzLocWface .or. &
+             fieldLoc == POP_gridHorzLocCenter) then
 
-            j = je
+            j = jb
 
             if (present(mMask)) then
                do i=ib,ie
@@ -1613,10 +1613,10 @@
       !*** must eliminate redundant points from global sum
 
       if (thisBlock%tripole) then
-         if (fieldLoc == POP_gridHorzLocsface .or. &
-             fieldLoc == POP_gridHorzLocSWcorner) then
+         if (fieldLoc == POP_gridHorzLocWface .or. &
+             fieldLoc == POP_gridHorzLocCenter) then
 
-            j = je
+            j = jb
 
             if (present(mMask)) then
                do i=ib,ie
@@ -1818,10 +1818,10 @@
       !*** must eliminate redundant points from global sum
 
       if (thisBlock%tripole) then
-         if (fieldLoc == POP_gridHorzLocsface .or. &
-             fieldLoc == POP_gridHorzLocSWcorner) then
+         if (fieldLoc == POP_gridHorzLocWface .or. &
+             fieldLoc == POP_gridHorzLocCenter) then
 
-            j = je
+            j = jb
 
             if (present(mMask)) then
                do i=ib,ie
@@ -1989,10 +1989,10 @@
       !*** must eliminate redundant points from global sum
 
       if (thisBlock%tripole) then
-         if (fieldLoc == POP_gridHorzLocsface .or. &
-             fieldLoc == POP_gridHorzLocSWcorner) then
+         if (fieldLoc == POP_gridHorzLocWface .or. &
+             fieldLoc == POP_gridHorzLocCenter) then
 
-            j = je
+            j = jb
 
             do i=ib,ie
                if (thisBlock%iGlobal(i) > thisBlock%nxGlobal/2) then
@@ -2141,10 +2141,10 @@
       !*** must eliminate redundant points from global sum
 
       if (thisBlock%tripole) then
-         if (fieldLoc == POP_gridHorzLocsface .or. &
-             fieldLoc == POP_gridHorzLocSWcorner) then
+         if (fieldLoc == POP_gridHorzLocWface .or. &
+             fieldLoc == POP_gridHorzLocCenter) then
 
-            j = je
+            j = jb
 
             do i=ib,ie
                if (thisBlock%iGlobal(i) > thisBlock%nxGlobal/2) then
@@ -2293,10 +2293,10 @@
       !*** must eliminate redundant points from global sum
 
       if (thisBlock%tripole) then
-         if (fieldLoc == POP_gridHorzLocsface .or. &
-             fieldLoc == POP_gridHorzLocSWcorner) then
+         if (fieldLoc == POP_gridHorzLocWface .or. &
+             fieldLoc == POP_gridHorzLocCenter) then
 
-            j = je
+            j = jb
 
             do i=ib,ie
                if (thisBlock%iGlobal(i) > thisBlock%nxGlobal/2) then
@@ -2445,10 +2445,10 @@
       !*** must eliminate redundant points from global sum
 
       if (thisBlock%tripole) then
-         if (fieldLoc == POP_gridHorzLocsface .or. &
-             fieldLoc == POP_gridHorzLocSWcorner) then
+         if (fieldLoc == POP_gridHorzLocWface .or. &
+             fieldLoc == POP_gridHorzLocCenter) then
 
-            j = je
+            j = jb
 
             do i=ib,ie
                if (thisBlock%iGlobal(i) > thisBlock%nxGlobal/2) then

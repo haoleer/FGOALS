@@ -260,7 +260,7 @@
          allBlocks(blockID)%nxGlobal = nxGlobal
          allBlocks(blockID)%nyGlobal = nyGlobal
 
-         if (jBlock == POP_numBlocksY .and. &
+         if (jBlock == 1  .and. &
              nsBoundaryType == 'tripole') then
             allBlocks(blockID)%tripole = .true.
          else
@@ -284,7 +284,7 @@
 
             allJGlobal(j,blockID) = js - POP_haloWidth + j - 1
 
-            !*** southern ghost cells
+            !*** nouthern ghost cells
 
             if (allJGlobal(j,blockID) < 1) then
                select case (nsBoundaryType)
@@ -292,8 +292,8 @@
                   allJGlobal(j,blockID) = allJGlobal(j,blockID) + nyGlobal
                case ('closed')
                   allJGlobal(j,blockID) = 0
-               case ('tripole')
-                  allJGlobal(j,blockID) = 0
+               case ('tripole') ! use negative value to flag tripole
+                  allJGlobal(j,blockID) = allJGlobal(j,blockID) - 1
                case default
                   call LICOM_ErrorSet(errorCode, &
                      'POP_BlocksCreate: unknown n-s bndy type')
@@ -314,8 +314,8 @@
                   allJGlobal(j,blockID) = allJGlobal(j,blockID) - nyGlobal
                case ('closed')
                   allJGlobal(j,blockID) = 0
-               case ('tripole') ! use negative value to flag tripole
-                  allJGlobal(j,blockID) = -allJGlobal(j,blockID)
+               case ('tripole') 
+                  allJGlobal(j,blockID) = 0
                case default
                   call LICOM_ErrorSet(errorCode, &
                      'POP_BlocksCreate: unknown n-s bndy type')
@@ -561,7 +561,7 @@ end subroutine POP_BlocksCreate
             !*** if the block size does not divide the domain
             !*** evenly
             inbr =  POP_numBlocksX - iBlock + 1 
-            jnbr = -jBlock
+            jnbr = jnbr -1
          case default
             call LICOM_ErrorSet(errorCode, &
                'POP_BlocksGetNbrID: unknown north boundary')
@@ -647,7 +647,7 @@ end subroutine POP_BlocksCreate
             !*** evenly
             inbr =  POP_numBlocksX - iBlock 
             if (inbr == 0) inbr = POP_numBlocksX
-            jnbr = -jBlock
+            jnbr = jnbr - 1
          case default
             call LICOM_ErrorSet(errorCode, &
                'POP_BlocksGetNbrID: unknown north boundary')
@@ -684,7 +684,7 @@ end subroutine POP_BlocksCreate
             !*** evenly
             inbr =  POP_numBlocksX - iBlock + 2 
             if (inbr > POP_numBlocksX) inbr = 1
-            jnbr = -jBlock
+            jnbr = jnbr -1
          case default
             call LICOM_ErrorSet(errorCode, &
                'POP_BlocksGetNbrID: unknown north boundary')
@@ -766,7 +766,7 @@ end subroutine POP_BlocksCreate
             !*** if the block size does not divide the domain
             !*** evenly
             inbr =  POP_numBlocksX - iBlock + 1 
-            jnbr = -(POP_numBlocksY - (jnbr - POP_numBlocksY - 1))
+            jnbr =  jnbr - 1
          case default
             call LICOM_ErrorSet(errorCode, &
                'POP_BlocksGetNbrID: unknown north boundary')
@@ -852,7 +852,7 @@ end subroutine POP_BlocksCreate
             !*** evenly
             inbr =  POP_numBlocksX - iBlock - 1 
             if (inbr == 0) inbr = POP_numBlocksX
-            jnbr = -(POP_numBlocksY - (jnbr - POP_numBlocksY - 1))
+            jnbr = jnbr - 1
          case default
             call LICOM_ErrorSet(errorCode, &
                'POP_BlocksGetNbrID: unknown north boundary')
@@ -889,7 +889,7 @@ end subroutine POP_BlocksCreate
             !*** evenly
             inbr =  POP_numBlocksX - iBlock + 3
             if (inbr > POP_numBlocksX) inbr = 0
-            jnbr = -(POP_numBlocksY - (jnbr - POP_numBlocksY - 1))
+            jnbr = jnbr - 1
          case default
             call LICOM_ErrorSet(errorCode, &
                'POP_BlocksGetNbrID: unknown north boundary')
@@ -983,7 +983,7 @@ end subroutine POP_BlocksCreate
             !*** evenly
             inbr =  POP_numBlocksX - iBlock - 1 
             if (inbr == 0) inbr = POP_numBlocksX
-            jnbr = -(POP_numBlocksY - (jnbr - POP_numBlocksY - 1))
+            jnbr = jnbr - 1
          case default
             call LICOM_ErrorSet(errorCode, &
                'POP_BlocksGetNbrID: unknown north boundary')
@@ -1020,7 +1020,7 @@ end subroutine POP_BlocksCreate
             !*** evenly
             inbr =  POP_numBlocksX - iBlock + 3
             if (inbr > POP_numBlocksX) inbr = 0
-            jnbr = -(POP_numBlocksY - (jnbr - POP_numBlocksY - 1))
+            jnbr = jnbr - 1
          case default
             call LICOM_ErrorSet(errorCode, &
                'POP_BlocksGetNbrID: unknown north boundary')
@@ -1114,7 +1114,7 @@ end subroutine POP_BlocksCreate
             !*** evenly
             inbr =  POP_numBlocksX - iBlock
             if (inbr == 0) inbr = POP_numBlocksX
-            jnbr = -(POP_numBlocksY - (jnbr - POP_numBlocksY - 1))
+            jnbr = jnbr - 1
          case default
             call LICOM_ErrorSet(errorCode, &
                'POP_BlocksGetNbrID: unknown north boundary')
@@ -1151,7 +1151,7 @@ end subroutine POP_BlocksCreate
             !*** evenly
             inbr =  POP_numBlocksX - iBlock + 2
             if (inbr > POP_numBlocksX) inbr = 0
-            jnbr = -(POP_numBlocksY - (jnbr - POP_numBlocksY - 1))
+            jnbr = jnbr - 1
          case default
             call LICOM_ErrorSet(errorCode, &
                'POP_BlocksGetNbrID: unknown north boundary')

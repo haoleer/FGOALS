@@ -32,7 +32,7 @@ use POP_HaloMod
       INTEGER     :: NN(JMT), MAX_NN, iblock
 !
 !
-      MAX_NN = 11
+      MAX_NN = 10
       do j =3, jmt-2
          if (cos(ulat(1,j,1)).le.cos(fil_lat*DEGtoRAD)) then
             NN(j) = int(cos(fil_lat*DEGtoRAD)/abs(cos(ulat(1,j,1)))*1.2D0)
@@ -186,7 +186,7 @@ use POP_HaloMod
 !lhl      fil_lat=54.D0
 !
          
-      MAX_NN = 14
+      MAX_NN = 10
       do j = 3,jmt-2
          if (cos(tlat(1,j,1)).le.cos(fil_lat*DEGtoRAD)) then
             NN(j) = int(cos(fil_lat*DEGtoRAD)/abs(cos(tlat(1,j,1)))*1.2D0)

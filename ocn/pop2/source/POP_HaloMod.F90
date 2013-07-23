@@ -1862,42 +1862,7 @@ contains
       case (POP_gridHorzLocCenter)   ! cell center location
 
          ioffset = 0
-         joffset = 0
-
-      case (POP_gridHorzLocSWcorner)   ! cell corner location
-
-         ioffset = 1
          joffset = 1
-
-         !*** top row is degenerate, so must enforce symmetry
-         !***   use average of two degenerate points for value
-         !*** swap locations with symmetric points so buffer has
-         !***   correct values during the copy out
-
-         do i = 1,nxGlobal/2
-            iDst = nxGlobal - i
-            x1 = bufTripoleR8(i   ,POP_haloWidth+1)
-            x2 = bufTripoleR8(iDst,POP_haloWidth+1)
-            xavg = 0.5_r8*(abs(x1) + abs(x2))
-            bufTripoleR8(i   ,POP_haloWidth+1) = isign*sign(xavg, x2)
-            bufTripoleR8(iDst,POP_haloWidth+1) = isign*sign(xavg, x1)
-         end do
-         bufTripoleR8(nxGlobal,POP_haloWidth+1) = isign* &
-         bufTripoleR8(nxGlobal,POP_haloWidth+1)
-
-      case (POP_gridHorzLocWface)   ! cell center location
-
-         ioffset = 1
-         joffset = 0
-
-      case (POP_gridHorzLocSface)   ! cell corner (velocity) location
-
-         ioffset = 0
-         joffset = 1
-
-         !*** top row is degenerate, so must enforce symmetry
-         !***   use average of two degenerate points for value
-
          do i = 1,nxGlobal/2
             iDst = nxGlobal + 1 - i
             x1 = bufTripoleR8(i   ,POP_haloWidth+1)
@@ -1906,6 +1871,42 @@ contains
             bufTripoleR8(i   ,POP_haloWidth+1) = isign*sign(xavg, x2)
             bufTripoleR8(iDst,POP_haloWidth+1) = isign*sign(xavg, x1)
          end do
+
+      case (POP_gridHorzLocSWcorner)   ! cell corner location
+
+         ioffset = -1
+         joffset = 0
+
+         !*** top row is degenerate, so must enforce symmetry
+         !***   use average of two degenerate points for value
+         !*** swap locations with symmetric points so buffer has
+         !***   correct values during the copy out
+
+
+      case (POP_gridHorzLocWface)   ! cell center location
+
+         ioffset = -1
+         joffset = 1
+
+         do i = 2,nxGlobal/2 + 1
+            iDst = nxGlobal + 2 - i
+            x1 = bufTripoleR8(i   ,POP_haloWidth+1)
+            x2 = bufTripoleR8(iDst,POP_haloWidth+1)
+            xavg = 0.5_r8*(abs(x1) + abs(x2))
+            bufTripoleR8(i   ,POP_haloWidth+1) = isign*sign(xavg, x2)
+            bufTripoleR8(iDst,POP_haloWidth+1) = isign*sign(xavg, x1)
+         end do
+         bufTripoleR8(1 ,POP_haloWidth+1) = isign* &
+         bufTripoleR8(1 ,POP_haloWidth+1)
+
+      case (POP_gridHorzLocSface)   ! cell corner (velocity) location
+
+         ioffset = 0
+         joffset = 0
+
+         !*** top row is degenerate, so must enforce symmetry
+         !***   use average of two degenerate points for value
+
 
       case default
          call LICOM_ErrorSet(errorCode, &
@@ -1933,7 +1934,7 @@ contains
             !*** correct for offsets
             iSrc = iSrc - ioffset
             jSrc = jSrc - joffset
-            if (iSrc == 0) iSrc = nxGlobal
+            if (iSrc == (nxGlobal+1) ) iSrc = 1
 
             !*** for center and Eface, do not need to replace
             !*** top row of physical domain, so jSrc should be
@@ -2208,16 +2209,29 @@ contains
       case (POP_gridHorzLocCenter)   ! cell center location
 
          ioffset = 0
-         joffset = 0
+         joffset = 1
+         do i = 1,nxGlobal/2
+            iDst = nxGlobal + 1 - i
+            x1 = bufTripoleR4(i   ,POP_haloWidth+1)
+            x2 = bufTripoleR4(iDst,POP_haloWidth+1)
+            xavg = 0.5_r4*(abs(x1) + abs(x2))
+            bufTripoleR4(i   ,POP_haloWidth+1) = isign*sign(xavg, x2)
+            bufTripoleR4(iDst,POP_haloWidth+1) = isign*sign(xavg, x1)
+         end do
 
       case (POP_gridHorzLocSWcorner)   ! cell corner location
 
-         ioffset = 1
-         joffset = 1
+         ioffset = -1
+         joffset = 0
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
 
+
+      case (POP_gridHorzLocWface)   ! cell center location
+
+         ioffset = -1
+         joffset = 1
          do i = 1,nxGlobal/2
             iDst = nxGlobal - i
             x1 = bufTripoleR4(i   ,POP_haloWidth+1)
@@ -2229,27 +2243,14 @@ contains
          bufTripoleR4(nxGlobal,POP_haloWidth+1) = isign* &
          bufTripoleR4(nxGlobal,POP_haloWidth+1)
 
-      case (POP_gridHorzLocWface)   ! cell center location
-
-         ioffset = 1
-         joffset = 0
-
       case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
-         joffset = 1
+         joffset = 0
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
 
-         do i = 1,nxGlobal/2
-            iDst = nxGlobal + 1 - i
-            x1 = bufTripoleR4(i   ,POP_haloWidth+1)
-            x2 = bufTripoleR4(iDst,POP_haloWidth+1)
-            xavg = 0.5_r4*(abs(x1) + abs(x2))
-            bufTripoleR4(i   ,POP_haloWidth+1) = isign*sign(xavg, x2)
-            bufTripoleR4(iDst,POP_haloWidth+1) = isign*sign(xavg, x1)
-         end do
 
       case default
          call LICOM_ErrorSet(errorCode, &
@@ -2277,7 +2278,7 @@ contains
             !*** correct for offsets
             iSrc = iSrc - ioffset
             jSrc = jSrc - joffset
-            if (iSrc == 0) iSrc = nxGlobal
+            if (iSrc == (nxGlobal+1) ) iSrc = 1
 
             !*** for center and Eface, do not need to replace
             !*** top row of physical domain, so jSrc should be
@@ -2552,16 +2553,29 @@ contains
       case (POP_gridHorzLocCenter)   ! cell center location
 
          ioffset = 0
-         joffset = 0
+         joffset = 1
+         do i = 1,nxGlobal/2
+            iDst = nxGlobal + 1 - i
+            x1 = bufTripoleI4(i   ,POP_haloWidth+1)
+            x2 = bufTripoleI4(iDst,POP_haloWidth+1)
+            xavg = nint(0.5_r8*(abs(x1) + abs(x2)))
+            bufTripoleI4(i   ,POP_haloWidth+1) = isign*sign(xavg, x2)
+            bufTripoleI4(iDst,POP_haloWidth+1) = isign*sign(xavg, x1)
+         end do
 
       case (POP_gridHorzLocSWcorner)   ! cell corner location
 
-         ioffset = 1
-         joffset = 1
+         ioffset = -1
+         joffset = 0
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
 
+
+      case (POP_gridHorzLocWface)   ! cell center location
+
+         ioffset = -1
+         joffset = 1
          do i = 1,nxGlobal/2
             iDst = nxGlobal - i
             x1 = bufTripoleI4(i   ,POP_haloWidth+1)
@@ -2573,27 +2587,14 @@ contains
          bufTripoleI4(nxGlobal,POP_haloWidth+1) = isign* &
          bufTripoleI4(nxGlobal,POP_haloWidth+1)
 
-      case (POP_gridHorzLocWface)   ! cell center location
-
-         ioffset = 1
-         joffset = 0
-
       case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
-         joffset = 1
+         joffset = 0
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
 
-         do i = 1,nxGlobal/2
-            iDst = nxGlobal + 1 - i
-            x1 = bufTripoleI4(i   ,POP_haloWidth+1)
-            x2 = bufTripoleI4(iDst,POP_haloWidth+1)
-            xavg = nint(0.5_r8*(abs(x1) + abs(x2)))
-            bufTripoleI4(i   ,POP_haloWidth+1) = isign*sign(xavg, x2)
-            bufTripoleI4(iDst,POP_haloWidth+1) = isign*sign(xavg, x1)
-         end do
 
       case default
          call LICOM_ErrorSet(errorCode, &
@@ -2621,7 +2622,7 @@ contains
             !*** correct for offsets
             iSrc = iSrc - ioffset
             jSrc = jSrc - joffset
-            if (iSrc == 0) iSrc = nxGlobal
+            if (iSrc == (nxGlobal+1) ) iSrc = 1
 
             !*** for center and Eface, do not need to replace
             !*** top row of physical domain, so jSrc should be
@@ -2954,16 +2955,31 @@ contains
       case (POP_gridHorzLocCenter)   ! cell center location
 
          ioffset = 0
-         joffset = 0
+         joffset = 1
+         do k=1,nz
+         do i = 1,nxGlobal/2
+            iDst = nxGlobal + 1 - i
+            x1 = bufTripole(i   ,POP_haloWidth+1,k)
+            x2 = bufTripole(iDst,POP_haloWidth+1,k)
+            xavg = 0.5_r8*(abs(x1) + abs(x2))
+            bufTripole(i   ,POP_haloWidth+1,k) = isign*sign(xavg, x2)
+            bufTripole(iDst,POP_haloWidth+1,k) = isign*sign(xavg, x1)
+         end do
+         end do
 
       case (POP_gridHorzLocSWcorner)   ! cell corner location
 
-         ioffset = 1
-         joffset = 1
+         ioffset = -1
+         joffset = 0
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
 
+
+      case (POP_gridHorzLocWface)   ! cell center location
+
+         ioffset = -1
+         joffset = 1
          do k=1,nz
          do i = 1,nxGlobal/2
             iDst = nxGlobal - i
@@ -2977,29 +2993,14 @@ contains
          bufTripole(nxGlobal,POP_haloWidth+1,k)
          end do
 
-      case (POP_gridHorzLocWface)   ! cell center location
-
-         ioffset = 1
-         joffset = 0
-
       case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
-         joffset = 1
+         joffset = 0
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
 
-         do k=1,nz
-         do i = 1,nxGlobal/2
-            iDst = nxGlobal + 1 - i
-            x1 = bufTripole(i   ,POP_haloWidth+1,k)
-            x2 = bufTripole(iDst,POP_haloWidth+1,k)
-            xavg = 0.5_r8*(abs(x1) + abs(x2))
-            bufTripole(i   ,POP_haloWidth+1,k) = isign*sign(xavg, x2)
-            bufTripole(iDst,POP_haloWidth+1,k) = isign*sign(xavg, x1)
-         end do
-         end do
 
       case default
          call LICOM_ErrorSet(errorCode, &
@@ -3027,7 +3028,7 @@ contains
             !*** correct for offsets
             iSrc = iSrc - ioffset
             jSrc = jSrc - joffset
-            if (iSrc == 0) iSrc = nxGlobal
+            if (iSrc == (nxGlobal+1) ) iSrc = 1
 
             !*** for center and Eface, do not need to replace
             !*** top row of physical domain, so jSrc should be
@@ -3365,16 +3366,31 @@ contains
       case (POP_gridHorzLocCenter)   ! cell center location
 
          ioffset = 0
-         joffset = 0
+         joffset = 1
+         do k=1,nz
+         do i = 1,nxGlobal/2
+            iDst = nxGlobal + 1 - i
+            x1 = bufTripole(i   ,POP_haloWidth+1,k)
+            x2 = bufTripole(iDst,POP_haloWidth+1,k)
+            xavg = 0.5_r4*(abs(x1) + abs(x2))
+            bufTripole(i   ,POP_haloWidth+1,k) = isign*sign(xavg, x2)
+            bufTripole(iDst,POP_haloWidth+1,k) = isign*sign(xavg, x1)
+         end do
+         end do
 
       case (POP_gridHorzLocSWcorner)   ! cell corner location
 
-         ioffset = 1
-         joffset = 1
+         ioffset = -1
+         joffset = 0
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
 
+
+      case (POP_gridHorzLocWface)   ! cell center location
+
+         ioffset = -1
+         joffset = 1
          do k=1,nz
          do i = 1,nxGlobal/2
             iDst = nxGlobal - i
@@ -3388,29 +3404,14 @@ contains
          bufTripole(nxGlobal,POP_haloWidth+1,k)
          end do
 
-      case (POP_gridHorzLocWface)   ! cell center location
-
-         ioffset = 1
-         joffset = 0
-
       case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
-         joffset = 1
+         joffset = 0
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
 
-         do k=1,nz
-         do i = 1,nxGlobal/2
-            iDst = nxGlobal + 1 - i
-            x1 = bufTripole(i   ,POP_haloWidth+1,k)
-            x2 = bufTripole(iDst,POP_haloWidth+1,k)
-            xavg = 0.5_r4*(abs(x1) + abs(x2))
-            bufTripole(i   ,POP_haloWidth+1,k) = isign*sign(xavg, x2)
-            bufTripole(iDst,POP_haloWidth+1,k) = isign*sign(xavg, x1)
-         end do
-         end do
 
       case default
          call LICOM_ErrorSet(errorCode, &
@@ -3438,7 +3439,8 @@ contains
             !*** correct for offsets
             iSrc = iSrc - ioffset
             jSrc = jSrc - joffset
-            if (iSrc == 0) iSrc = nxGlobal
+            if (iSrc == (nxGlobal+1) ) iSrc = 1
+
 
             !*** for center and Eface, do not need to replace
             !*** top row of physical domain, so jSrc should be
@@ -3776,16 +3778,31 @@ contains
       case (POP_gridHorzLocCenter)   ! cell center location
 
          ioffset = 0
-         joffset = 0
+         joffset = 1
+         do k=1,nz
+         do i = 1,nxGlobal/2
+            iDst = nxGlobal + 1 - i
+            x1 = bufTripole(i   ,POP_haloWidth+1,k)
+            x2 = bufTripole(iDst,POP_haloWidth+1,k)
+            xavg = nint(0.5_r8*(abs(x1) + abs(x2)))
+            bufTripole(i   ,POP_haloWidth+1,k) = isign*sign(xavg, x2)
+            bufTripole(iDst,POP_haloWidth+1,k) = isign*sign(xavg, x1)
+         end do
+         end do
 
       case (POP_gridHorzLocSWcorner)   ! cell corner location
 
-         ioffset = 1
-         joffset = 1
+         ioffset = -1
+         joffset = 0
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
 
+
+      case (POP_gridHorzLocWface)   ! cell center location
+
+         ioffset = -1
+         joffset = 1
          do k=1,nz
          do i = 1,nxGlobal/2
             iDst = nxGlobal - i
@@ -3799,29 +3816,14 @@ contains
          bufTripole(nxGlobal,POP_haloWidth+1,k)
          end do
 
-      case (POP_gridHorzLocWface)   ! cell center location
-
-         ioffset = 1
-         joffset = 0
-
       case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
-         joffset = 1
+         joffset = 0
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
 
-         do k=1,nz
-         do i = 1,nxGlobal/2
-            iDst = nxGlobal + 1 - i
-            x1 = bufTripole(i   ,POP_haloWidth+1,k)
-            x2 = bufTripole(iDst,POP_haloWidth+1,k)
-            xavg = nint(0.5_r8*(abs(x1) + abs(x2)))
-            bufTripole(i   ,POP_haloWidth+1,k) = isign*sign(xavg, x2)
-            bufTripole(iDst,POP_haloWidth+1,k) = isign*sign(xavg, x1)
-         end do
-         end do
 
       case default
          call LICOM_ErrorSet(errorCode, &
@@ -3849,7 +3851,7 @@ contains
             !*** correct for offsets
             iSrc = iSrc - ioffset
             jSrc = jSrc - joffset
-            if (iSrc == 0) iSrc = nxGlobal
+            if (iSrc == (nxGlobal+1) ) iSrc = 1
 
             !*** for center and Eface, do not need to replace
             !*** top row of physical domain, so jSrc should be
@@ -4201,16 +4203,35 @@ contains
       case (POP_gridHorzLocCenter)   ! cell center location
 
          ioffset = 0
-         joffset = 0
+         joffset = 1
+         do l=1,nt
+         do k=1,nz
+         do i = 1,nxGlobal/2
+            iDst = nxGlobal + 1 - i
+            x1 = bufTripole(i   ,POP_haloWidth+1,k,l)
+            x2 = bufTripole(iDst,POP_haloWidth+1,k,l)
+            xavg = 0.5_r8*(abs(x1) + abs(x2))
+            bufTripole(i   ,POP_haloWidth+1,k,l) = isign*sign(xavg, x2)
+            bufTripole(iDst,POP_haloWidth+1,k,l) = isign*sign(xavg, x1)
+         end do
+         end do
+         end do
+!
 
       case (POP_gridHorzLocSWcorner)   ! cell corner location
 
-         ioffset = 1
-         joffset = 1
+         ioffset = -1
+         joffset = 0
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
 
+
+      case (POP_gridHorzLocWface)   ! cell center location
+
+         ioffset = -1
+         joffset = 1
+!
          do l=1,nt
          do k=1,nz
          do i = 1,nxGlobal/2
@@ -4226,31 +4247,14 @@ contains
          end do
          end do
 
-      case (POP_gridHorzLocWface)   ! cell center location
-
-         ioffset = 1
-         joffset = 0
-
       case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
-         joffset = 1
+         joffset = 0
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
 
-         do l=1,nt
-         do k=1,nz
-         do i = 1,nxGlobal/2
-            iDst = nxGlobal + 1 - i
-            x1 = bufTripole(i   ,POP_haloWidth+1,k,l)
-            x2 = bufTripole(iDst,POP_haloWidth+1,k,l)
-            xavg = 0.5_r8*(abs(x1) + abs(x2))
-            bufTripole(i   ,POP_haloWidth+1,k,l) = isign*sign(xavg, x2)
-            bufTripole(iDst,POP_haloWidth+1,k,l) = isign*sign(xavg, x1)
-         end do
-         end do
-         end do
 
       case default
          call LICOM_ErrorSet(errorCode, &
@@ -4278,7 +4282,8 @@ contains
             !*** correct for offsets
             iSrc = iSrc - ioffset
             jSrc = jSrc - joffset
-            if (iSrc == 0) iSrc = nxGlobal
+            if (iSrc == (nxGlobal+1) ) iSrc = 1
+
 
             !*** for center and Eface, do not need to replace
             !*** top row of physical domain, so jSrc should be
@@ -4632,16 +4637,33 @@ contains
       case (POP_gridHorzLocCenter)   ! cell center location
 
          ioffset = 0
-         joffset = 0
+         joffset = 1
+         do l=1,nt
+         do k=1,nz
+         do i = 1,nxGlobal/2
+            iDst = nxGlobal + 1 - i
+            x1 = bufTripole(i   ,POP_haloWidth+1,k,l)
+            x2 = bufTripole(iDst,POP_haloWidth+1,k,l)
+            xavg = 0.5_r4*(abs(x1) + abs(x2))
+            bufTripole(i   ,POP_haloWidth+1,k,l) = isign*sign(xavg, x2)
+            bufTripole(iDst,POP_haloWidth+1,k,l) = isign*sign(xavg, x1)
+         end do
+         end do
+         end do
 
       case (POP_gridHorzLocSWcorner)   ! cell corner location
 
-         ioffset = 1
-         joffset = 1
+         ioffset = -1
+         joffset = 0
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
 
+
+      case (POP_gridHorzLocWface)   ! cell center location
+
+         ioffset = -1
+         joffset = 1
          do l=1,nt
          do k=1,nz
          do i = 1,nxGlobal/2
@@ -4657,31 +4679,14 @@ contains
          end do
          end do
 
-      case (POP_gridHorzLocWface)   ! cell center location
-
-         ioffset = 1
-         joffset = 0
-
       case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
-         joffset = 1
+         joffset = 0
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
 
-         do l=1,nt
-         do k=1,nz
-         do i = 1,nxGlobal/2
-            iDst = nxGlobal + 1 - i
-            x1 = bufTripole(i   ,POP_haloWidth+1,k,l)
-            x2 = bufTripole(iDst,POP_haloWidth+1,k,l)
-            xavg = 0.5_r4*(abs(x1) + abs(x2))
-            bufTripole(i   ,POP_haloWidth+1,k,l) = isign*sign(xavg, x2)
-            bufTripole(iDst,POP_haloWidth+1,k,l) = isign*sign(xavg, x1)
-         end do
-         end do
-         end do
 
       case default
          call LICOM_ErrorSet(errorCode, &
@@ -4709,7 +4714,8 @@ contains
             !*** correct for offsets
             iSrc = iSrc - ioffset
             jSrc = jSrc - joffset
-            if (iSrc == 0) iSrc = nxGlobal
+            if (iSrc == (nxGlobal+1) ) iSrc = 1
+
 
             !*** for center and Eface, do not need to replace
             !*** top row of physical domain, so jSrc should be
@@ -5063,16 +5069,31 @@ contains
       case (POP_gridHorzLocCenter)   ! cell center location
 
          ioffset = 0
-         joffset = 0
+         joffset = 1
+         do l=1,nt
+         do k=1,nz
+         do i = 1,nxGlobal/2
+            iDst = nxGlobal + 1 - i
+            x1 = bufTripole(i   ,POP_haloWidth+1,k,l)
+            x2 = bufTripole(iDst,POP_haloWidth+1,k,l)
+            xavg = nint(0.5_r8*(abs(x1) + abs(x2)))
+            bufTripole(i   ,POP_haloWidth+1,k,l) = isign*sign(xavg, x2)
+            bufTripole(iDst,POP_haloWidth+1,k,l) = isign*sign(xavg, x1)
+         end do
 
       case (POP_gridHorzLocSWcorner)   ! cell corner location
 
-         ioffset = 1
-         joffset = 1
+         ioffset = -1
+         joffset = 0
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
 
+
+      case (POP_gridHorzLocWface)   ! cell center location
+
+         ioffset = -1
+         joffset = 1
          do l=1,nt
          do k=1,nz
          do i = 1,nxGlobal/2
@@ -5087,32 +5108,17 @@ contains
          bufTripole(nxGlobal,POP_haloWidth+1,k,l)
          end do
          end do
-
-      case (POP_gridHorzLocWface)   ! cell center location
-
-         ioffset = 1
-         joffset = 0
+         end do
+         end do
 
       case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
-         joffset = 1
+         joffset = 0
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
 
-         do l=1,nt
-         do k=1,nz
-         do i = 1,nxGlobal/2
-            iDst = nxGlobal + 1 - i
-            x1 = bufTripole(i   ,POP_haloWidth+1,k,l)
-            x2 = bufTripole(iDst,POP_haloWidth+1,k,l)
-            xavg = nint(0.5_r8*(abs(x1) + abs(x2)))
-            bufTripole(i   ,POP_haloWidth+1,k,l) = isign*sign(xavg, x2)
-            bufTripole(iDst,POP_haloWidth+1,k,l) = isign*sign(xavg, x1)
-         end do
-         end do
-         end do
 
       case default
          call LICOM_ErrorSet(errorCode, &
@@ -5140,7 +5146,8 @@ contains
             !*** correct for offsets
             iSrc = iSrc - ioffset
             jSrc = jSrc - joffset
-            if (iSrc == 0) iSrc = nxGlobal
+            if (iSrc == (nxGlobal+1) ) iSrc = 1
+
 
             !*** for center and Eface, do not need to replace
             !*** top row of physical domain, so jSrc should be
@@ -5518,7 +5525,8 @@ contains
                msgIndx = msgIndx + 1
 
                halo%srcLocalAddr(1,msgIndx) = ibSrc + i - 1
-               halo%srcLocalAddr(2,msgIndx) = jeSrc-1-POP_haloWidth+j
+!YU            halo%srcLocalAddr(2,msgIndx) = jeSrc-1-POP_haloWidth+j
+               halo%srcLocalAddr(2,msgIndx) = jbSrc + j - 1
                halo%srcLocalAddr(3,msgIndx) = srcLocalID
 
                halo%dstLocalAddr(1,msgIndx) = iGlobal(ibSrc + i - 1)
@@ -5544,7 +5552,8 @@ contains
                halo%srcLocalAddr(3,msgIndx) = -srcLocalID
 
                halo%dstLocalAddr(1,msgIndx) = i
-               halo%dstLocalAddr(2,msgIndx) = jeSrc + j - 1
+!YU            halo%dstLocalAddr(2,msgIndx) = jeSrc + j - 1
+               halo%dstLocalAddr(2,msgIndx) = j 
                halo%dstLocalAddr(3,msgIndx) = dstLocalID
 
             end do
@@ -6028,7 +6037,8 @@ contains
                bufSize = bufSize + 1
 
                halo%sendAddr(1,bufSize,msgIndx)=ibSrc + i - 1
-               halo%sendAddr(2,bufSize,msgIndx)=jeSrc-POP_haloWidth+j-1
+!YU            halo%sendAddr(2,bufSize,msgIndx)=jeSrc-POP_haloWidth+j-1
+               halo%sendAddr(2,bufSize,msgIndx) = jbSrc + j - 1
                halo%sendAddr(3,bufSize,msgIndx)=srcLocalID
 
             end do
@@ -6092,7 +6102,8 @@ contains
                bufSize = bufSize + 1
 
                halo%sendAddr(1,bufSize,msgIndx)=ibSrc + i - 1
-               halo%sendAddr(2,bufSize,msgIndx)=jeSrc-POP_haloWidth+j-1
+!YU            halo%sendAddr(2,bufSize,msgIndx)=jeSrc-POP_haloWidth+j-1
+               halo%sendAddr(2,bufSize,msgIndx) = jbSrc + j - 1
                halo%sendAddr(3,bufSize,msgIndx)=srcLocalID
 
             end do
@@ -6135,7 +6146,8 @@ contains
                bufSize = bufSize + 1
 
                halo%sendAddr(1,bufSize,msgIndx)=ibSrc + i - 1
-               halo%sendAddr(2,bufSize,msgIndx)=jeSrc-POP_haloWidth+j-1
+!YU            halo%sendAddr(2,bufSize,msgIndx)=jeSrc-POP_haloWidth+j-1
+               halo%sendAddr(2,bufSize,msgIndx) = jbSrc + j - 1
                halo%sendAddr(3,bufSize,msgIndx)=srcLocalID
 
             end do
@@ -6294,7 +6306,8 @@ contains
                bufSize = bufSize + 1
 
                halo%recvAddr(1,bufSize,msgIndx) = iGlobal(ibSrc + i - 1)
-               halo%recvAddr(2,bufSize,msgIndx) = j
+!YU            halo%recvAddr(2,bufSize,msgIndx) = j
+               halo%recvAddr(2,bufSize,msgIndx) = jeDst + j - 1
                halo%recvAddr(3,bufSize,msgIndx) = -dstLocalID
 
             end do
@@ -6357,7 +6370,8 @@ contains
                bufSize = bufSize + 1
 
                halo%recvAddr(1,bufSize,msgIndx) = iGlobal(ibSrc + i - 1)
-               halo%recvAddr(2,bufSize,msgIndx) = j
+!YU            halo%recvAddr(2,bufSize,msgIndx) = j
+               halo%recvAddr(2,bufSize,msgIndx) = jeDst + j - 1
                halo%recvAddr(3,bufSize,msgIndx) = -dstLocalID
 
             end do
@@ -6400,7 +6414,8 @@ contains
                bufSize = bufSize + 1
 
                halo%recvAddr(1,bufSize,msgIndx) = iGlobal(ibSrc + i - 1)
-               halo%recvAddr(2,bufSize,msgIndx) = j
+!YU            halo%recvAddr(2,bufSize,msgIndx) = j
+               halo%recvAddr(2,bufSize,msgIndx) = jeDst + j - 1
                halo%recvAddr(3,bufSize,msgIndx) = -dstLocalID
 
             end do

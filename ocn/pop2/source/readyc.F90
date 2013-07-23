@@ -412,9 +412,6 @@ use distribution
       END DO
       END DO
    END DO
-      if (mytid == 3) then
-         write(162,*) dlu(84,24,2,1), dlv(84,24,2,1)
-      end if
 
 !
       deallocate(riu) 

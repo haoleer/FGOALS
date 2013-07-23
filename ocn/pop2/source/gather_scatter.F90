@@ -874,7 +874,7 @@ end subroutine gather_global_dbl
    integer (int_kind), intent(in) :: &
       field_type,               &! id for type of field (scalar, vector, angle)
       field_loc                  ! id for location on horizontal grid
-                                 !  (center, NEcorner, Nface, Eface)
+                                 !  (center, SWcorner, Sface, Wface)
 
 ! !OUTPUT PARAMETERS:
 
@@ -926,10 +926,10 @@ end subroutine gather_global_dbl
       xoffset = 1
       yoffset = 1
    case (field_loc_SWcorner)   ! cell corner (velocity) location
-      xoffset = 0
+      xoffset = 2
       yoffset = 0
    case (field_loc_Wface)   ! cell center location
-      xoffset = 0
+      xoffset = 2
       yoffset = 1
    case (field_loc_Sface)   ! cell corner (velocity) location
       xoffset = 1
@@ -1185,7 +1185,7 @@ end subroutine gather_global_dbl
    integer (int_kind), intent(in) :: &
       field_type,               &! id for type of field (scalar, vector, angle)
       field_loc                  ! id for location on horizontal grid
-                                 !  (center, NEcorner, Nface, Eface)
+                                 !  (center, SWcorner, Sface, Wface)
 
 !-----------------------------------------------------------------------
 !
@@ -1239,10 +1239,10 @@ end subroutine gather_global_dbl
       xoffset = 1
       yoffset = 1
    case (field_loc_SWcorner)   ! cell corner (velocity) location
-      xoffset = 0
+      xoffset = 2
       yoffset = 0
    case (field_loc_Wface)   ! cell center location
-      xoffset = 0
+      xoffset = 2
       yoffset = 1
    case (field_loc_Sface)   ! cell corner (velocity) location
       xoffset = 1
@@ -1492,7 +1492,7 @@ end subroutine gather_global_dbl
    integer (int_kind), intent(in) :: &
       field_type,               &! id for type of field (scalar, vector, angle)
       field_loc                  ! id for location on horizontal grid
-                                 !  (center, NEcorner, Nface, Eface)
+                                 !  (center, SWcorner, Sface, Nface)
 
    type (distrb), intent(in) :: &
      dst_dist       ! distribution of resulting blocks
@@ -1552,10 +1552,10 @@ end subroutine gather_global_dbl
       xoffset = 1
       yoffset = 1
    case (Field_loc_SWcorner)   ! cell corner (velocity) location
-      xoffset = 0
+      xoffset = 2
       yoffset = 0
    case (field_loc_Wface)   ! cell center location
-      xoffset = 0
+      xoffset = 2
       yoffset = 1
    case (field_loc_Sface)   ! cell corner (velocity) location
       xoffset = 1
@@ -1808,7 +1808,7 @@ end subroutine gather_global_dbl
    integer (int_kind), intent(in) :: &
       field_type,               &! id for type of field (scalar, vector, angle)
       field_loc                  ! id for location on horizontal grid
-                                 !  (center, NEcorner, Nface, Eface)
+                                 !  (center, SWcorner, Sface, Wface)
 
    type (distrb), intent(in) :: &
      dst_dist       ! distribution of resulting blocks
@@ -1868,10 +1868,10 @@ end subroutine gather_global_dbl
       xoffset = 1
       yoffset = 1
    case (Field_loc_SWcorner)   ! cell corner (velocity) location
-      xoffset = 0
+      xoffset = 2
       yoffset = 0
    case (field_loc_Wface)   ! cell center location
-      xoffset = 0
+      xoffset = 2
       yoffset = 1
    case (field_loc_Sface)   ! cell corner (velocity) location
       xoffset = 1
