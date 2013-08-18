@@ -24,20 +24,20 @@ use hmix_del4
 use msg_mod 
 use gather_scatter
 use distribution
-
+use constant_mod
+use canuto_2010_mod
       IMPLICIT NONE
 !      REAL(r8)  :: WKP (KMP1)
       INTEGER   :: IWK,n2, iblock
-      REAL(r8)  :: WK1 (KM) ,WK2 (KM), WK3 (KM)
+      REAL(r8)  :: WK1 (KM) ,WK2 (KM), WK3 (KM),WK4(KM)
       REAL(r8)  :: WP1 (KM) ,WP2 (KM), WP3 (KM)
-      REAL(r8)  :: WP4 (KM) ,WP5 (KM), WP6 (KM)
-      REAL(r8)  :: WP7 (KM) ,WP8(KM*2)
+      REAL(r8)  :: WP4 (KMM1) ,WP5 (KMM1), WP6 (KMM1)
+      REAL(r8)  :: WP7 (KMM1) ,WP8(KM)
       REAL(r8)  :: WP9 ,WP10, WP11
       REAL(r8),dimension(IMT,JMT,KM,MAX_BLOCKS_CLINIC) :: WP12,WP13,riv1,riv2
-      REAL(r8)  :: epsln,RKV,RKV1
+      REAL(r8)  :: epsln,RKV,RKV1,ek0
       REAL(r8)  :: adv_x1,adv_x2,adv_x,adv_y1,adv_y2,adv_z,diff_u1,diff_u2,diff_v1,diff_v2
       REAL(r8)  :: dlux,dlvx,dluy,dlvy,dluz,dlvz,adv_z1,adv_z2,adv_z3,adv_z4
-      REAL(r6)  :: xxx, c0,ek0
       real(r8)  :: hdvk(imt,jmt), hduk(imt,jmt), adv_uu(imt,jmt,km), adv_vv(imt,jmt,km)
 !
 !     real (r8) :: ttt(imt_global, jmt_global)
@@ -54,11 +54,8 @@ use distribution
 !Yu      write(6,*)'allocation error---riu'
 !Yu      stop
 !Yu   end if
-
-      c0 = 0.0D0 
  
       epsln = 1.0D-25
-      
  
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC
@@ -108,7 +105,6 @@ use distribution
                riv1(i,j,k,iblock) = wp12 (I,J,K,iblock)*vit(i,j,k,iblock) - wp12 (I,J,K +1,iblock)*vit(i,j,k+1,iblock)
                riv2(i,j,k,iblock) = wp13 (I,J,K,iblock)*vit(i,j,k,iblock) - wp13 (I,J,K +1,iblock)*vit(i,j,k+1,iblock)
                s2t (i,j,k,iblock) =vit(i,j,k+1,iblock)*(riv1(i,j,k,iblock)*riv1(i,j,k,iblock)+riv2(i,j,k,iblock)*riv2(i,j,k,iblock))*ODZT(K+1)*ODZT(K+1)
-               ridt(i,j,k,iblock) =vit(i,j,k+1,iblock)*ricdt(i,j,k,iblock)/(s2t(i,j,k,iblock)+epsln)
 #ifdef CANUTO  
                rit (i,j,k,iblock)= VIT (I,J,K +1,iblock)*rict(i,j,k,iblock)/(s2t(i,j,k,iblock)+epsln)
 #else          
@@ -166,27 +162,21 @@ use distribution
          wp11=0.D0
 !
          do k=1,km
-            AKM_BACK(K)=0.0D0
-            AKT_BACK(K)=0.0D0
-            AKS_BACK(K)=0.0D0
+            wp8(k)=-vit(i,j,k+1,iblock)*ZKP(k+1)
          end do
 !
          DO K = 1,KMT(i,j,iblock)-1
                wp1(K)= VIT (I,J,K+1,iblock)* (AT (I,J,K,1,iblock)-(AT (I,J,K,1,iblock)-AT (I,J,K+1,1,iblock))* &
                                DZP (K)/(DZP(K)+DZP(K+1)))
                wp2(K)= VIT (I,J,K+1,iblock)* (AT (I,J,K,2,iblock)-(AT (I,J,K,2,iblock)-AT (I,J,K+1,2,iblock))* &
-                               DZP (K)/(DZP(K)+DZP(K+1)))
+                               DZP (K)/(DZP(K)+DZP(K+1)))*1.0D3+35.
                wp3(K)= VIT (I,J,K+1,iblock)* (pdensity (I,J,K,iblock)-(pdensity (I,J,K,iblock)- &
-                       pdensity(I,J,K+1,iblock))* DZP (K)/(DZP(K)+DZP(K+1)))*1.d-3
-               wp8(k)=-vit(i,j,k+1,iblock)*ZKP(k+1)*1.d+2
+                       pdensity(I,J,K+1,iblock))* DZP (K)/(DZP(K)+DZP(K+1)))
                wp4(k)=vit(i,j,k+1,iblock)*RIT(i,j,k,iblock)
-               wp5(k)=vit(i,j,k+1,iblock)*RIDT(i,j,k,iblock)
+               wp5(k)=vit(i,j,k+1,iblock)*RICDT(i,j,k,iblock)
                wp6(k)=vit(i,j,k+1,iblock)*S2T(i,j,k,iblock)
                wp7(k)=vit(i,j,k+1,iblock)*RICT(i,j,k,iblock)
          END DO
-         wp9=vit(i,j,1,iblock)*USTAR(I,J,iblock)*1.0d+2
-         wp10=vit(i,j,1,iblock)*BUOYTUR(I,J,iblock)*1.0d+4
-         wp11=vit(i,j,1,iblock)*BUOYSOL(I,J,iblock)*1.0d+4
 !
          IWK=KMT(I,J,iblock)-1
 !
@@ -215,18 +205,36 @@ use distribution
 !           write(180,*) (s2t(i,j,k,1),k=1,29)
 !           close(180)
 !        end if
-         CALL  TURB_2(wp8,wp1,wp2,wp3,&
+         call  canuto_2010_interface(wk1,    wk2,     wk3,     wk4,     amld(i,j,iblock) ,&
+                                     wp1,    wp2,     wp3,     wp4,     wp5,              &
+                                     wp7,    wp6,     ulat(i,j,iblock)/degtorad ,     wp8,  kmt(i,j,iblock) ,i,j, iblock, isc)
+
+!        if (mytid == 6 .and. isc ==41 .and. iday == 9 .and. i == 32 .and. j == 17) then
+!           write(160,*) i,j,kmt(i,j,1)
+!           write(160,*) wk1, wk2, wk3
+!           write(160,*) wp1
+!           write(160,*) wp2
+!           write(160,*) wp3
+!           write(160,*) wp4
+!           write(160,*) wp5
+!           write(160,*) wp6
+!           write(160,*) wp7
+!           write(160,*) wp8
+!           close(160)
+!        end if
+!        if (isc ==41 .and. iday == 9 .and. i == 32 .and. j == 17) stop
+!        CALL  TURB_2(wp8,wp1,wp2,wp3,&
 !input RIT and RIDT no unit, S2T in 1/s^2, DFRICMX and DWNDMIX in cm^2/s
-                wp4,wp5,wp6, DFRICMX*1.0d+4, DWNDMIX*1.0d+4,&
+!               wp4,wp5,wp6, DFRICMX*1.0d+4, DWNDMIX*1.0d+4,&
 !output in cm^2/s, so 1d-4 should be multipled
-               AKM_BACK,AKT_BACK,AKS_BACK,&
+!              AKM_BACK,AKT_BACK,AKS_BACK,&
 !input  RICT in 1/s^2 USTAR in cm/s, BUOYTUR,BUOYSOL in cm^2/s^3,FF in 1/s
-               wp7,wp9,wp10,wp11,FCORT(i,j,iblock) ,& !OK
+!              wp7,wp9,wp10,wp11,FCORT(i,j,iblock) ,& !OK
 !output amld in cm, akmt,akh, and aks in cm^2/s
 !               AMLD(I,J,iblock),AKMT(I,J,1,iblock),AKT(I,J,1,1,iblock),AKT(I,J,1,2,iblock),&
-               AMLD(I,J,iblock),WK1,WK2,WK3,&
+!              AMLD(I,J,iblock),WK1,WK2,WK3,&
 !input int
-               IWK,kmt(I,J,iblock)-1,KM,1,0,0,i,j) !OK!
+!              IWK,kmt(I,J,iblock)-1,KM,1,0,0,i,j) !OK!
 
          DO K = 1,KM
 !        xxx = WK1(K)
@@ -235,9 +243,9 @@ use distribution
 !        WK2(K) = xxx
 !        xxx = WK3(K)
 !        WK3(K) = xxx
-         AKMT(I,J,K,iblock)=+(WK1(K)+dmin1(AKM_BACK(K),1d-3))*1.d-4
-         AKT(I,J,K,1,iblock)=AKT(I,J,K,1,iblock)+(WK2(K)+dmin1(AKT_BACK(K),1d-3))/NCC*1.d-4
-         AKT(I,J,K,2,iblock)=AKT(I,J,K,2,iblock)+(WK3(K)+dmin1(AKS_BACK(K),1d-3))/NCC*1.d-4
+         AKMT(I,J,K,iblock)=WK1(K)
+         AKT(I,J,K,1,iblock)=AKT(I,J,K,1,iblock)+ WK2(K)/float(NCC)
+         AKT(I,J,K,2,iblock)=AKT(I,J,K,2,iblock)+ WK3(K)/float(NCC)
          END DO
 
 !               k=6
@@ -254,6 +262,7 @@ use distribution
          END DO
       END DO
    END DO
+!  stop
 !!
 ! calculate the vertical mixing on U-grid
 !$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
@@ -262,13 +271,38 @@ use distribution
          call tgrid_to_ugrid(akmu(:,:,k,iblock), akmt(:,:,k,iblock),iblock)
          do j= 1,jmt
          do i= 1,imt
-            akmu(i,j,k,iblock) = akmu(i,j,k,iblock) * viv(i,j,k+1,iblock)
+            akmu(i,j,k,iblock) = akmu(i,j,k,iblock)* viv(i,j,k+1,iblock)
          end do
          end do
       END DO
    end do
 !lhl241204
 #endif
+!    call chk_var3d(akt(:,:,:,1,:),ek0,1,km)
+!    if (mytid == 0) then
+!       write(124,*) "TT", iday, isc,ek0
+!    end if
+!    call chk_var3d(akt(:,:,:,2,:),ek0,1,km)
+!    if (mytid == 0) then
+!       write(124,*) "SS", iday, isc,ek0
+!    end if
+!    call chk_var3d(akmt,ek0,1,km)
+!    if (mytid == 0) then
+!       write(124,*) "UU", iday, isc,ek0
+!    end if
+!    if ( isc == 41) then
+!       do iblock= 1, nblocks_clinic
+!       do k=1, km
+!       do j =3, jmt-2
+!       do i = 3, imt-2
+!          if ( isnan(akt(i,j,k,1,iblock))) then
+!             write(*,*) "mytid=", mytid, i,j,k
+!          end if
+!       end do
+!       end do
+!       end do
+!       end do
+!    end if
 !---------------------------------------------------------------------
 !     COMPUTE THE ADVECTIVE TERM: ZONAL COMPONENT
 !---------------------------------------------------------------------
@@ -408,11 +442,28 @@ use distribution
 !lhl1204
             DLV (I,J,K,IBLOCK) = DLV (I,J,K,IBLOCK) + ODZP (K)* (diff_v1-diff_v2)
             DLU (I,J,K,IBLOCK) = DLU (I,J,K,IBLOCK) + ODZP (K)* (diff_u1-diff_u2)
+!           DLV (I,J,K,IBLOCK) = ODZP (K)* (diff_v1-diff_v2) *viv(i,j,k,iblock)
+!           DLU (I,J,K,IBLOCK) = ODZP (K)* (diff_u1-diff_u2) *viv(i,j,k,iblock)
+!           if (mytid == 11 .and. i == 44 .and. j == 5 .and. k < 4) then
+!               write(163,*) k
+!               write(163,*) diff_v1, diff_v2
+!               write(163,*) diff_u1, diff_u2
+!               write(163,*) up(i,j,k,iblock), vp(i,j,k,iblock), akmu(i,j,k,iblock)
+!           end if
         END DO
       END DO
       END DO
    END DO
+!     if (mytid == 1) close(163)
 
+!
+!     do k=1 ,km
+!     call write_global(dlv(:,:,k,:),161)
+!     call write_global(dlu(:,:,k,:),162)
+!     end do
+!     if (mytid ==0 ) close(161)
+!     if (mytid ==0 ) close(162)
+!     stop
 !
       deallocate(riu) 
  

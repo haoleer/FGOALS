@@ -67,17 +67,8 @@ use grid
                                 - rhoi (i,k,j,m,iblock))/hue(i,j,iblock))
                e (i,k -1,j,3,iblock) = dzwr (k -1)* tmask (i,k -1,j,iblock)* tmask (i,k,j,iblock)* c1e10 &
                                 * (rhoi (i,k -1,j,m,iblock) - rhoi (i,k,j,m,iblock))  
-               if (mytid == 0 .and. i==55 .and. j==6 .and. k ==2 ) then
-                   write(140,*) rhoi (i,k -1,j,m,iblock), rhoi (i,k -1,j-1,m,iblock), (rhoi (i,k -1,j,m,iblock) - rhoi (i,k -1,j -1,m,iblock))/hue(i,j-1,iblock)
-                   write(140,*)  rhoi (i,k -1,j+1,m,iblock),rhoi (i,k -1,j,m,iblock),(rhoi (i,k -1,j+1,m,iblock) - rhoi (i,k -1,j ,m,iblock))/hue(i,j,iblock)
-                   write(140,*)  rhoi (i,k,j,m,iblock),rhoi (i,k ,j-1,m,iblock), (rhoi (i,k,j,m,iblock) - rhoi (i,k,j -1,m,iblock))/hue(i,j-1,iblock)
-                   write(140,*)  rhoi (i,k,j+1,m,iblock),rhoi (i,k ,j,m,iblock), (rhoi (i,k ,j+1,m,iblock) - rhoi (i,k,j ,m,iblock))/hue(i,j,iblock)
-                   write(140,*)  dzwr(k-1),m,  rhoi (i,k -1,j,m,iblock), rhoi (i,k,j,m,iblock)
-                   write(140,*)  e (i,k -1,j,2,iblock),  e (i,k -1,j,3,iblock)
-               end if
             END DO
          END DO
-         if (mytid ==0 ) close(140) 
 !nickbegin
 !       k = km
 !nickend
@@ -135,16 +126,10 @@ use grid
                K3 (i,k,j,1,iblock) = - e (i,k,j,3,iblock)* e (i,k,j,1,iblock)* ahfctr
                K3 (i,k,j,2,iblock) = - e (i,k,j,3,iblock)* e (i,k,j,2,iblock)* ahfctr
                K3 (i,k,j,3,iblock) = (e (i,k,j,1,iblock)**2+ e (i,k,j,2,iblock)**2)* ahfctr
-               if (mytid == 0 .and. i==55 .and. j==6 .and. k ==1 ) then
-                   write(139,*) k3(i,k,j,1,iblock), k3(i,k,j,2,iblock),k3(i,k,j,3,iblock)
-                   write(139,*) e(i,k,j,1,iblock), e(i,k,j,2,iblock),e(i,k,j,3,iblock)
-                   write(139,*) ahfctr
-               end if
             END DO
          END DO
       END DO
   end do
-   if (mytid == 0 ) close(139) 
 #endif
  
 !-----------------------------------------------------------------------

@@ -23,14 +23,14 @@ use operators
 !
       IMPLICIT NONE
       REAL(r8)   :: ABCD,TUP,SUP,TLO,SLO,RHOUP,RHOLO,ek0
-      REAL(r8)   :: DENS, zzz1,zzz2
+      REAL(r8)   :: DENS, zzz1,zzz2,epsln
       real(r8),dimension(:,:,:,:),allocatable:: alpha, beta, pp, ppa, ppb, ppc
       real(r8),dimension(:,:,:),allocatable:: work1, work2, adv_tt
       integer :: iblock
       EXTERNAL DENS
       type (block) :: this_block          ! block information for current block
  
- 
+      epsln = 1.0D-25 
       allocate ( alpha(imt,jmt,km,max_blocks_clinic), beta(imt,jmt,km,max_blocks_clinic))
       allocate ( pp(imt,jmt,km,max_blocks_clinic), ppa(imt,jmt,km,max_blocks_clinic))
       allocate ( ppb(imt,jmt,km,max_blocks_clinic), ppc(imt,jmt,km,max_blocks_clinic))
@@ -207,16 +207,14 @@ use operators
    DO IBLOCK = 1, NBLOCKS_CLINIC
       DO K = 1,KMM1
          DO J = 1, JMT
-            DO I = 1,IMT
-               ricdt(I,J,K,iblock)=VIT(I,J,K+1,iblock)*G*((AT(I,J,K,1,iblock)-AT(I,J,K+1,1,iblock))* & 
-                                   ALPHA(I,J,K+1,iblock)+1000.D0*(AT(I,J,K,2,iblock)-AT(I,J,K+1,2,iblock))*  &
-                                   BETA(I,J,K+1,iblock))*ODZT(K+1)
+            DO I = 2, IMT-1
+               ricdt(I,J,K,iblock)=VIT(I,J,K+1,iblock)/((AT(I,J,K,1,iblock)-AT(I,J,K+1,1,iblock)+epsln)* & 
+                                   ALPHA(I,J,K+1,iblock))*1000.D0*((AT(I,J,K,2,iblock)-AT(I,J,K+1,2,iblock))*  &
+                                   BETA(I,J,K+1,iblock))
             END DO
          END DO
       END DO
    END DO
-
-
 
 !$OMP PARALLEL DO PRIVATE (K,J,I)
    DO IBLOCK = 1, NBLOCKS_CLINIC

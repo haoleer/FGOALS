@@ -310,9 +310,6 @@ use cforce_mod
       call run_time('INIRUN_PT')
 #endif
 #endif
-#ifdef CANUTO
-      call turb_ini
-#endif
 !---------------------------------------------------------------------
 !     INITIALIZATION OF ISOPYCNAL MIXING
 !---------------------------------------------------------------------
@@ -357,6 +354,7 @@ use cforce_mod
 
     integer(kind(1))   :: curr_ymd     ! Current date YYYYMMDD
     integer(kind(1))   :: yy,mm,dd     ! year, month, day
+    logical :: write_restart
 
 !----------------------------------------------------------------------
 !   get Eclock data information
@@ -369,9 +367,11 @@ use cforce_mod
     mon0 = mm  ! month = (iyfm-1)*12 + mon0
     iday = dd  ! number_day = iday + 1
     
+    write_restart = seq_timemgr_RestartAlarmIsOn(EClock)
     if(mytid == 0) then
-       write(6,*) "From CPL7-Time yy=",yy,"mm=",mm,"dd=",dd
+       write(6,*) "From CPL7-Time yy=",yy,"mm=",mm,"dd=",dd, write_restart
     endif
+
 
 !linpf 2012Jul27
 !=====================time control for licom output===============
@@ -410,7 +410,6 @@ use cforce_mod
       write(111,*)"OK------11.0"
       close(111)
       end if
-    call energy
 !---------------------------------------------------------------------
 !     THERMAL CYCLE
 !---------------------------------------------------------------------
@@ -568,7 +567,7 @@ use cforce_mod
       end if
 
     LOGMSG()
-    CALL SSAVEINS
+    CALL SSAVEINS (EClock)
       if (mytid == 0) then
       write(111,*)"OK------25.0"
       close(111)

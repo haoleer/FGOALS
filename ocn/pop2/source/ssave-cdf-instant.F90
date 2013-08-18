@@ -1,6 +1,6 @@
 !  CVS: $Id: ssave-cdf.F90,v 1.1.1.1 2004/04/29 06:22:39 lhl Exp $
 !     =================
-      subroutine SSAVEINS
+      subroutine SSAVEINS(EClock)
 #include <def-undef.h>
 !     =================
 !     output in NETcdf format
@@ -17,10 +17,21 @@ use buf_mod, only:t_cpl,s_cpl,u_cpl,v_cpl,dhdx,dhdy,q
 use domain
 use gather_scatter
 use distribution
+use mct_mod
+use esmf_mod
+use seq_flds_mod
+use seq_cdata_mod
+use seq_infodata_mod
+use seq_timemgr_mod
 
+      logical       :: write_restart     ! restart now
       character (len=18) :: fname
       integer :: klevel
+      type(ESMF_Clock)            ,intent(in)    :: EClock
+      integer(kind(1))   :: curr_ymd     ! Current date YYYYMMDD
 !
+!        call seq_timemgr_EClockGetData( EClock, curr_ymd=curr_ymd)
+         write_restart = seq_timemgr_RestartAlarmIsOn(EClock)
          number_day = iday !+1 !LPF 20120816
          number_month = month
          if ( number_day  > imd ) then
@@ -31,8 +42,10 @@ use distribution
 
 !
      if(mytid==0) write(*,*)'in instant,iday=,imd=,rest_freq',iday,imd,rest_freq
+     if(mytid==0) write(*,*)'in instant,write_restart', write_restart
 !
-     if ( mod(iday,rest_freq) == 0 .or. iday == imd) then
+!    if ( mod(iday,rest_freq) == 0 .or. iday == imd .or. iday == 10 .or. iday ==20) then
+     if ( mod(iday,rest_freq) == 0 .or. iday == imd ) then
 !
        if ( mytid == 0 ) then
          fname(1:8)='fort.22.'

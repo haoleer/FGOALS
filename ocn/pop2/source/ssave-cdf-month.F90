@@ -506,7 +506,11 @@ use gather_scatter
  
          allocate(buffer_r4_global(imt_global,jmt_global), buffer_r4_local(imt,jmt,max_blocks_clinic))
 !
-         buffer_r4_local = z0mon
+         where ( vit(:,:,1,:) > 0.5D0 )
+            buffer_r4_local = z0mon/float(imd)
+         elsewhere
+            buffer_r4_local = spval
+         endwhere 
          call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic) 
 !
          if(mytid==0) then         
@@ -514,7 +518,11 @@ use gather_scatter
             CALL check_err (iret)
          endif !mytid==0
 !
-         buffer_r4_local = icmon(:,:,1,:)
+         where ( vit(:,:,1,:) > 0.5D0 )
+            buffer_r4_local = icmon(:,:,1,:)/float(imd)
+         elsewhere
+            buffer_r4_local = spval
+         endwhere 
          call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic) 
 !
          if(mytid==0) then
@@ -523,7 +531,11 @@ use gather_scatter
          endif !mytid==0
 
 !
-         buffer_r4_local = icmon(:,:,2,:)
+         where ( vit(:,:,1,:) > 0.5D0 )
+            buffer_r4_local = icmon(:,:,2,:)/float(imd)
+         elsewhere
+            buffer_r4_local = spval
+         endwhere 
          call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic) 
 !
          if(mytid==0) then
@@ -531,7 +543,11 @@ use gather_scatter
             CALL check_err (iret)
          endif !mytid==0
 !
-         buffer_r4_local = netmon(:,:,1,:)
+         where ( vit(:,:,1,:) > 0.5D0 )
+            buffer_r4_local = netmon(:,:,1,:)/float(imd)
+         elsewhere
+            buffer_r4_local = spval
+         endwhere 
          call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic) 
 !
          if(mytid==0) then
@@ -539,14 +555,22 @@ use gather_scatter
             CALL check_err (iret)
          endif !mytid==0
 
-         buffer_r4_local = netmon(:,:,2,:)
+         where ( vit(:,:,1,:) > 0.5D0 )
+            buffer_r4_local = netmon(:,:,2,:)/float(imd)
+         elsewhere
+            buffer_r4_local = spval
+         endwhere 
          call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic) 
          if(mytid==0) then
             iret = nf_put_vara_real (ncid,net2_id,start3, count3, buffer_r4_global)
             CALL check_err (iret)
          endif !mytid==0
 !
-         buffer_r4_local = mldmon
+         where ( vit(:,:,1,:) > 0.5D0 )
+            buffer_r4_local = mldmon/float(imd)
+         elsewhere
+            buffer_r4_local = spval
+         endwhere 
          call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic) 
          if(mytid==0) then
             iret = nf_put_vara_real (ncid,mld_id,start3, count3, buffer_r4_global)
@@ -565,11 +589,15 @@ use gather_scatter
             start4 (3)= k
             count4 (3)= 1
 !
-            buffer_r4_local = akmmon(:,:,k,:)
+            where ( viv(:,:,k,:) > 0.5D0 )
+               buffer_r4_local = akmmon(:,:,k,:)/float(imd)
+            elsewhere
+               buffer_r4_local = spval
+            endwhere 
             call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic) 
             if(mytid==0) then
-!              iret = nf_put_vara_real (ncid,akm_id,start4, count4, buffer_r4_global)
-!              CALL check_err (iret)
+               iret = nf_put_vara_real (ncid,akm_id,start4, count4, buffer_r4_global)
+               CALL check_err (iret)
             endif !mytid==0
 !
          end do
@@ -578,7 +606,11 @@ use gather_scatter
             start4 (3)= k
             count4 (3)= 1
 !
-            buffer_r4_local = aktmon(:,:,k,:)
+            where ( vit(:,:,k,:) > 0.5D0 )
+               buffer_r4_local = aktmon(:,:,k,:)/float(imd)
+            elsewhere
+               buffer_r4_local = spval
+            endwhere 
             call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
             if(mytid==0) then
                iret = nf_put_vara_real (ncid,akt_id,start4, count4, buffer_r4_global)
@@ -591,7 +623,11 @@ use gather_scatter
             start4 (3)= k
             count4 (3)= 1
 !
-            buffer_r4_local = aksmon(:,:,k,:)
+            where ( vit(:,:,k,:) > 0.5D0 )
+               buffer_r4_local = aksmon(:,:,k,:)/float(imd)
+            elsewhere
+               buffer_r4_local = spval
+            endwhere 
             call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
             if(mytid==0) then
                iret = nf_put_vara_real (ncid,aks_id,start4, count4, buffer_r4_global)
@@ -604,7 +640,11 @@ use gather_scatter
             start4 (3)= k
             count4 (3)= 1
 !
-            buffer_r4_local = tsmon(:,:,k,:)
+            where ( vit(:,:,k,:) > 0.5D0 )
+               buffer_r4_local = tsmon(:,:,k,:)/float(imd)
+            elsewhere
+               buffer_r4_local = spval
+            endwhere 
             call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
             if(mytid==0) then
                iret = nf_put_vara_real (ncid,ts_id,start4, count4, buffer_r4_global)
@@ -617,7 +657,11 @@ use gather_scatter
             start4 (3)= k
             count4 (3)= 1
 !
-            buffer_r4_local = ssmon(:,:,k,:)
+            where ( vit(:,:,k,:) > 0.5D0 )
+               buffer_r4_local = ssmon(:,:,k,:)/float(imd)
+            elsewhere
+               buffer_r4_local = spval
+            endwhere 
             call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
             if(mytid==0) then
                iret = nf_put_vara_real (ncid,ss_id,start4, count4, buffer_r4_global)
@@ -630,7 +674,11 @@ use gather_scatter
             start4 (3)= k
             count4 (3)= 1
 !
-            buffer_r4_local = wsmon(:,:,k,:)
+            where ( vit(:,:,k,:) > 0.5D0 )
+               buffer_r4_local = wsmon(:,:,k,:)/float(imd)
+            elsewhere
+               buffer_r4_local = spval
+            endwhere 
             call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
             if(mytid==0) then
                iret = nf_put_vara_real (ncid,ws_id,start4, count4, buffer_r4_global)
@@ -643,7 +691,11 @@ use gather_scatter
             start4 (3)= k
             count4 (3)= 1
 !
-            buffer_r4_local = usmon(:,:,k,:)
+            where ( viv(:,:,k,:) > 0.5D0 )
+               buffer_r4_local = usmon(:,:,k,:)/float(imd)
+            elsewhere
+               buffer_r4_local = spval
+            endwhere 
             call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
             if(mytid==0) then
                iret = nf_put_vara_real (ncid,us_id,start4, count4, buffer_r4_global)
@@ -656,7 +708,11 @@ use gather_scatter
             start4 (3)= k
             count4 (3)= 1
 !
-            buffer_r4_local = vsmon(:,:,k,:)
+            where ( viv(:,:,k,:) > 0.5D0 )
+               buffer_r4_local = vsmon(:,:,k,:)/float(imd)
+            elsewhere
+               buffer_r4_local = spval
+            endwhere 
             call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
             if(mytid==0) then
                iret = nf_put_vara_real (ncid,vs_id,start4, count4, buffer_r4_global)
@@ -667,42 +723,66 @@ use gather_scatter
 
 !Taux 
 
-         buffer_r4_local = sumon
+         where ( viv(:,:,1,:) > 0.5D0 )
+            buffer_r4_local = sumon/float(imd)
+         elsewhere
+            buffer_r4_local = spval
+         endwhere 
          call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
          if(mytid==0) then
             iret = nf_put_vara_real (ncid,su_id,start3, count3, buffer_r4_global)
             CALL check_err (iret)
          endif !mytid==0
 !
-         buffer_r4_local = svmon
+         where ( viv(:,:,1,:) > 0.5D0 )
+            buffer_r4_local = svmon/float(imd)
+         elsewhere
+            buffer_r4_local = spval
+         endwhere 
          call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
          if(mytid==0) then
             iret = nf_put_vara_real (ncid,sv_id,start3, count3, buffer_r4_global)
             CALL check_err (iret)
          endif !mytid==0
 !
-         buffer_r4_local = lthfmon
+         where ( vit(:,:,1,:) > 0.5D0 )
+            buffer_r4_local = lthfmon/float(imd)
+         elsewhere
+            buffer_r4_local = spval
+         endwhere 
          call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
          if(mytid==0) then
             iret = nf_put_vara_real (ncid,lthf_id,start3, count3, buffer_r4_global)
             CALL check_err (iret)
          endif !mytid==0
 !
-         buffer_r4_local = sshfmon
+         where ( vit(:,:,1,:) > 0.5D0 )
+            buffer_r4_local = sshfmon/float(imd)
+         elsewhere
+            buffer_r4_local = spval
+         endwhere 
          call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
          if(mytid==0) then
             iret = nf_put_vara_real (ncid,sshf_id,start3, count3, buffer_r4_global)
             CALL check_err (iret)
          endif !mytid==0
 !
-         buffer_r4_local = lwvmon
+         where ( vit(:,:,1,:) > 0.5D0 )
+            buffer_r4_local = lwvmon/float(imd)
+         elsewhere
+            buffer_r4_local = spval
+         endwhere 
          call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
          if(mytid==0) then
             iret = nf_put_vara_real (ncid,lwv_id,start3, count3, buffer_r4_global)
             CALL check_err (iret)
          endif !mytid==0
 !
-         buffer_r4_local = swvmon
+         where ( vit(:,:,1,:) > 0.5D0 )
+            buffer_r4_local = swvmon/float(imd)
+         elsewhere
+            buffer_r4_local = spval
+         endwhere 
          call gather_global(buffer_r4_global,buffer_r4_local, master_task,distrb_clinic)
          if(mytid==0) then
             iret = nf_put_vara_real (ncid,swv_id,start3, count3, buffer_r4_global)

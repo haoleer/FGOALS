@@ -27,16 +27,16 @@
       DO IBLOCK  = 1, NBLOCKS_CLINIC
 !
       DO K = 1,KM
-         DO J = JST,JET
-            DO I = 2,IMM
+         DO J = 1, JMT
+            DO I = 2,IMT-1
             tmp(i,j,k,iblock)=-pp(i,j,k,iblock)/OD0/10000.D0*mask(i,j,k,iblock)
             END DO
          END DO   
       END DO
 !
       DO K = 1,KM
-         DO J = JST,JET
-            DO I = 2,IMM
+         DO J = 1, JMT
+            DO I = 2,IMT-1
        bb(i,j,k,iblock)=(0.785567d-3-0.301985d-5*tt(i,j,k,iblock)+0.555579d-7*tt(i,j,k,iblock)**2 &
            -0.415613d-9*tt(i,j,k,iblock)**3+(ss(i,j,k,iblock)*1000.0d0)*(-0.356603d-6+0.788212d-8*tt(i,j,k,iblock)&
            +0.408195d-10*tmp(i,j,k,iblock)-0.602281d-15*tmp(i,j,k,iblock)**2) &

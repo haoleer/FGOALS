@@ -16,11 +16,14 @@ use grid
 use blocks
 use smuvh
 use operators
+use global_reductions
+use distribution
 
       IMPLICIT NONE
       REAL(r8)    :: AA,GGU,WK1,WK2,fil_lat1,fil_lat2
-      integer     :: iblock,kt
+      integer     :: iblock,kt, ival, jval
       REAL(r8)    :: gradx(imt,jmt), grady(imt,jmt)
+      REAL(r8)    :: val, tmp(imt,jmt,max_blocks_clinic)
       type (block) :: this_block
 
 !lhl0711
@@ -371,7 +374,21 @@ use operators
          END DO
       END DO
   END DO
- 
+!
+    if ( iday == 1 .and. isc < 8) then
+    do k=1, km
+      tmp = abs (u(:,:,k,:))
+      call global_maxloc(tmp,distrb_clinic,field_loc_center,ival,jval,val)
+      if (mytid == 0 .and. val > 2.0) then
+          write(123,*)"uuuu", iday,isc, ival, jval, k, val
+      end if
+      tmp = abs (v(:,:,k,:))
+      call global_maxloc(tmp,distrb_clinic,field_loc_center,ival,jval,val)
+      if (mytid == 0 .and. val > 2.0) then
+          write(123,*)"vvvv", iday, isc, ival, jval, k, val
+      end if
+    end do 
+    end if
 !
   call mpi_barrier(mpi_comm_ocn,ierr)
 

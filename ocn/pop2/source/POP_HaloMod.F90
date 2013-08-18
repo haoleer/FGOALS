@@ -5080,6 +5080,8 @@ contains
             bufTripole(i   ,POP_haloWidth+1,k,l) = isign*sign(xavg, x2)
             bufTripole(iDst,POP_haloWidth+1,k,l) = isign*sign(xavg, x1)
          end do
+         end do
+         end do
 
       case (POP_gridHorzLocSWcorner)   ! cell corner location
 
@@ -5106,8 +5108,6 @@ contains
          end do
          bufTripole(nxGlobal,POP_haloWidth+1,k,l) = isign* &
          bufTripole(nxGlobal,POP_haloWidth+1,k,l)
-         end do
-         end do
          end do
          end do
 
