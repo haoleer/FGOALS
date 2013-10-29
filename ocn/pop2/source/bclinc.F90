@@ -16,14 +16,11 @@ use grid
 use blocks
 use smuvh
 use operators
-use global_reductions
-use distribution
 
       IMPLICIT NONE
       REAL(r8)    :: AA,GGU,WK1,WK2,fil_lat1,fil_lat2
-      integer     :: iblock,kt, ival, jval
+      integer     :: iblock,kt
       REAL(r8)    :: gradx(imt,jmt), grady(imt,jmt)
-      REAL(r8)    :: val, tmp(imt,jmt,max_blocks_clinic)
       type (block) :: this_block
 
 !lhl0711
@@ -208,8 +205,11 @@ use distribution
          call POP_HaloUpdate(DLV, POP_haloClinic, POP_gridHorzLocSWcorner , &
                        POP_fieldKindVector, errorCode, fillValue = 0.0_r8)
 !
-      CALL SMUV_3D (DLU,VIV,fil_lat1)
+
+    if (trim(horiz_grid_opt) == 'lat_lon') then
       CALL SMUV_3D (DLV,VIV,fil_lat1)
+      CALL SMUV_3D (DLV,VIV,fil_lat1)
+    end if
 !YU 
 
 !---------------------------------------------------------------------
@@ -353,12 +353,14 @@ use distribution
  
 !YU  Oct. 24, 2005
 !lhl0711     IF (MOD(ISC,60)==0) THEN
+    if (trim(horiz_grid_opt) == 'lat_lon') then
      IF (MOD(ISC,160)==1) THEN
         CALL SMUV_3D (U,VIV,fil_lat2)
         CALL SMUV_3D (V,VIV,fil_lat2)
         CALL SMUV_3D (UP,VIV,fil_lat2)
         CALL SMUV_3D (VP,VIV,fil_lat2)
      END IF
+    end if
 !YU 
       ISC = ISC +1
       END IF
@@ -374,21 +376,7 @@ use distribution
          END DO
       END DO
   END DO
-!
-    if ( iday == 1 .and. isc < 8) then
-    do k=1, km
-      tmp = abs (u(:,:,k,:))
-      call global_maxloc(tmp,distrb_clinic,field_loc_center,ival,jval,val)
-      if (mytid == 0 .and. val > 2.0) then
-          write(123,*)"uuuu", iday,isc, ival, jval, k, val
-      end if
-      tmp = abs (v(:,:,k,:))
-      call global_maxloc(tmp,distrb_clinic,field_loc_center,ival,jval,val)
-      if (mytid == 0 .and. val > 2.0) then
-          write(123,*)"vvvv", iday, isc, ival, jval, k, val
-      end if
-    end do 
-    end if
+ 
 !
   call mpi_barrier(mpi_comm_ocn,ierr)
 

@@ -789,6 +789,37 @@ use gather_scatter
             CALL check_err (iret)
          endif !mytid==0
 !
+     if (diag_bsf) then
+        call barosf
+        if (mytid ==0 ) then
+            iret = nf_put_vara_real (ncid,bsf_id,start3, count3, buffer_r4_global)
+            CALL check_err (iret)
+        end if
+     end if
+!
+     if (diag_msf) then
+         start3 (1)= 1
+         start3 (2)= 1
+         start3 (3)= 1
+         count3 (1)= lat_len
+         count3 (2)= lev1_len
+         count3 (3)= 1
+        call msf
+        if (mytid ==0 ) then
+            iret = nf_put_vara_real (ncid,psi_id,start3, count3, psi(:,:,1))
+            CALL check_err (iret)
+        end if
+     end if
+!
+     if (diag_mth) then
+        call diag_heat_transport(1)
+        call diag_heat_transport(2)
+        if (mytid ==0 ) then
+            iret = nf_put_vara_real (ncid,mth_id,start3, count3, mth)
+            CALL check_err (iret)
+        end if
+     end if
+!
      if(mytid==0) then 
          iret = nf_CLOSE (ncid)
          CALL check_err (iret)

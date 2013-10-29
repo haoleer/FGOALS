@@ -373,6 +373,8 @@
    stdout = 6
    if (my_task == master_task) then
       write(stdout,'(a13)') ' Grid options'
+      write(112,*) "OK-----1"
+      close(112)
    endif
 
 !-----------------------------------------------------------------------
@@ -382,7 +384,15 @@
 !-----------------------------------------------------------------------
 
       call broadcast_scalar(horiz_grid_file, master_task)
+   if (my_task == master_task) then
+      write(112,*) "OK-----2"
+      close(112)
+   endif
       call read_horiz_grid(horiz_grid_file,.false.)
+   if (my_task == master_task) then
+      write(112,*) "OK-----3"
+      close(112)
+   endif
 
 
 !-----------------------------------------------------------------------
@@ -462,8 +472,16 @@
 !
 !-----------------------------------------------------------------------
 
+   if (my_task == master_task) then
+      write(112,*) "OK-----4"
+      close(112)
+   endif
    call cf_area_avg  ! coefficients for area-weighted averages
 
+   if (my_task == master_task) then
+      write(112,*) "OK-----5"
+      close(112)
+   endif
 !-----------------------------------------------------------------------
 !
 !  calculate lat/lon of T points and calculate ANGLET from ANGLE
@@ -471,11 +489,19 @@
 !-----------------------------------------------------------------------
 
    call calc_upoints(errorCode)
+   if (my_task == master_task) then
+      write(112,*) "OK-----6"
+      close(112)
+   endif
 
    if (errorCode /= 0) then
       call LICOM_ErrorSet(errorCode, &
          'init_grid2: error in calc_upoints')
       return
+   endif
+   if (my_task == master_task) then
+      write(112,*) "OK-----7"
+      close(112)
    endif
 
 !  !***
@@ -535,11 +561,19 @@
       enddo
    enddo
    !$OMP END PARALLEL DO
+   if (my_task == master_task) then
+      write(112,*) "OK-----8"
+      close(112)
+   endif
 
    call POP_HaloUpdate(ANGLE, POP_haloClinic, POP_gridHorzLocCenter, &
                                POP_fieldKindAngle, errorCode,         &
                                fillValue = 0.0_r8)
 
+   if (my_task == master_task) then
+      write(112,*) "OK-----9", errorCode
+      close(112)
+   endif
    if (errorCode /= 0) then
       call LICOM_ErrorSet(errorCode, &
          'init_grid2: error updating angleT halo')
@@ -1124,6 +1158,7 @@
                           field_loc_center, field_type_scalar)
       deallocate(KMT_G)
 !
+
       call boundary
 !
    endif
@@ -1674,9 +1709,11 @@
 !
 !-----------------------------------------------------------------------
 
-   
+ !
+ 
    call POP_HaloUpdate(ULAT, POP_haloClinic, POP_gridHorzLocSWcorner, & 
                        POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
+!-----------------------------------------------------------------------
 
    if (errorCode /= 0) then
       call LICOM_ErrorSet(errorCode, &

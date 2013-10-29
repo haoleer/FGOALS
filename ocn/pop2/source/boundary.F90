@@ -11,6 +11,7 @@ use msg_mod, only: tag_1d,tag_2d,tag_3d,tag_4d,nproc,status,mpi_comm_ocn, &
                    nbrs,my_rank,UPUP,DOWN,RIGHT,LEFT,dims,coords,cartcomm,reorder,periods
 use dyn_mod, only : buffer
 use domain
+use grid
 use POP_HaloMod
 use POP_GridHorzMod
 use grid, only : kmt, kmu

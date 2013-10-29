@@ -24,4 +24,4 @@
 #undef SOLARCHLORO
 #undef LDD97
 #undef  SMAG
-#define JMT_GLOBAL 196
+#define JMT_GLOBAL 218

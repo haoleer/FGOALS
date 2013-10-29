@@ -1764,12 +1764,14 @@ contains
 !
    do nmsg=1,halo%numMsgSend
 
+!     write(160+POP_mytask,*) "numMsgSend", nmsg, halo%sendTask(nmsg)
       do n=1,halo%sizeSend(nmsg)
          iSrc     = halo%sendAddr(1,n,nmsg)
          jSrc     = halo%sendAddr(2,n,nmsg)
          srcBlock = halo%sendAddr(3,n,nmsg)
 
          bufSendR8(n,nmsg) = array(iSrc,jSrc,srcBlock)
+!     write(160+POP_mytask,*) iSrc, jSrc, srcBlock
       end do
       do n=halo%sizeSend(nmsg)+1,bufSizeSend
          bufSendR8(n,nmsg) = fill  ! fill remainder of buffer
@@ -1800,6 +1802,9 @@ contains
       jDst     = halo%dstLocalAddr(2,nmsg)
       dstBlock = halo%dstLocalAddr(3,nmsg)
 
+!     write(160+POP_mytask,*) "localCopies", nmsg
+!     write(160+POP_mytask,*) iSrc,jSrc,srcBlock
+!     write(160+POP_mytask,*) iDst,jDst,DstBlock
       if (srcBlock > 0) then
          if (dstBlock > 0) then
             array(iDst,jDst,dstBlock) = &
@@ -1823,10 +1828,12 @@ contains
    call MPI_WAITALL(halo%numMsgRecv, rcvRequest, rcvStatus, ierr)
 
    do nmsg=1,halo%numMsgRecv
+!     write(160+POP_mytask,*) "RecvMsg", nmsg
       do n=1,halo%sizeRecv(nmsg)
          iDst     = halo%recvAddr(1,n,nmsg)
          jDst     = halo%recvAddr(2,n,nmsg)
          dstBlock = halo%recvAddr(3,n,nmsg)
+!     write(160+POP_mytask,*) iDst,jDst,DstBlock
 
          if (dstBlock > 0) then
             array(iDst,jDst,dstBlock) = bufRecvR8(n,nmsg)
@@ -1835,6 +1842,7 @@ contains
          endif
       end do
    end do
+!  close(160+POP_mytask)
 
 !-----------------------------------------------------------------------
 !
@@ -1865,17 +1873,23 @@ contains
          joffset = 1
          do i = 1,nxGlobal/2
             iDst = nxGlobal + 1 - i
-            x1 = bufTripoleR8(i   ,POP_haloWidth+1)
-            x2 = bufTripoleR8(iDst,POP_haloWidth+1)
-            xavg = 0.5_r8*(abs(x1) + abs(x2))
-            bufTripoleR8(i   ,POP_haloWidth+1) = isign*sign(xavg, x2)
-            bufTripoleR8(iDst,POP_haloWidth+1) = isign*sign(xavg, x1)
+            x1 = bufTripoleR8(i   ,1)
+            x2 = bufTripoleR8(iDst,1)
+            if ( isign == 1) then
+               xavg = 0.5_r8*(x1 + x2)
+               bufTripoleR8(i   ,1) = xavg
+               bufTripoleR8(iDst,1) = xavg
+            else
+               xavg = 0.5_r8*(abs(x1) + abs(x2))
+               bufTripoleR8(i   ,1) = isign*sign(xavg, x2)
+               bufTripoleR8(iDst,1) = isign*sign(xavg, x1)
+            end if
          end do
 
       case (POP_gridHorzLocSWcorner)   ! cell corner location
 
          ioffset = -1
-         joffset = 0
+         joffset = 2
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
@@ -1890,19 +1904,25 @@ contains
 
          do i = 2,nxGlobal/2 + 1
             iDst = nxGlobal + 2 - i
-            x1 = bufTripoleR8(i   ,POP_haloWidth+1)
-            x2 = bufTripoleR8(iDst,POP_haloWidth+1)
-            xavg = 0.5_r8*(abs(x1) + abs(x2))
-            bufTripoleR8(i   ,POP_haloWidth+1) = isign*sign(xavg, x2)
-            bufTripoleR8(iDst,POP_haloWidth+1) = isign*sign(xavg, x1)
+            x1 = bufTripoleR8(i   ,1)
+            x2 = bufTripoleR8(iDst,1)
+            if ( isign == 1) then
+               xavg = 0.5_r8*(x1 + x2)
+               bufTripoleR8(i   ,1) = xavg
+               bufTripoleR8(iDst,1) = xavg
+            else
+               xavg = 0.5_r8*(abs(x1) + abs(x2))
+               bufTripoleR8(i   ,1) = isign*sign(xavg, x2)
+               bufTripoleR8(iDst,1) = isign*sign(xavg, x1)
+            end if
          end do
-         bufTripoleR8(1 ,POP_haloWidth+1) = isign* &
-         bufTripoleR8(1 ,POP_haloWidth+1)
+         bufTripoleR8(1 ,1) = isign* &
+         bufTripoleR8(1 ,1)
 
       case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
-         joffset = 0
+         joffset = 2
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
@@ -1941,7 +1961,7 @@ contains
             !*** out of range and skipped
             !*** otherwise do the copy
 
-            if (jSrc <= POP_haloWidth+1) then
+            if (jSrc > 0 ) then
                array(iDst,jDst,dstBlock) = isign*bufTripoleR8(iSrc,jSrc)
             endif
 
@@ -2212,17 +2232,17 @@ contains
          joffset = 1
          do i = 1,nxGlobal/2
             iDst = nxGlobal + 1 - i
-            x1 = bufTripoleR4(i   ,POP_haloWidth+1)
-            x2 = bufTripoleR4(iDst,POP_haloWidth+1)
+            x1 = bufTripoleR4(i   ,1)
+            x2 = bufTripoleR4(iDst,1)
             xavg = 0.5_r4*(abs(x1) + abs(x2))
-            bufTripoleR4(i   ,POP_haloWidth+1) = isign*sign(xavg, x2)
-            bufTripoleR4(iDst,POP_haloWidth+1) = isign*sign(xavg, x1)
+            bufTripoleR4(i   ,1) = isign*sign(xavg, x2)
+            bufTripoleR4(iDst,1) = isign*sign(xavg, x1)
          end do
 
       case (POP_gridHorzLocSWcorner)   ! cell corner location
 
          ioffset = -1
-         joffset = 0
+         joffset = 2
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
@@ -2233,20 +2253,20 @@ contains
          ioffset = -1
          joffset = 1
          do i = 1,nxGlobal/2
-            iDst = nxGlobal - i
-            x1 = bufTripoleR4(i   ,POP_haloWidth+1)
-            x2 = bufTripoleR4(iDst,POP_haloWidth+1)
+            iDst = nxGlobal+2 - i
+            x1 = bufTripoleR4(i   ,1)
+            x2 = bufTripoleR4(iDst,1)
             xavg = 0.5_r4*(abs(x1) + abs(x2))
-            bufTripoleR4(i   ,POP_haloWidth+1) = isign*sign(xavg, x2)
-            bufTripoleR4(iDst,POP_haloWidth+1) = isign*sign(xavg, x1)
+            bufTripoleR4(i   ,1) = isign*sign(xavg, x2)
+            bufTripoleR4(iDst,1) = isign*sign(xavg, x1)
          end do
-         bufTripoleR4(nxGlobal,POP_haloWidth+1) = isign* &
-         bufTripoleR4(nxGlobal,POP_haloWidth+1)
+         bufTripoleR4(1,1) = isign* &
+         bufTripoleR4(1,1)
 
       case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
-         joffset = 0
+         joffset = 2
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
@@ -2285,7 +2305,7 @@ contains
             !*** out of range and skipped
             !*** otherwise do the copy
 
-            if (jSrc <= POP_haloWidth+1) then
+            if (jSrc > 0 )  then
                array(iDst,jDst,dstBlock) = isign*bufTripoleR4(iSrc,jSrc)
             endif
 
@@ -2556,17 +2576,17 @@ contains
          joffset = 1
          do i = 1,nxGlobal/2
             iDst = nxGlobal + 1 - i
-            x1 = bufTripoleI4(i   ,POP_haloWidth+1)
-            x2 = bufTripoleI4(iDst,POP_haloWidth+1)
+            x1 = bufTripoleI4(i   ,1)
+            x2 = bufTripoleI4(iDst,1)
             xavg = nint(0.5_r8*(abs(x1) + abs(x2)))
-            bufTripoleI4(i   ,POP_haloWidth+1) = isign*sign(xavg, x2)
-            bufTripoleI4(iDst,POP_haloWidth+1) = isign*sign(xavg, x1)
+            bufTripoleI4(i   ,1) = isign*sign(xavg, x2)
+            bufTripoleI4(iDst,1) = isign*sign(xavg, x1)
          end do
 
       case (POP_gridHorzLocSWcorner)   ! cell corner location
 
          ioffset = -1
-         joffset = 0
+         joffset = 2
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
@@ -2577,20 +2597,20 @@ contains
          ioffset = -1
          joffset = 1
          do i = 1,nxGlobal/2
-            iDst = nxGlobal - i
-            x1 = bufTripoleI4(i   ,POP_haloWidth+1)
-            x2 = bufTripoleI4(iDst,POP_haloWidth+1)
+            iDst = nxGlobal+2 - i
+            x1 = bufTripoleI4(i   ,1)
+            x2 = bufTripoleI4(iDst,1)
             xavg = nint(0.5_r8*(abs(x1) + abs(x2)))
-            bufTripoleI4(i   ,POP_haloWidth+1) = isign*sign(xavg, x2)
-            bufTripoleI4(iDst,POP_haloWidth+1) = isign*sign(xavg, x1)
+            bufTripoleI4(i   ,1) = isign*sign(xavg, x2)
+            bufTripoleI4(iDst,1) = isign*sign(xavg, x1)
          end do
-         bufTripoleI4(nxGlobal,POP_haloWidth+1) = isign* &
-         bufTripoleI4(nxGlobal,POP_haloWidth+1)
+         bufTripoleI4(1,1) = isign* &
+         bufTripoleI4(1,1)
 
       case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
-         joffset = 0
+         joffset = 2
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
@@ -2629,7 +2649,7 @@ contains
             !*** out of range and skipped
             !*** otherwise do the copy
 
-            if (jSrc <= POP_haloWidth+1) then
+            if (jSrc > 0 ) then
                array(iDst,jDst,dstBlock) = isign*bufTripoleI4(iSrc,jSrc)
             endif
 
@@ -2959,18 +2979,18 @@ contains
          do k=1,nz
          do i = 1,nxGlobal/2
             iDst = nxGlobal + 1 - i
-            x1 = bufTripole(i   ,POP_haloWidth+1,k)
-            x2 = bufTripole(iDst,POP_haloWidth+1,k)
+            x1 = bufTripole(i   ,1,k)
+            x2 = bufTripole(iDst,1,k)
             xavg = 0.5_r8*(abs(x1) + abs(x2))
-            bufTripole(i   ,POP_haloWidth+1,k) = isign*sign(xavg, x2)
-            bufTripole(iDst,POP_haloWidth+1,k) = isign*sign(xavg, x1)
+            bufTripole(i   ,1,k) = isign*sign(xavg, x2)
+            bufTripole(iDst,1,k) = isign*sign(xavg, x1)
          end do
          end do
 
       case (POP_gridHorzLocSWcorner)   ! cell corner location
 
          ioffset = -1
-         joffset = 0
+         joffset = 2
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
@@ -2982,21 +3002,21 @@ contains
          joffset = 1
          do k=1,nz
          do i = 1,nxGlobal/2
-            iDst = nxGlobal - i
-            x1 = bufTripole(i   ,POP_haloWidth+1,k)
-            x2 = bufTripole(iDst,POP_haloWidth+1,k)
+            iDst = nxGlobal +2 - i
+            x1 = bufTripole(i   ,1,k)
+            x2 = bufTripole(iDst,1,k)
             xavg = 0.5_r8*(abs(x1) + abs(x2))
-            bufTripole(i   ,POP_haloWidth+1,k) = isign*sign(xavg, x2)
-            bufTripole(iDst,POP_haloWidth+1,k) = isign*sign(xavg, x1)
+            bufTripole(i   ,1,k) = isign*sign(xavg, x2)
+            bufTripole(iDst,1,k) = isign*sign(xavg, x1)
          end do
-         bufTripole(nxGlobal,POP_haloWidth+1,k) = isign* &
-         bufTripole(nxGlobal,POP_haloWidth+1,k)
+         bufTripole(1,1,k) = isign* &
+         bufTripole(1,1,k)
          end do
 
       case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
-         joffset = 0
+         joffset = 2
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
@@ -3035,7 +3055,7 @@ contains
             !*** out of range and skipped
             !*** otherwise do the copy
 
-            if (jSrc <= POP_haloWidth+1) then
+            if (jSrc > 0 ) then
                do k=1,nz
                   array(iDst,jDst,k,dstBlock) = isign*    &
                                   bufTripole(iSrc,jSrc,k)
@@ -3370,18 +3390,18 @@ contains
          do k=1,nz
          do i = 1,nxGlobal/2
             iDst = nxGlobal + 1 - i
-            x1 = bufTripole(i   ,POP_haloWidth+1,k)
-            x2 = bufTripole(iDst,POP_haloWidth+1,k)
+            x1 = bufTripole(i   ,1,k)
+            x2 = bufTripole(iDst,1,k)
             xavg = 0.5_r4*(abs(x1) + abs(x2))
-            bufTripole(i   ,POP_haloWidth+1,k) = isign*sign(xavg, x2)
-            bufTripole(iDst,POP_haloWidth+1,k) = isign*sign(xavg, x1)
+            bufTripole(i   ,1,k) = isign*sign(xavg, x2)
+            bufTripole(iDst,1,k) = isign*sign(xavg, x1)
          end do
          end do
 
       case (POP_gridHorzLocSWcorner)   ! cell corner location
 
          ioffset = -1
-         joffset = 0
+         joffset = 2
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
@@ -3393,21 +3413,21 @@ contains
          joffset = 1
          do k=1,nz
          do i = 1,nxGlobal/2
-            iDst = nxGlobal - i
-            x1 = bufTripole(i   ,POP_haloWidth+1,k)
-            x2 = bufTripole(iDst,POP_haloWidth+1,k)
+            iDst = nxGlobal+2 - i
+            x1 = bufTripole(i   ,1,k)
+            x2 = bufTripole(iDst,1,k)
             xavg = 0.5_r4*(abs(x1) + abs(x2))
-            bufTripole(i   ,POP_haloWidth+1,k) = isign*sign(xavg, x2)
-            bufTripole(iDst,POP_haloWidth+1,k) = isign*sign(xavg, x1)
+            bufTripole(i   ,1,k) = isign*sign(xavg, x2)
+            bufTripole(iDst,1,k) = isign*sign(xavg, x1)
          end do
-         bufTripole(nxGlobal,POP_haloWidth+1,k) = isign* &
-         bufTripole(nxGlobal,POP_haloWidth+1,k)
+         bufTripole(1,1,k) = isign* &
+         bufTripole(1,1,k)
          end do
 
       case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
-         joffset = 0
+         joffset = 2
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
@@ -3447,7 +3467,7 @@ contains
             !*** out of range and skipped
             !*** otherwise do the copy
 
-            if (jSrc <= POP_haloWidth+1) then
+            if (jSrc > 0 ) then
                do k=1,nz
                   array(iDst,jDst,k,dstBlock) = isign*    &
                                   bufTripole(iSrc,jSrc,k)
@@ -3782,18 +3802,18 @@ contains
          do k=1,nz
          do i = 1,nxGlobal/2
             iDst = nxGlobal + 1 - i
-            x1 = bufTripole(i   ,POP_haloWidth+1,k)
-            x2 = bufTripole(iDst,POP_haloWidth+1,k)
+            x1 = bufTripole(i   ,1,k)
+            x2 = bufTripole(iDst,1,k)
             xavg = nint(0.5_r8*(abs(x1) + abs(x2)))
-            bufTripole(i   ,POP_haloWidth+1,k) = isign*sign(xavg, x2)
-            bufTripole(iDst,POP_haloWidth+1,k) = isign*sign(xavg, x1)
+            bufTripole(i   ,1,k) = isign*sign(xavg, x2)
+            bufTripole(iDst,1,k) = isign*sign(xavg, x1)
          end do
          end do
 
       case (POP_gridHorzLocSWcorner)   ! cell corner location
 
          ioffset = -1
-         joffset = 0
+         joffset = 2
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
@@ -3805,21 +3825,21 @@ contains
          joffset = 1
          do k=1,nz
          do i = 1,nxGlobal/2
-            iDst = nxGlobal - i
-            x1 = bufTripole(i   ,POP_haloWidth+1,k)
-            x2 = bufTripole(iDst,POP_haloWidth+1,k)
+            iDst = nxGlobal+2 - i
+            x1 = bufTripole(i   ,1,k)
+            x2 = bufTripole(iDst,1,k)
             xavg = nint(0.5_r8*(abs(x1) + abs(x2)))
-            bufTripole(i   ,POP_haloWidth+1,k) = isign*sign(xavg, x2)
-            bufTripole(iDst,POP_haloWidth+1,k) = isign*sign(xavg, x1)
+            bufTripole(i   ,1,k) = isign*sign(xavg, x2)
+            bufTripole(iDst,1,k) = isign*sign(xavg, x1)
          end do
-         bufTripole(nxGlobal,POP_haloWidth+1,k) = isign* &
-         bufTripole(nxGlobal,POP_haloWidth+1,k)
+         bufTripole(1,1,k) = isign* &
+         bufTripole(1,1,k)
          end do
 
       case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
-         joffset = 0
+         joffset = 2
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
@@ -3858,7 +3878,7 @@ contains
             !*** out of range and skipped
             !*** otherwise do the copy
 
-            if (jSrc <= POP_haloWidth+1) then
+            if (jSrc > 0 ) then
                do k=1,nz
                   array(iDst,jDst,k,dstBlock) = isign*    &
                                   bufTripole(iSrc,jSrc,k)
@@ -4208,11 +4228,11 @@ contains
          do k=1,nz
          do i = 1,nxGlobal/2
             iDst = nxGlobal + 1 - i
-            x1 = bufTripole(i   ,POP_haloWidth+1,k,l)
-            x2 = bufTripole(iDst,POP_haloWidth+1,k,l)
+            x1 = bufTripole(i   ,1,k,l)
+            x2 = bufTripole(iDst,1,k,l)
             xavg = 0.5_r8*(abs(x1) + abs(x2))
-            bufTripole(i   ,POP_haloWidth+1,k,l) = isign*sign(xavg, x2)
-            bufTripole(iDst,POP_haloWidth+1,k,l) = isign*sign(xavg, x1)
+            bufTripole(i   ,1,k,l) = isign*sign(xavg, x2)
+            bufTripole(iDst,1,k,l) = isign*sign(xavg, x1)
          end do
          end do
          end do
@@ -4221,7 +4241,7 @@ contains
       case (POP_gridHorzLocSWcorner)   ! cell corner location
 
          ioffset = -1
-         joffset = 0
+         joffset = 2
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
@@ -4235,22 +4255,22 @@ contains
          do l=1,nt
          do k=1,nz
          do i = 1,nxGlobal/2
-            iDst = nxGlobal - i
-            x1 = bufTripole(i   ,POP_haloWidth+1,k,l)
-            x2 = bufTripole(iDst,POP_haloWidth+1,k,l)
+            iDst = nxGlobal+2 - i
+            x1 = bufTripole(i   ,1,k,l)
+            x2 = bufTripole(iDst,1,k,l)
             xavg = 0.5_r8*(abs(x1) + abs(x2))
-            bufTripole(i   ,POP_haloWidth+1,k,l) = isign*sign(xavg, x2)
-            bufTripole(iDst,POP_haloWidth+1,k,l) = isign*sign(xavg, x1)
+            bufTripole(i   ,1,k,l) = isign*sign(xavg, x2)
+            bufTripole(iDst,1,k,l) = isign*sign(xavg, x1)
          end do
-         bufTripole(nxGlobal,POP_haloWidth+1,k,l) = isign* &
-         bufTripole(nxGlobal,POP_haloWidth+1,k,l)
+         bufTripole(1,1,k,l) = isign* &
+         bufTripole(1,1,k,l)
          end do
          end do
 
       case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
-         joffset = 0
+         joffset = 2
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
@@ -4290,7 +4310,7 @@ contains
             !*** out of range and skipped
             !*** otherwise do the copy
 
-            if (jSrc <= POP_haloWidth+1) then
+            if (jSrc > 0 ) then
                do l=1,nt
                do k=1,nz
                   array(iDst,jDst,k,l,dstBlock) = isign*    &
@@ -4642,11 +4662,11 @@ contains
          do k=1,nz
          do i = 1,nxGlobal/2
             iDst = nxGlobal + 1 - i
-            x1 = bufTripole(i   ,POP_haloWidth+1,k,l)
-            x2 = bufTripole(iDst,POP_haloWidth+1,k,l)
+            x1 = bufTripole(i   ,1,k,l)
+            x2 = bufTripole(iDst,1,k,l)
             xavg = 0.5_r4*(abs(x1) + abs(x2))
-            bufTripole(i   ,POP_haloWidth+1,k,l) = isign*sign(xavg, x2)
-            bufTripole(iDst,POP_haloWidth+1,k,l) = isign*sign(xavg, x1)
+            bufTripole(i   ,1,k,l) = isign*sign(xavg, x2)
+            bufTripole(iDst,1,k,l) = isign*sign(xavg, x1)
          end do
          end do
          end do
@@ -4654,7 +4674,7 @@ contains
       case (POP_gridHorzLocSWcorner)   ! cell corner location
 
          ioffset = -1
-         joffset = 0
+         joffset = 2
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
@@ -4667,22 +4687,22 @@ contains
          do l=1,nt
          do k=1,nz
          do i = 1,nxGlobal/2
-            iDst = nxGlobal - i
-            x1 = bufTripole(i   ,POP_haloWidth+1,k,l)
-            x2 = bufTripole(iDst,POP_haloWidth+1,k,l)
+            iDst = nxGlobal+2 - i
+            x1 = bufTripole(i   ,1,k,l)
+            x2 = bufTripole(iDst,1,k,l)
             xavg = 0.5_r4*(abs(x1) + abs(x2))
-            bufTripole(i   ,POP_haloWidth+1,k,l) = isign*sign(xavg, x2)
-            bufTripole(iDst,POP_haloWidth+1,k,l) = isign*sign(xavg, x1)
+            bufTripole(i   ,1,k,l) = isign*sign(xavg, x2)
+            bufTripole(iDst,1,k,l) = isign*sign(xavg, x1)
          end do
-         bufTripole(nxGlobal,POP_haloWidth+1,k,l) = isign* &
-         bufTripole(nxGlobal,POP_haloWidth+1,k,l)
+         bufTripole(1,1,k,l) = isign* &
+         bufTripole(1,1,k,l)
          end do
          end do
 
       case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
-         joffset = 0
+         joffset = 2
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
@@ -4722,7 +4742,7 @@ contains
             !*** out of range and skipped
             !*** otherwise do the copy
 
-            if (jSrc <= POP_haloWidth+1) then
+            if (jSrc > 0 ) then
                do l=1,nt
                do k=1,nz
                   array(iDst,jDst,k,l,dstBlock) = isign*    &
@@ -5074,11 +5094,11 @@ contains
          do k=1,nz
          do i = 1,nxGlobal/2
             iDst = nxGlobal + 1 - i
-            x1 = bufTripole(i   ,POP_haloWidth+1,k,l)
-            x2 = bufTripole(iDst,POP_haloWidth+1,k,l)
+            x1 = bufTripole(i   ,1,k,l)
+            x2 = bufTripole(iDst,1,k,l)
             xavg = nint(0.5_r8*(abs(x1) + abs(x2)))
-            bufTripole(i   ,POP_haloWidth+1,k,l) = isign*sign(xavg, x2)
-            bufTripole(iDst,POP_haloWidth+1,k,l) = isign*sign(xavg, x1)
+            bufTripole(i   ,1,k,l) = isign*sign(xavg, x2)
+            bufTripole(iDst,1,k,l) = isign*sign(xavg, x1)
          end do
          end do
          end do
@@ -5086,7 +5106,7 @@ contains
       case (POP_gridHorzLocSWcorner)   ! cell corner location
 
          ioffset = -1
-         joffset = 0
+         joffset = 2
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
@@ -5099,22 +5119,22 @@ contains
          do l=1,nt
          do k=1,nz
          do i = 1,nxGlobal/2
-            iDst = nxGlobal - i
-            x1 = bufTripole(i   ,POP_haloWidth+1,k,l)
-            x2 = bufTripole(iDst,POP_haloWidth+1,k,l)
+            iDst = nxGlobal +2- i
+            x1 = bufTripole(i   ,1,k,l)
+            x2 = bufTripole(iDst,1,k,l)
             xavg = nint(0.5_r8*(abs(x1) + abs(x2)))
-            bufTripole(i   ,POP_haloWidth+1,k,l) = isign*sign(xavg, x2)
-            bufTripole(iDst,POP_haloWidth+1,k,l) = isign*sign(xavg, x1)
+            bufTripole(i   ,1,k,l) = isign*sign(xavg, x2)
+            bufTripole(iDst,1,k,l) = isign*sign(xavg, x1)
          end do
-         bufTripole(nxGlobal,POP_haloWidth+1,k,l) = isign* &
-         bufTripole(nxGlobal,POP_haloWidth+1,k,l)
+         bufTripole(1,1,k,l) = isign* &
+         bufTripole(1,1,k,l)
          end do
          end do
 
       case (POP_gridHorzLocSface)   ! cell corner (velocity) location
 
          ioffset = 0
-         joffset = 0
+         joffset = 2
 
          !*** top row is degenerate, so must enforce symmetry
          !***   use average of two degenerate points for value
@@ -5154,7 +5174,7 @@ contains
             !*** out of range and skipped
             !*** otherwise do the copy
 
-            if (jSrc <= POP_haloWidth+1) then
+            if (jSrc > 0 ) then
                do l=1,nt
                do k=1,nz
                   array(iDst,jDst,k,l,dstBlock) = isign*    &
@@ -6306,8 +6326,7 @@ contains
                bufSize = bufSize + 1
 
                halo%recvAddr(1,bufSize,msgIndx) = iGlobal(ibSrc + i - 1)
-!YU            halo%recvAddr(2,bufSize,msgIndx) = j
-               halo%recvAddr(2,bufSize,msgIndx) = jeDst + j - 1
+               halo%recvAddr(2,bufSize,msgIndx) = j
                halo%recvAddr(3,bufSize,msgIndx) = -dstLocalID
 
             end do
@@ -6370,8 +6389,7 @@ contains
                bufSize = bufSize + 1
 
                halo%recvAddr(1,bufSize,msgIndx) = iGlobal(ibSrc + i - 1)
-!YU            halo%recvAddr(2,bufSize,msgIndx) = j
-               halo%recvAddr(2,bufSize,msgIndx) = jeDst + j - 1
+               halo%recvAddr(2,bufSize,msgIndx) = j
                halo%recvAddr(3,bufSize,msgIndx) = -dstLocalID
 
             end do
@@ -6414,8 +6432,7 @@ contains
                bufSize = bufSize + 1
 
                halo%recvAddr(1,bufSize,msgIndx) = iGlobal(ibSrc + i - 1)
-!YU            halo%recvAddr(2,bufSize,msgIndx) = j
-               halo%recvAddr(2,bufSize,msgIndx) = jeDst + j - 1
+               halo%recvAddr(2,bufSize,msgIndx) = j
                halo%recvAddr(3,bufSize,msgIndx) = -dstLocalID
 
             end do

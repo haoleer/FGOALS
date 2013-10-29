@@ -5,7 +5,6 @@
 use precision_mod
 use param_mod
 use pconst_mod
-use diag_mod
 use pmix_mod
 use msg_mod, only: tag_1d,tag_2d,tag_3d,tag_4d,nproc,status,mpi_comm_ocn
 use shr_sys_mod
@@ -16,6 +15,8 @@ use netcdf
 
   implicit none
 
+  public  :: const
+!
   !----- constants -----
   real(SHR_KIND_R8), parameter ::  latvap   = SHR_CONST_LATVAP ! latent heat of evap   ~ J/kg
   real(SHR_KIND_R8), parameter ::  Tzro     = SHR_CONST_TKFRZ  ! 0 degrees C                       ~ kelvin
@@ -32,7 +33,7 @@ use netcdf
   real(r8), parameter :: karman = 0.4d0
 
 
-
+!
    real (r8), parameter, public :: &
       c0     =    0.0_r8   ,&
       c1     =    1.0_r8   ,&
@@ -93,7 +94,6 @@ use netcdf
   character (5), parameter, public :: &
       blank_fmt = "(' ')"
 
-      public  :: const
 !
       contains 
 !  CVS: $Id: const.F90,v 1.1.1.1 2004/04/29 06:22:39 lhl Exp $
@@ -106,7 +106,6 @@ use netcdf
 !
 ! Author: Yongqiang Yu and Hailong Liu, Dec. 31, 2002
 !
-!
 !-----------------------------------------------------------------------
 
 !lhl090729
@@ -117,9 +116,9 @@ use netcdf
       REAL(r8)    :: AG,ALFA
 
       namelist /namctl/ AFB1,AFC1,AFT1,IDTB,IDTC,IDTS,AMV,AHV,NUMBER, &
-                        NSTART,IO_HIST,IO_REST,klv,AM_TRO,AM_EXT,&
-                        diag_msf,diag_bsf,diag_budget,diag_mth,rest_freq, &
-                        hist_freq,out_dir,adv_tracer,adv_momentum
+                        NSTART,IO_HIST,IO_REST,klv,AM_TRO,AM_EXT,   &
+                        hist_freq,out_dir,adv_tracer,adv_momentum, &
+                        diag_msf,diag_bsf,diag_budget,diag_mth,rest_freq
 !-------------------------------------------------------
 !     Set up the default value for namelist.
 !-------------------------------------------------------
@@ -209,6 +208,10 @@ use netcdf
       call mpi_bcast(adv_tracer,80,mpi_integer,0,mpi_comm_ocn,ierr)
       call mpi_bcast(adv_momentum,80,mpi_character,0,mpi_comm_ocn,ierr)
       call mpi_bcast(nstart,1,mpi_integer,0,mpi_comm_ocn,ierr)
+      call mpi_bcast(diag_msf,1,mpi_logical,0,mpi_comm_ocn,ierr)
+      call mpi_bcast(diag_bsf,1,mpi_logical,0,mpi_comm_ocn,ierr)
+      call mpi_bcast(diag_budget,1,mpi_logical,0,mpi_comm_ocn,ierr)
+      call mpi_bcast(diag_mth,1,mpi_logical,0,mpi_comm_ocn,ierr)
 !      call mpi_barrier(mpi_comm_ocn,ierr)
 
       AHICE = AHV

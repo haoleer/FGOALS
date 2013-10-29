@@ -243,9 +243,9 @@ use blocks
       real(r8) :: var(imt,jmt,max_blocks_clinic)
       integer :: nfile
 !
-      allocate( work_global(imt_global,jmt_global))
-         call gather_global(work_global, var, master_task,distrb_clinic)
-         if (mytid ==0) write(nfile) ((work_global(i,j), i=1,imt_global), j=4,jmt_global)
-      deallocate( work_global)
+      allocate( work1_g(imt_global,jmt_global))
+         call gather_global(work1_g, var, master_task,distrb_clinic)
+         if (mytid ==0) write(nfile) ((work1_g(i,j), i=1,imt_global), j=4,jmt_global)
+      deallocate( work1_g)
 !
       end subroutine write_global

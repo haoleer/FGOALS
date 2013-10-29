@@ -17,7 +17,6 @@ use precision_mod
 !YU
       integer,parameter:: jmt_global=JMT_GLOBAL  ! Number of the End Grid for Tracer in Latitude.
       integer,parameter:: jmm_global=jmt_global-1
-      integer,parameter:: jstart    = 3     ! Satrting grid for Tracer in Latitude.
       integer,parameter:: imt_global=360   ! Number of Grid Points in Longitude
       integer,parameter:: km=30     ! Number of Grid Points in Vertical Direction
 !
@@ -25,7 +24,6 @@ use precision_mod
       integer,parameter:: ny_proc=NY_PROC ! Number of MPI tasks in meridional direction
       integer,parameter:: n_proc=nx_proc*ny_proc ! Total number of Processors for MPI
       integer,parameter:: num_overlap=2 ! Number of overlapping grids for subdomain.
-      integer,parameter:: jst_global=jstart ! Number of the Strating Grid for Tracer in Latitude.
 
 !Nummber of grids in the each subdomain
       integer,parameter:: jst=1     ! Number of the Strating Grid for Tracer in Latitude.
@@ -50,7 +48,5 @@ use precision_mod
       integer,parameter:: s_imt=192,s_jmt=94
 !lhl090729
 !YU  01/02/2013
-
-
 
 end module param_mod

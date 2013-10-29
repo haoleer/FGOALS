@@ -23,9 +23,9 @@ use constant_mod
       IMPLICIT NONE
 
       INTEGER :: IEB,NC,IEB_LOOP
-      real(r8)    :: gstar ,am_viv,fil_lat1,fil_lat2, ek0
+      real(r8)    :: gstar ,am_viv,fil_lat1,fil_lat2, ek0, maxz0, minz0
 !     real(r8)  ::  ttt(imt_global,jmt_global)
-      integer :: iblock
+      integer :: iblock,ii1,jj1,ii2,jj2
       real(r8):: hduk(imt,jmt) , hdvk(imt,jmt), gradx(imt,jmt),grady(imt,jmt), div_out(imt,jmt)
       type(block):: this_block
 
@@ -218,9 +218,11 @@ use constant_mod
  
 
 !YU  Oct. 24,2005
+      if (trim(horiz_grid_opt) == 'lat_lon') then
          CALL SMUV_2D (WKA(:,:,3,:) ,VIV(:,:,1,:),fil_lat1)
          CALL SMUV_2D (WKA(:,:,4,:) ,VIV(:,:,1,:),fil_lat1)
          CALL SMZ0 (WORK,VIT(:,:,1,:),fil_lat1)
+      end if
 !YU  Oct. 24,2005
 !   DO IBLOCK = 1, NBLOCKS_CLINIC
 !        DO J = 1, jmt
@@ -252,9 +254,11 @@ use constant_mod
 !     FILTER FORCING AT HIGT LATITUDES
 !---------------------------------------------------------------------
 
+         if (trim(horiz_grid_opt) == 'lat_lon') then
             CALL SMUV_2D (UB ,VIV(:,:,1,:),fil_lat1)
             CALL SMUV_2D (VB ,VIV(:,:,1,:),fil_lat1)
             CALL SMZ0 (H0,VIT(:,:,1,:),fil_lat1)
+         end if
 !        
 
          IF (IEB == 0) THEN
@@ -319,6 +323,7 @@ use constant_mod
 
 !YU  Oct. 24,2005
 !lhl0711         IF (MOD(ISB,1200)==0) THEN
+      if (trim(horiz_grid_opt) == 'lat_lon') then
          IF (MOD(ISB,1440)==1) THEN
             CALL SMUV_2D (UB ,VIV(:,:,1,:),fil_lat2)
             CALL SMUV_2D (VB ,VIV(:,:,1,:),fil_lat2)
@@ -327,7 +332,7 @@ use constant_mod
             CALL SMUV_2D (VBP,VIV(:,:,1,:),fil_lat2)
             CALL SMZ0 (H0P,VIT(:,:,1,:),fil_lat2)
          END IF
-
+      end if
 !YU  Oct. 24,2005
 
          ISB = ISB +1
@@ -349,6 +354,31 @@ use constant_mod
       deallocate(dlub,dlvb)
   call mpi_barrier(mpi_comm_ocn,ierr)
 
+!     maxz0=0.0D0
+!     minz0=0.0D0
+!     do iblock =1 ,nblocks_clinic
+!     do j = 3, jmt-2
+!     do i = 3, imt-2
+!        if (maxz0 < h0(i,j,iblock) ) then
+!           maxz0 = h0(i,j,iblock)
+!           ii1=i
+!           jj1=j
+!        end if
+!        if (minz0 > h0(i,j,iblock) ) then
+!           minz0 = h0(i,j,iblock)
+!           ii2=i
+!           jj2=j
+!        end if
+!     end do
+!     end do
+!     end do
+!     write(130+mytid,*) mytid,ii1,jj1,maxz0
+!     write(130+mytid,*) mytid,ii2,jj2,minz0
+!     write(130+mytid,*) (h0(i,1,1),i=1,imt)
+!     write(130+mytid,*) (h0(i,2,1),i=1,imt)
+!     write(130+mytid,*) (h0(i,3,1),i=1,imt)
+!     write(130+mytid,*) (h0(i,4,1),i=1,imt)
+!     write(130+mytid,*) (h0(i,5,1),i=1,imt)
       RETURN
       END SUBROUTINE BAROTR
 

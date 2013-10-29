@@ -560,7 +560,7 @@ contains
             end if
 !
                 Km_out(k) = min(2.0D-2, Km_out(k))
-                Km_out(k) = max(0.4D-3, Km_out(k))
+                Km_out(k) = max(0.1D-3, Km_out(k))
                 Kh_out(k) = min(1.2D-1, Kh_out(k))
                 Kh_out(k) = max(0.1D-4, Kh_out(k))
                 Ks_out(k) = min(1.2D-1, Ks_out(k))

@@ -142,7 +142,7 @@ use cforce_mod
   call seq_infodata_PutData( infodata, ocn_nx=imt_global, ocn_ny=jmt_global)
 !  call seq_infodata_PutData( infodata, ocn_prognostic=.true.) !LPF 20120829
   ! lihuimin, 2012.7.25, not use ocnrof_p
-  call seq_infodata_PutData( infodata, ocn_prognostic=.true.,ocnrof_prognostic=.true.,rof_present=.true.)
+  call seq_infodata_PutData( infodata, ocn_prognostic=.true.,ocnrof_prognostic=.true.,rof_present=.false.)
 !open ocnrof. !LPF 20120829
 
   !-----------------------------
@@ -457,13 +457,14 @@ use cforce_mod
       write(111,*)"OK------15.0"
       close(111)
       end if
-
+      call energy
 
 
 
 !     PREDICTION OF BAROCLINIC MODE
     LOGMSG()
                CALL BCLINC
+      call energy
       if (mytid == 0) then
       write(111,*)"OK------16.0"
       close(111)

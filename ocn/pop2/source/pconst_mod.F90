@@ -14,11 +14,12 @@ use param_mod
       real(r8),dimension(imt,jmt,km,max_blocks_clinic):: vit,viv 
 !     real(r8),dimension(imt_global,jmt,km):: vit_1d,viv_1d
       real(r8),dimension(jmt_global):: ahv_back
-!     integer,dimension(imt_global,jmt_global):: basin
+      integer,dimension(imt,jmt,max_blocks_clinic):: basin
 !     integer,dimension(imt,jmt,max_blocks_clinic):: itnu
 !lhl1204
       integer,dimension(imt,jmt,max_blocks_clinic):: na
       real(r8) :: dfricmx,dwndmix
+
       ! lihuimin, 2012.7.15
 !     integer :: i_num   ! actual grid number in i direction in this process
 !     integer :: j_num   ! actual grid number in j direction in this process
@@ -96,6 +97,7 @@ use param_mod
       real(r8)::  D0,CP,C0F,TBICE,OD0,SAG,CAG,OD0CP,ASEA, &
                     VSEA,AFB1,AFB2,AFC1,AFC2,AFT1,AFT2
 #endif
+      logical :: diag_msf, diag_bsf, diag_mth, diag_budget
 !
 !
       CHARACTER (LEN=3):: ABMON(12)

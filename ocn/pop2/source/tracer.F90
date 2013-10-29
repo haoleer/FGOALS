@@ -519,7 +519,9 @@ use distribution
  
                
     if (mod(ist,180) == 1) then
-            CALL SMTS (VTL,VIT,fil_lat2)
+    if (trim(horiz_grid_opt) == 'lat_lon') then          
+      CALL SMTS (VTL,VIT,fil_lat2)
+    end if
     else
              DO IBLOCK = 1, NBLOCKS_CLINIC
              DO J=1, JMT
@@ -552,7 +554,10 @@ use distribution
             END DO
        END DO
                   
+
+    if (trim(horiz_grid_opt) == 'lat_lon') then          
            CALL SMTS (VTL,VIT,fil_lat1)
+    end if
 
 
 !

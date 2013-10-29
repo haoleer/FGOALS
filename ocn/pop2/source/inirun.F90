@@ -45,6 +45,7 @@ use hmix_del4
       integer*4,  dimension(4) :: count(4)
       character (len=18) :: fname
       INTEGER :: NMFF
+      real(r8) :: xx,yy
 
       allocate(h0(imt,jmt,max_blocks_clinic),u(imt,jmt,km,max_blocks_clinic),v(imt,jmt,km,max_blocks_clinic), &
                at(imt,jmt,km,ntra,max_blocks_clinic))
@@ -52,9 +53,6 @@ use hmix_del4
 
       if (mytid==0)then
           write(6,*)"BEGINNING-----INIRUN !"
-          open (17,file='rpointer.ocn',form='formatted')
-          read(17,'(a18)') fname
-          close(17)
       endif 
  
 #ifdef COUP
@@ -141,7 +139,7 @@ use hmix_del4
  
       IF (NSTART == 1) THEN
 !
-      allocate(buffer(imt_global+2,jmt_global))
+      allocate(buffer(imt_global,jmt_global))
       number_day = 1
  
 !     ------------------------------------------------------------------
@@ -162,24 +160,40 @@ use hmix_del4
       do k=1,km !km
 !
        if (mytid == 0) then
-        start(1)=1 ; count(1)=imt_global+2
+        start(1)=1 ; count(1)=imt_global
         start(2)=1 ; count(2)=jmt_global
         start(3)=k ; count(3)=1
         start(4)=1 ; count(4)=1
 
-        iret=nf_get_vara_double(ncid,   5,start,count, buffer)
+        iret=nf_get_vara_double(ncid,   8,start,count, buffer)
         call check_err (iret)
+        do j=1 ,jmt_global/2
+        do i=1, imt_global
+           xx = buffer(i,j)
+           yy = buffer(i,jmt_global+1-j)
+           buffer(i,jmt_global+1-j) = xx
+           buffer(i,j) = yy
+        end do
+        end do
        end if
 !
-      call scatter_global(at(:,:,k,1,:), buffer(2:imt_global+1,:), master_task, distrb_clinic, &
+      call scatter_global(at(:,:,k,1,:), buffer, master_task, distrb_clinic, &
                           field_loc_center, field_type_scalar)
 !
        if (mytid == 0 ) then
-        iret=nf_get_vara_double(ncid,   6,start,count, buffer)
+        iret=nf_get_vara_double(ncid,   7,start,count, buffer)
         call check_err (iret)
+        do j=1 ,jmt_global/2
+        do i=1, imt_global
+           xx = buffer(i,j)
+           yy = buffer(i,jmt_global+1-j)
+           buffer(i,jmt_global+1-j) = xx
+           buffer(i,j) = yy
+        end do
+        end do
        end if
 !
-       call scatter_global(at(:,:,k,2,:), buffer(2:imt_global+1,:),master_task, distrb_clinic, &
+       call scatter_global(at(:,:,k,2,:), buffer,master_task, distrb_clinic, &
                           field_loc_center, field_type_scalar)
 !
        end do !km
@@ -238,7 +252,7 @@ use hmix_del4
 !     ------------------------------------------------------------------
  
 #if (defined BOUNDARY)
-      allocate(buffer(imt_global+2,jmt_global))
+      allocate(buffer(imt_global,jmt_global))
          if (mytid==0) then
 !----------------------------------------------------
 ! Open netCDF file.
@@ -254,28 +268,44 @@ use hmix_del4
       do k=1,km
 !
       if (mytid == 0) then
-      start(1)=1 ; count(1)=imt_global+2
+      start(1)=1 ; count(1)=imt_global
       start(2)=1 ; count(2)=jmt_global
       start(3)=k ; count(3)=1
       start(4)=1 ; count(4)=1
 
-      iret=nf_get_vara_double(ncid,   5,start,count, buffer)
+      iret=nf_get_vara_double(ncid,   8,start,count, buffer)
       call check_err (iret)
+        do j=1 ,jmt_global/2
+        do i=1, imt_global
+           xx = buffer(i,j)
+           yy = buffer(i,jmt_global+1-j)
+           buffer(i,jmt_global+1-j) = xx
+           buffer(i,j) = yy
+        end do
+        end do
       end if
 !
-      call scatter_global(at(:,:,k,1.:),buffer(2:imt_global+1,:), master_task, distrb_clinic, &
+      call scatter_global(at(:,:,k,1.:),buffer, master_task, distrb_clinic, &
                           field_loc_center, field_type_scalar)
 !
       if (mytid == 0 ) then
-      start(1)=1 ; count(1)=imt_global+2
+      start(1)=1 ; count(1)=imt_global
       start(2)=1 ; count(2)=jmt_global
       start(3)=k ; count(3)=1
       start(4)=1 ; count(4)=1
-      iret=nf_get_vara_double(ncid,   6,start,count, buffer)
+      iret=nf_get_vara_double(ncid,   7,start,count, buffer)
       call check_err (iret)
+        do j=1 ,jmt_global/2
+        do i=1, imt_global
+           xx = buffer(i,j)
+           yy = buffer(i,jmt_global+1-j)
+           buffer(i,jmt_global+1-j) = xx
+           buffer(i,j) = yy
+        end do
+        end do
       end if
 !
-      call scatter_global(at(:,:,k,2.:), buffer(2:imt_global+1,:), master_task, distrb_clinic, &
+      call scatter_global(at(:,:,k,2.:), buffer, master_task, distrb_clinic, &
                           field_loc_center, field_type_scalar)
 !
        end do
@@ -309,9 +339,12 @@ use hmix_del4
       deallocate(buffer)
 #endif
 !
-         if (mytid==0) then
-         open(22,file=trim(out_dir)//fname,form='unformatted')
-         end if
+       if (mytid==0) then
+          open (17,file='rpointer.ocn',form='formatted')
+          read(17,'(a18)') fname
+          close(17)
+          open(22,file=trim(out_dir)//fname,form='unformatted')
+       end if
 !
          allocate (buffer(imt_global,jmt_global))
 !

@@ -18,6 +18,6 @@ use param_mod
       real(r8),dimension(:,:,:,:),allocatable:: WKB,WKC,WKD,TF
       real(r8),dimension(:,:,:),allocatable::stf
       real(r4),dimension(:,:),allocatable:: buffer_real4
-      real(r8),dimension(:,:), allocatable :: work_global
+      real(r8),dimension(:,:), allocatable :: work1_g, work2_g, work3_g
 !
 end module work_mod
