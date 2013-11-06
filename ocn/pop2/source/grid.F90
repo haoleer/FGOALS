@@ -28,6 +28,7 @@
    use msg_mod
    use global_reductions
    use pconst_mod
+   use cdf_mod !for reading basin index filed
 
    implicit none
    private
@@ -75,8 +76,8 @@
                        ! for use in computing KMT internally
 
    integer (i4), dimension(:,:), allocatable, public :: &
-      KMT_G            ! k index of deepest grid cell on global T grid
-                       ! for use in performing work distribution
+      KMT_G            ,&! k index of deepest grid cell on global T grid
+      BASIN_G   !zwp         ! for use in performing work distribution
 
 
 !-----------------------------------------------------------------------
@@ -110,6 +111,12 @@
       DZU, DZT               ! thickness of U,T cell for pbc
 
    !*** 2d landmasks
+!ZWP
+
+   integer, dimension(imt,jmt,max_blocks_clinic), &
+      public :: &
+      BASIN            ! basin index of deepest grid cell on T grid
+!ZWP
 
    integer (i4), dimension(nx_block,ny_block,max_blocks_clinic), &
       public :: &
@@ -373,8 +380,6 @@
    stdout = 6
    if (my_task == master_task) then
       write(stdout,'(a13)') ' Grid options'
-      write(112,*) "OK-----1"
-      close(112)
    endif
 
 !-----------------------------------------------------------------------
@@ -384,15 +389,7 @@
 !-----------------------------------------------------------------------
 
       call broadcast_scalar(horiz_grid_file, master_task)
-   if (my_task == master_task) then
-      write(112,*) "OK-----2"
-      close(112)
-   endif
       call read_horiz_grid(horiz_grid_file,.false.)
-   if (my_task == master_task) then
-      write(112,*) "OK-----3"
-      close(112)
-   endif
 
 
 !-----------------------------------------------------------------------
@@ -472,16 +469,8 @@
 !
 !-----------------------------------------------------------------------
 
-   if (my_task == master_task) then
-      write(112,*) "OK-----4"
-      close(112)
-   endif
    call cf_area_avg  ! coefficients for area-weighted averages
 
-   if (my_task == master_task) then
-      write(112,*) "OK-----5"
-      close(112)
-   endif
 !-----------------------------------------------------------------------
 !
 !  calculate lat/lon of T points and calculate ANGLET from ANGLE
@@ -489,19 +478,11 @@
 !-----------------------------------------------------------------------
 
    call calc_upoints(errorCode)
-   if (my_task == master_task) then
-      write(112,*) "OK-----6"
-      close(112)
-   endif
 
    if (errorCode /= 0) then
       call LICOM_ErrorSet(errorCode, &
          'init_grid2: error in calc_upoints')
       return
-   endif
-   if (my_task == master_task) then
-      write(112,*) "OK-----7"
-      close(112)
    endif
 
 !  !***
@@ -561,19 +542,11 @@
       enddo
    enddo
    !$OMP END PARALLEL DO
-   if (my_task == master_task) then
-      write(112,*) "OK-----8"
-      close(112)
-   endif
 
    call POP_HaloUpdate(ANGLE, POP_haloClinic, POP_gridHorzLocCenter, &
                                POP_fieldKindAngle, errorCode,         &
                                fillValue = 0.0_r8)
 
-   if (my_task == master_task) then
-      write(112,*) "OK-----9", errorCode
-      close(112)
-   endif
    if (errorCode /= 0) then
       call LICOM_ErrorSet(errorCode, &
          'init_grid2: error updating angleT halo')
@@ -596,6 +569,18 @@
 !  !***
 !  !*** calculate other vertical grid quantities
 !  !***
+!
+!-----------------------------------------------------------------------
+!
+!  set up basin
+!
+!-----------------------------------------------------------------------
+      if (my_task == master_task) then
+         write(stdout,*) ' Reading Basin Index from file:'
+      endif
+!      call read_basin
+!      write(899,*) basin
+!      stop
 
 !-----------------------------------------------------------------------
 !
@@ -783,7 +768,10 @@
          read(25,rec=1,iostat=ioerr) TLAT_G
          read(25,rec=2,iostat=ioerr) TLON_G
       endif
-!
+!ZWP20131030
+      lon_o = TLON_G/DEGtoRAD
+      lat_o = TLAT_G/DEGtoRAD
+!ZWP20131030
       do j=1, jmt_global
          lat(j) = tlat_g(1,j)/DEGtoRAD
       end do
@@ -1103,6 +1091,8 @@
    logical(log_kind), intent(in) :: &
       kmt_global       ! flag for generating only global KMT field
 
+#include <netcdf.inc> !for reading basin index filed
+
 !EOP
 !BOC
 !-----------------------------------------------------------------------
@@ -1158,16 +1148,66 @@
                           field_loc_center, field_type_scalar)
       deallocate(KMT_G)
 !
-
       call boundary
 !
    endif
-
 !-----------------------------------------------------------------------
 !EOC
 
  end subroutine read_topography
 
+
+!-----------------------------------------------------------------------
+!ZWP
+ subroutine read_basin
+
+! !DESCRIPTION:
+!  Reads in the Basin index field from file
+!
+! !REVISION HISTORY:
+!  same as module
+
+! !INPUT PARAMETERS:
+
+#include <netcdf.inc> !for reading basin index filed
+!-----------------------------------------------------------------------
+!
+!  local variables
+!
+!-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
+!
+!  read basin index filed from NC file !zwp 2013-10-17
+!
+!-----------------------------------------------------------------------
+
+      allocate(BASIN_G(imt_global,jmt_global))
+!
+      if (my_task == master_task) then
+      iret=nf_open('/disk4/home/lhl/CESM/cesm_licom/cesm.run/licom_tripole&
+                    /run/BASIN.nc',nf_nowrite,ncid)
+      call check_err (iret)
+      endif
+!
+      start2(1)=1 ; count2(1)=imt_global
+      start2(2)=1 ; count2(2)=jmt_global
+!
+      if (my_task == master_task) then
+      iret=nf_get_vara_int(ncid,   3,start2,count2,BASIN_G)
+      call check_err (iret)
+      iret = nf_close (ncid)
+      call check_err (iret)
+!      write(888,*) basin_g
+      endif
+!
+      call scatter_global(BASIN, BASIN_G, master_task, distrb_clinic, &
+                          field_loc_center, field_type_scalar)
+      deallocate(BASIN_G)
+!
+!      call boundary
+!
+ end subroutine read_basin
+!ZWP
 !***********************************************************************
 !BOP
 ! !IROUTINE: landmasks
@@ -1709,11 +1749,9 @@
 !
 !-----------------------------------------------------------------------
 
- !
- 
+   
    call POP_HaloUpdate(ULAT, POP_haloClinic, POP_gridHorzLocSWcorner, & 
                        POP_fieldKindScalar, errorCode, fillValue = 0.0_r8)
-!-----------------------------------------------------------------------
 
    if (errorCode /= 0) then
       call LICOM_ErrorSet(errorCode, &

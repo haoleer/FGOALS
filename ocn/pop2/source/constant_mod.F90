@@ -118,7 +118,7 @@ use netcdf
       namelist /namctl/ AFB1,AFC1,AFT1,IDTB,IDTC,IDTS,AMV,AHV,NUMBER, &
                         NSTART,IO_HIST,IO_REST,klv,AM_TRO,AM_EXT,   &
                         hist_freq,out_dir,adv_tracer,adv_momentum, &
-                        diag_msf,diag_bsf,diag_budget,diag_mth,rest_freq
+                        diag_msf,diag_bsf,diag_budget,diag_mth,rest_freq, boundary_restore
 !-------------------------------------------------------
 !     Set up the default value for namelist.
 !-------------------------------------------------------
@@ -208,6 +208,7 @@ use netcdf
       call mpi_bcast(adv_tracer,80,mpi_integer,0,mpi_comm_ocn,ierr)
       call mpi_bcast(adv_momentum,80,mpi_character,0,mpi_comm_ocn,ierr)
       call mpi_bcast(nstart,1,mpi_integer,0,mpi_comm_ocn,ierr)
+      call mpi_bcast(boundary_restore,1,mpi_integer,0,mpi_comm_ocn,ierr)
       call mpi_bcast(diag_msf,1,mpi_logical,0,mpi_comm_ocn,ierr)
       call mpi_bcast(diag_bsf,1,mpi_logical,0,mpi_comm_ocn,ierr)
       call mpi_bcast(diag_budget,1,mpi_logical,0,mpi_comm_ocn,ierr)

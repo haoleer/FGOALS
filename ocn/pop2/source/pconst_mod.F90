@@ -14,7 +14,7 @@ use param_mod
       real(r8),dimension(imt,jmt,km,max_blocks_clinic):: vit,viv 
 !     real(r8),dimension(imt_global,jmt,km):: vit_1d,viv_1d
       real(r8),dimension(jmt_global):: ahv_back
-      integer,dimension(imt,jmt,max_blocks_clinic):: basin
+!      integer,dimension(imt,jmt,max_blocks_clinic):: basin
 !     integer,dimension(imt,jmt,max_blocks_clinic):: itnu
 !lhl1204
       integer,dimension(imt,jmt,max_blocks_clinic):: na
@@ -33,6 +33,8 @@ use param_mod
 #if (defined NETCDF) || (defined ALL)
       real(r4),dimension(imt_global):: lon
       real(r4),dimension(jmt_global):: lat
+      real(r4),dimension(imt_global,jmt_global):: lon_o
+      real(r4),dimension(imt_global,jmt_global):: lat_o
       real(r4),dimension(km):: lev
       real(r4),dimension(km+1):: lev1
 #endif
@@ -110,7 +112,7 @@ use param_mod
       INTEGER:: number_day, number_month
 !
       ! lihuimin 2012.6.18, add REFDATE
-      INTEGER :: NUMBER,NSTART,IY0,IYFM,MON0,MEND,IMD,IDAY,II,JJ,IO_HIST,IO_REST,rest_freq,hist_freq,REFDATE
+      INTEGER :: NUMBER,NSTART,IY0,IYFM,MON0,MEND,IMD,IDAY,II,JJ,IO_HIST,IO_REST,rest_freq,hist_freq,REFDATE,boundary_restore
       integer :: klv
 !
       character (len=80) :: adv_momentum, adv_tracer

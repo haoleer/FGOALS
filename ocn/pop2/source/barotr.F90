@@ -234,7 +234,6 @@ use constant_mod
 !        END DO
 !    END DO
 !
-         IF (ISB < 1) THEN
 
 !
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
@@ -263,6 +262,9 @@ use constant_mod
 
          IF (IEB == 0) THEN
             ISB = ISB +1
+            ubp=ub
+            vbp=vb
+            h0p=h0
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
     DO IBLOCK = 1, NBLOCKS_CLINIC
             DO J = JST,JET ! Dec. 4, 2002, Yongqiang YU
@@ -272,82 +274,12 @@ use constant_mod
                END DO
             END DO
     END DO
+            ieb = 1
             cycle baro_loop
          END IF
 
          IEB = 0
 
-         cycle baro_loop
-
-      ELSE
-
-
-!$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
-    DO IBLOCK = 1, NBLOCKS_CLINIC
-         DO J = 1,jmt
-            DO I = 1,imt
-               WKA (I,J,1,IBLOCK) = UBP (I,J,IBLOCK) + WKA (I,J,3,IBLOCK)* DTB2
-               WKA (I,J,2,IBLOCK) = VBP (I,J,IBLOCK) + WKA (I,J,4,IBLOCK)* DTB2
-               WORK(I,J,IBLOCK)   = H0P (I,J,IBLOCK) + WORK (I,J,IBLOCK)* DTB2
-!     if (mytid ==0 .and. i > 3 .and. i < 20 .and. j >5 .and. j < 8 ) then
-!     write(210+isb,*) i,j, wka(i,j,1,1),wka(i,j,2,1),work(i,j,1)
-!     end if
-            END DO
-         END DO
-    END DO
-
-!---------------------------------------------------------------------
-!     FILTER FORCING AT HIGT LATITUDES
-!---------------------------------------------------------------------
-!        
-
-!$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)
-    DO IBLOCK = 1, NBLOCKS_CLINIC
-         DO J = 1, jmt
-            DO I = 1,IMT
-               UBP (I,J,IBLOCK) = AFB2* UB (I,J,IBLOCK) + AFB1* (UBP (I,J,IBLOCK) + WKA (I,J,1,IBLOCK))
-               UB (I,J,IBLOCK) = WKA (I,J,1,IBLOCK)*VIV(I,J,1,IBLOCK)
-               VBP (I,J,IBLOCK) = AFB2* VB (I,J,IBLOCK) + AFB1* (VBP (I,J,IBLOCK) + WKA (I,J,2,IBLOCK))
-               VB (I,J,IBLOCK) = WKA (I,J,2,IBLOCK)*VIV(I,J,1,IBLOCK)
-               H0P (I,J,IBLOCK) = AFB2* H0 (I,J,IBLOCK) + AFB1* (H0P (I,J,IBLOCK) + WORK(I,J,IBLOCK))
-               H0 (I,J,IBLOCK) = WORK (I,J,IBLOCK)
-!     if (mytid ==0 .and. i > 3 .and. i < 20 .and. j >5 .and. j < 8 ) then
-!     write(220+isb,*) i,j, ub(i,j,1),vb(i,j,1),h0(i,j,1)
-!     end if
-!     if (mytid ==0 .and. i > 3 .and. i < 20 .and. j >5 .and. j < 8 ) then
-!     write(230+isb,*) i,j, AFB2,AFB1,DTB2,jet,jmt
-!     end if
-            END DO
-         END DO
-    END DO
-
-!YU  Oct. 24,2005
-!lhl0711         IF (MOD(ISB,1200)==0) THEN
-      if (trim(horiz_grid_opt) == 'lat_lon') then
-         IF (MOD(ISB,1440)==1) THEN
-            CALL SMUV_2D (UB ,VIV(:,:,1,:),fil_lat2)
-            CALL SMUV_2D (VB ,VIV(:,:,1,:),fil_lat2)
-            CALL SMZ0 (H0 ,VIT(:,:,1,:),fil_lat2)
-            CALL SMUV_2D (UBP,VIV(:,:,1,:),fil_lat2)
-            CALL SMUV_2D (VBP,VIV(:,:,1,:),fil_lat2)
-            CALL SMZ0 (H0P,VIT(:,:,1,:),fil_lat2)
-         END IF
-      end if
-!YU  Oct. 24,2005
-
-         ISB = ISB +1
-      END IF
-!
-
-!$OMP PARALLEL DO PRIVATE (J,I)
-    DO IBLOCK = 1, NBLOCKS_CLINIC
-         DO J = JST,JET ! Dec. 4, 2002, Yongqiang YU
-            DO I = 1,IMT
-               H0F (I,J,IBLOCK) = H0F (I,J,IBLOCK) + H0 (I,J,IBLOCK)
-               H0BF (I,J,IBLOCK) = H0BF (I,J,IBLOCK) + H0 (I,J,IBLOCK)
-            END DO
-         END DO
-    END DO
 
       END DO baro_loop
 

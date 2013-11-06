@@ -58,8 +58,8 @@ use gather_scatter
            SSF(i,j,iblock) =  -(prec(i,j,iblock)+evap(i,j,iblock)+&
                          meltw(i,j,iblock)+roff(i,j,iblock)) &
                         *34.7*1.0e-3/DZP(1)*OD0                                     ! P+E+melting !linpf 25->DZP(1)
-           tmp_su(i,j,iblock)= taux(i,j,iblock)
-           tmp_sv(i,j,iblock) = -tauy(i,j,iblock)
+           tmp_su(i,j,iblock)= taux(i,j,iblock)*cos(anglet(i,j,iblock))-tauy(i,j,iblock)*sin(anglet(i,j,iblock))
+           tmp_sv(i,j,iblock)=-tauy(i,j,iblock)*cos(anglet(i,j,iblock))-taux(i,j,iblock)*sin(anglet(i,j,iblock))
         end do
         end do
      end do

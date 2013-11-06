@@ -15,8 +15,8 @@ use param_mod
       real(r4),dimension(imt,jmt,NTRA,max_blocks_clinic)::netmon
       real(r4),dimension(imt,jmt,max_blocks_clinic)::mldmon
       real(r4),dimension(imt,jmt,km,max_blocks_clinic)::akmmon,aktmon,aksmon
-      real(r4),dimension(jmt_global,km+1,2):: psi
-      real(r4),dimension(jmt_global,2,NTRA):: mth,mth_adv,mth_dif,mth_adv_iso
+      real(r4),dimension(2,jmt_global,km+1):: psi !ZWP 2013-10-17
+      real(r4),dimension(2,jmt_global,NTRA):: mth,mth_adv,mth_dif,mth_adv_iso !ZWP
       real(r4),dimension(imt,jmt,km,NTRA,max_blocks_clinic)::trendmon
       real(r4),dimension(imt,jmt,km,NTRA,max_blocks_clinic)::axmon,aymon,azmon
       real(r4),dimension(imt,jmt,km,NTRA,max_blocks_clinic)::dxmon,dymon,dzmon

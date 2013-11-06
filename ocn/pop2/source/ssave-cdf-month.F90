@@ -77,10 +77,16 @@ use gather_scatter
          CALL check_err (iret)
           write(*,*)'ok generate,ncid=',ncid, time_len
 ! define dimensions
-         iret = nf_def_dim (ncid, 'lat', lat_len, lat_dim)
+         iret = nf_def_dim (ncid, 'y', lat_len, y_dim)
          CALL check_err (iret)
-         iret = nf_def_dim (ncid, 'lon', lon_len, lon_dim)
+         iret = nf_def_dim (ncid, 'x', lon_len, x_dim)
          CALL check_err (iret)
+!ZWP Define Basin
+          write(*,*)'begin define basin'
+         iret = nf_def_dim (ncid, 'basin', basin_len, basin_dim)
+         CALL check_err (iret)
+          write(*,*)'OK define basin'
+!ZWP DEfine Basin 2013-10-17
  
          IF (mon0 == 12) THEN
             iret = nf_def_dim (ncid, 'lev', lev_len, lev_dim)
@@ -96,14 +102,25 @@ use gather_scatter
          iret = nf_def_dim (ncid, 'time', NF_UNLIMITED, time_dim)
 !      iret = nf_def_dim(ncid, 'time', time_len, time_dim)
          CALL check_err (iret)
+!
 ! define variables
-         lat_dims (1) = lat_dim
+         lat_dims (2) = y_dim
+         lat_dims (1) = x_dim
          iret = nf_def_var (ncid, 'lat', NF_REAL, lat_rank, lat_dims, lat_id)
          CALL check_err (iret)
 !
-         lon_dims (1) = lon_dim
+         lon_dims (2) = y_dim
+         lon_dims (1) = x_dim
          iret = nf_def_var (ncid, 'lon', NF_REAL, lon_rank, lon_dims, lon_id)
          CALL check_err (iret)
+!
+!ZWP
+!          write(*,*)'begin define variable basin'
+!         basin_dims (1) = basin_dim
+!         iret = nf_def_var (ncid, 'basin', NF_REAL, basin_rank, basin_dims, basin_id)
+!         CALL check_err (iret)
+!          write(*,*)'OK define variable basin'
+!ZWP2013-10-17
 !
          lev_dims (1) = lev_dim
          iret = nf_def_var (ncid, 'lev', NF_REAL, lev_rank, lev_dims, lev_id)
@@ -118,140 +135,153 @@ use gather_scatter
          CALL check_err (iret)
  
          z0_dims (3) = time_dim
-         z0_dims (2) = lat_dim
-         z0_dims (1) = lon_dim
+         z0_dims (2) = y_dim
+         z0_dims (1) = x_dim
          iret = nf_def_var (ncid, 'z0', NF_REAL, z0_rank, z0_dims, z0_id)
          CALL check_err (iret)
  
          ic1_dims (3) = time_dim
-         ic1_dims (2) = lat_dim
-         ic1_dims (1) = lon_dim
+         ic1_dims (2) = y_dim
+         ic1_dims (1) = x_dim
          iret = nf_def_var (ncid, 'ic1', NF_REAL, ic1_rank, ic1_dims, ic1_id)
          CALL check_err (iret)
  
          ic2_dims (3) = time_dim
-         ic2_dims (2) = lat_dim
-         ic2_dims (1) = lon_dim
+         ic2_dims (2) = y_dim
+         ic2_dims (1) = x_dim
          iret = nf_def_var (ncid, 'ic2', NF_REAL, ic2_rank, ic2_dims, ic2_id)
          CALL check_err (iret)
 
          net1_dims (3) = time_dim
-         net1_dims (2) = lat_dim
-         net1_dims (1) = lon_dim
+         net1_dims (2) = y_dim
+         net1_dims (1) = x_dim
          iret = nf_def_var (ncid, 'net1', NF_REAL, net1_rank, net1_dims, net1_id)
          CALL check_err (iret)
  
          net2_dims (3) = time_dim
-         net2_dims (2) = lat_dim
-         net2_dims (1) = lon_dim
+         net2_dims (2) = y_dim
+         net2_dims (1) = x_dim
          iret = nf_def_var (ncid, 'net2', NF_REAL, net2_rank, net2_dims, net2_id)
          CALL check_err (iret)
-!
+
          mld_dims (3) = time_dim
-         mld_dims (2) = lat_dim
-         mld_dims (1) = lon_dim
+         mld_dims (2) = y_dim
+         mld_dims (1) = x_dim
          iret = nf_def_var (ncid, 'mld', NF_REAL, mld_rank, mld_dims, mld_id)
          CALL check_err (iret)
+
          akm_dims (4) = time_dim
          akm_dims (3) = lev_dim
-         akm_dims (2) = lat_dim
-         akm_dims (1) = lon_dim
+         akm_dims (2) = y_dim
+         akm_dims (1) = x_dim
          iret = nf_def_var (ncid, 'akm', NF_REAL, akm_rank, akm_dims, akm_id)
          CALL check_err (iret)
+
          akt_dims (4) = time_dim
          akt_dims (3) = lev_dim
-         akt_dims (2) = lat_dim
-         akt_dims (1) = lon_dim
+         akt_dims (2) = y_dim
+         akt_dims (1) = x_dim
          iret = nf_def_var (ncid, 'akt', NF_REAL, akt_rank, akt_dims, akt_id)
          CALL check_err (iret)
+
          aks_dims (4) = time_dim
          aks_dims (3) = lev_dim
-         aks_dims (2) = lat_dim
-         aks_dims (1) = lon_dim
+         aks_dims (2) = y_dim
+         aks_dims (1) = x_dim
          iret = nf_def_var (ncid, 'aks', NF_REAL, aks_rank, aks_dims, aks_id)
          CALL check_err (iret)
+
          ts_dims (4) = time_dim
          ts_dims (3) = lev_dim
-         ts_dims (2) = lat_dim
-         ts_dims (1) = lon_dim
+         ts_dims (2) = y_dim
+         ts_dims (1) = x_dim
          iret = nf_def_var (ncid, 'ts', NF_REAL, ts_rank, ts_dims, ts_id)
          CALL check_err (iret)
+
          ss_dims (4) = time_dim
          ss_dims (3) = lev_dim
-         ss_dims (2) = lat_dim
-         ss_dims (1) = lon_dim
+         ss_dims (2) = y_dim
+         ss_dims (1) = x_dim
          iret = nf_def_var (ncid, 'ss', NF_REAL, ss_rank, ss_dims, ss_id)
          CALL check_err (iret)
+
          us_dims (4) = time_dim
          us_dims (3) = lev_dim
-         us_dims (2) = lat_dim
-         us_dims (1) = lon_dim
+         us_dims (2) = y_dim
+         us_dims (1) = x_dim
          iret = nf_def_var (ncid, 'us', NF_REAL, us_rank, us_dims, us_id)
          CALL check_err (iret)
+
          vs_dims (4) = time_dim
          vs_dims (3) = lev_dim
-         vs_dims (2) = lat_dim
-         vs_dims (1) = lon_dim
+         vs_dims (2) = y_dim
+         vs_dims (1) = x_dim
          iret = nf_def_var (ncid, 'vs', NF_REAL, vs_rank, vs_dims, vs_id)
          CALL check_err (iret)
+
          ws_dims (4) = time_dim
          ws_dims (3) = lev_dim
-         ws_dims (2) = lat_dim
-         ws_dims (1) = lon_dim
+         ws_dims (2) = y_dim
+         ws_dims (1) = x_dim
          iret = nf_def_var (ncid, 'ws', NF_REAL, ws_rank, ws_dims, ws_id)
          CALL check_err (iret)
+
          su_dims (3) = time_dim
-         su_dims (2) = lat_dim
-         su_dims (1) = lon_dim
+         su_dims (2) = y_dim
+         su_dims (1) = x_dim
          iret = nf_def_var (ncid, 'su', NF_REAL, su_rank, su_dims, su_id)
          CALL check_err (iret) !Uwindstress
 
          sv_dims (3) = time_dim
-         sv_dims (2) = lat_dim
-         sv_dims (1) = lon_dim
+         sv_dims (2) = y_dim
+         sv_dims (1) = x_dim
          iret = nf_def_var (ncid, 'sv', NF_REAL, sv_rank, sv_dims, sv_id)
          CALL check_err (iret) !Vwindstress
          lthf_dims (3) = time_dim
-         lthf_dims (2) = lat_dim
-         lthf_dims (1) = lon_dim
+         lthf_dims (2) = y_dim
+         lthf_dims (1) = x_dim
          iret = nf_def_var (ncid, 'lthf', NF_REAL, lthf_rank, lthf_dims, lthf_id)
          CALL check_err (iret) !latent heat flux 
+
          sshf_dims (3) = time_dim
-         sshf_dims (2) = lat_dim
-         sshf_dims (1) = lon_dim
+         sshf_dims (2) = y_dim
+         sshf_dims (1) = x_dim
          iret = nf_def_var (ncid, 'sshf', NF_REAL, sshf_rank, sshf_dims, sshf_id)
          CALL check_err (iret) !sensible heat flux 
+
          lwv_dims (3) = time_dim
-         lwv_dims (2) = lat_dim
-         lwv_dims (1) = lon_dim
+         lwv_dims (2) = y_dim
+         lwv_dims (1) = x_dim
          iret = nf_def_var (ncid, 'lwv', NF_REAL, lwv_rank, lwv_dims, lwv_id)
          CALL check_err (iret) !longwave 
+
          swv_dims (3) = time_dim
-         swv_dims (2) = lat_dim
-         swv_dims (1) = lon_dim
+         swv_dims (2) = y_dim
+         swv_dims (1) = x_dim
          iret = nf_def_var (ncid, 'swv', NF_REAL, swv_rank, swv_dims, swv_id)
          CALL check_err (iret) !shortwave 
 
          if (diag_msf) then
-            psi_dims (3) = time_dim
-            psi_dims (2) = lev1_dim
-            psi_dims (1) = lat_dim
+            psi_dims (4) = time_dim
+            psi_dims (3) = lev1_dim
+            psi_dims (2) = y_dim
+            psi_dims (1) = basin_dim !ZWP2013-10-17
             iret = nf_def_var (ncid, 'psi', NF_REAL, psi_rank, psi_dims, psi_id)
             CALL check_err (iret)
          end if
 
          if (diag_bsf) then
             bsf_dims (3) = time_dim
-            bsf_dims (2) = lat_dim
-            bsf_dims (1) = lon_dim
+            bsf_dims (2) = y_dim
+            bsf_dims (1) = x_dim
             iret = nf_def_var (ncid, 'bsf', NF_REAL, bsf_rank, bsf_dims, bsf_id)
             CALL check_err (iret)
          end if
  
          if (diag_mth) then
             mth_dims (3) = time_dim
-            mth_dims (2) = lat_dim
-            mth_dims (1) = lon_dim
+            mth_dims (2) = y_dim
+            mth_dims (1) = basin_dim
             iret = nf_def_var (ncid, 'mth', NF_REAL, mth_rank, mth_dims, mth_id)
             CALL check_err (iret)
          end if
@@ -259,8 +289,8 @@ use gather_scatter
 #if (defined SMAG_OUT)
          am_dims (4) = time_dim
          am_dims (3) = lev_dim
-         am_dims (2) = lat_dim
-         am_dims (1) = lon_dim
+         am_dims (2) = y_dim
+         am_dims (1) = x_dim
          iret = nf_def_var (ncid, 'am', NF_REAL, am_rank, am_dims, am_id)
          CALL check_err (iret)
 #endif
@@ -274,6 +304,12 @@ use gather_scatter
          CALL check_err (iret)
          iret = nf_put_att_text (ncid, lon_id, 'units', 12, 'degrees_east')
          CALL check_err (iret)
+!ZWP
+!         iret = nf_put_att_text (ncid, basin_id, 'long_name', 11, 'Basin Index)')
+!         CALL check_err (iret)
+!         iret = nf_put_att_text (ncid, basin_id, 'units', 31, '1 for global and 2 for Atlantic')
+!         CALL check_err (iret)
+!ZWP2013-10-17
          iret = nf_put_att_text (ncid, lev_id, 'long_name', 18, 'depth (on T grids)')
          CALL check_err (iret)
          iret = nf_put_att_text (ncid, lev_id, 'units', 5, 'meter')
@@ -294,12 +330,16 @@ use gather_scatter
          CALL check_err (iret)
          iret = nf_put_att_real (ncid, z0_id, '_FillValue', NF_REAL, 1, spval)
          CALL check_err (iret)
+         iret = nf_put_att_text (ncid, z0_id, 'coordinates', 7,  'lon lat')
+         CALL check_err (iret)
  
          iret = nf_put_att_text (ncid, ic1_id, 'long_name', 56, 'total of number of levels involved in convection per day')
          CALL check_err (iret)
          iret = nf_put_att_text (ncid, ic1_id, 'units', 6, 'levels')
          CALL check_err (iret)
          iret = nf_put_att_real (ncid, ic1_id, '_FillValue', NF_REAL, 1,spval)
+         CALL check_err (iret)
+         iret = nf_put_att_text (ncid, ic1_id, 'coordinates', 7,  'lon lat')
          CALL check_err (iret)
  
          iret = nf_put_att_text (ncid, ic2_id, 'long_name', 35, 'number of levels ventilated per day')
@@ -308,12 +348,16 @@ use gather_scatter
          CALL check_err (iret)
          iret = nf_put_att_real (ncid, ic2_id, '_FillValue', NF_REAL, 1,spval)
          CALL check_err (iret)
+         iret = nf_put_att_text (ncid, ic2_id, 'coordinates', 7,  'lon lat')
+         CALL check_err (iret)
  
          iret = nf_put_att_text (ncid, net1_id, 'long_name', 21, 'net surface heat flux')
          CALL check_err (iret)
          iret = nf_put_att_text (ncid, net1_id, 'units', 5, 'W/m^2')
          CALL check_err (iret)
          iret = nf_put_att_real (ncid, net1_id, '_FillValue', NF_REAL, 1,spval)
+         CALL check_err (iret)
+         iret = nf_put_att_text (ncid, net1_id, 'coordinates', 7,  'lon lat')
          CALL check_err (iret)
  
          iret = nf_put_att_text (ncid, net2_id, 'long_name', 21, 'net surface salt flux')
@@ -322,12 +366,16 @@ use gather_scatter
          CALL check_err (iret)
          iret = nf_put_att_real (ncid, net2_id, '_FillValue', NF_REAL, 1,spval)
          CALL check_err (iret)
+         iret = nf_put_att_text (ncid, net2_id, 'coordinates', 7,  'lon lat')
+         CALL check_err (iret)
  
          iret = nf_put_att_text (ncid, mld_id, 'long_name', 17, 'mixed layer depth')
          CALL check_err (iret)
          iret = nf_put_att_text (ncid, mld_id, 'units', 1, 'm')
          CALL check_err (iret)
          iret = nf_put_att_real (ncid, mld_id, '_FillValue', NF_REAL, 1,spval)
+         CALL check_err (iret)
+         iret = nf_put_att_text (ncid, mld_id, 'coordinates', 7,  'lon lat')
          CALL check_err (iret)
 !
          iret = nf_put_att_text (ncid, akm_id, 'long_name', 28, 'turbulent vertical viscosity')
@@ -336,12 +384,16 @@ use gather_scatter
          CALL check_err (iret)
          iret = nf_put_att_real (ncid, akm_id, '_FillValue', NF_REAL, 1,spval)
          CALL check_err (iret)
+         iret = nf_put_att_text (ncid, akm_id, 'coordinates', 7,  'lon lat')
+         CALL check_err (iret)
 !
          iret = nf_put_att_text (ncid, akt_id, 'long_name', 33, 'turbulent heat vertical viscosity')
          CALL check_err (iret)
          iret = nf_put_att_text (ncid, akt_id, 'units', 5, 'm^2/s')
          CALL check_err (iret)
          iret = nf_put_att_real (ncid, akt_id, '_FillValue', NF_REAL, 1,spval)
+         CALL check_err (iret)
+         iret = nf_put_att_text (ncid, akt_id, 'coordinates', 7,  'lon lat')
          CALL check_err (iret)
 !
          iret = nf_put_att_text (ncid, aks_id, 'long_name', 33, 'turbulent salt vertical viscosity')
@@ -350,12 +402,16 @@ use gather_scatter
          CALL check_err (iret)
          iret = nf_put_att_real (ncid, aks_id, '_FillValue', NF_REAL, 1,spval)
          CALL check_err (iret)
+         iret = nf_put_att_text (ncid, aks_id, 'coordinates', 7,  'lon lat')
+         CALL check_err (iret)
 !
          iret = nf_put_att_text (ncid, ts_id, 'long_name', 11, 'temperature')
          CALL check_err (iret)
          iret = nf_put_att_text (ncid, ts_id, 'units', 10, 'centigrade')
          CALL check_err (iret)
          iret = nf_put_att_real (ncid, ts_id, '_FillValue', NF_REAL, 1, spval)
+         CALL check_err (iret)
+         iret = nf_put_att_text (ncid, ts_id, 'coordinates', 7,  'lon lat')
          CALL check_err (iret)
  
          iret = nf_put_att_text (ncid, ss_id, 'long_name', 8, 'salinity')
@@ -364,12 +420,16 @@ use gather_scatter
          CALL check_err (iret)
          iret = nf_put_att_real (ncid, ss_id, '_FillValue', NF_REAL, 1, spval)
          CALL check_err (iret)
+         iret = nf_put_att_text (ncid, ss_id, 'coordinates', 7,  'lon lat')
+         CALL check_err (iret)
  
          iret = nf_put_att_text (ncid, us_id, 'long_name', 13, 'zonal current')
          CALL check_err (iret)
          iret = nf_put_att_text (ncid, us_id, 'units', 3, 'm/s')
          CALL check_err (iret)
          iret = nf_put_att_real (ncid, us_id, '_FillValue', NF_REAL, 1, spval)
+         CALL check_err (iret)
+         iret = nf_put_att_text (ncid, us_id, 'coordinates', 7,  'lon lat')
          CALL check_err (iret)
  
          iret = nf_put_att_text (ncid, vs_id, 'long_name', 18, 'meridional current')
@@ -378,12 +438,16 @@ use gather_scatter
          CALL check_err (iret)
          iret = nf_put_att_real (ncid, vs_id, '_FillValue', NF_REAL, 1, spval)
          CALL check_err (iret)
+         iret = nf_put_att_text (ncid, vs_id, 'coordinates', 7,  'lon lat')
+         CALL check_err (iret)
  
          iret = nf_put_att_text (ncid, ws_id, 'long_name', 16, 'vertical current')
          CALL check_err (iret)
          iret = nf_put_att_text (ncid, ws_id, 'units', 3, 'm/s')
          CALL check_err (iret)
          iret = nf_put_att_real (ncid, ws_id, '_FillValue', NF_REAL, 1, spval)
+         CALL check_err (iret)
+         iret = nf_put_att_text (ncid, ws_id, 'coordinates', 7,  'lon lat')
          CALL check_err (iret)
 !
          iret = nf_put_att_text (ncid, su_id, 'long_name', 11, 'Uwindstress')
@@ -392,6 +456,8 @@ use gather_scatter
          CALL check_err (iret)
          iret = nf_put_att_real (ncid, su_id, '_FillValue', NF_REAL, 1,spval)
          CALL check_err (iret)
+         iret = nf_put_att_text (ncid, su_id, 'coordinates', 7,  'lon lat')
+         CALL check_err (iret)
 
          iret = nf_put_att_text (ncid, sv_id, 'long_name', 11, 'Vwindstress')
          CALL check_err (iret)
@@ -399,12 +465,16 @@ use gather_scatter
          CALL check_err (iret)
          iret = nf_put_att_real (ncid, sv_id, '_FillValue', NF_REAL, 1,spval)
          CALL check_err (iret)
+         iret = nf_put_att_text (ncid, sv_id, 'coordinates', 7,  'lon lat')
+         CALL check_err (iret)
 
          iret = nf_put_att_text (ncid, lthf_id, 'long_name', 16, 'latent heat flux')
          CALL check_err (iret)
          iret = nf_put_att_text (ncid, lthf_id, 'units', 5, 'W/m^2')
          CALL check_err (iret)
          iret = nf_put_att_real (ncid, lthf_id, '_FillValue', NF_REAL, 1,spval)
+         CALL check_err (iret)
+         iret = nf_put_att_text (ncid, lthf_id, 'coordinates', 7,  'lon lat')
          CALL check_err (iret)
 
 
@@ -414,6 +484,8 @@ use gather_scatter
          CALL check_err (iret)
          iret = nf_put_att_real (ncid, sshf_id, '_FillValue', NF_REAL, 1,spval)
          CALL check_err (iret)
+         iret = nf_put_att_text (ncid, sshf_id, 'coordinates', 7,  'lon lat')
+         CALL check_err (iret)
 
          iret = nf_put_att_text (ncid, lwv_id, 'long_name', 8, 'Longwave')
          CALL check_err (iret)
@@ -421,12 +493,16 @@ use gather_scatter
          CALL check_err (iret)
          iret = nf_put_att_real (ncid, lwv_id, '_FillValue', NF_REAL, 1,spval)
          CALL check_err (iret)
+         iret = nf_put_att_text (ncid, lwv_id, 'coordinates', 7,  'lon lat')
+         CALL check_err (iret)
 
          iret = nf_put_att_text (ncid, swv_id, 'long_name', 9, 'Shortwave')
          CALL check_err (iret)
          iret = nf_put_att_text (ncid, swv_id, 'units', 5, 'W/m^2')
          CALL check_err (iret)
          iret = nf_put_att_real (ncid, swv_id, '_FillValue', NF_REAL, 1,spval)
+         CALL check_err (iret)
+         iret = nf_put_att_text (ncid, swv_id, 'coordinates', 7,  'lon lat')
          CALL check_err (iret)
 !
          if (diag_msf) then
@@ -444,6 +520,8 @@ use gather_scatter
              iret = nf_put_att_text (ncid, bsf_id, 'units', 8, 'Sverdrup')
              CALL check_err (iret)
              iret = nf_put_att_real (ncid, bsf_id, '_FillValue', NF_REAL, 1, spval)
+             CALL check_err (iret)
+             iret = nf_put_att_text (ncid, bsf_id, 'coordinates', 7,  'lon lat')
              CALL check_err (iret)
          end if
 !
@@ -463,6 +541,8 @@ use gather_scatter
          CALL check_err (iret)
          iret = nf_put_att_real (ncid, am_id, '_FillValue', NF_REAL, 1, spval)
          CALL check_err (iret)
+         iret = nf_put_att_text (ncid, am_id, 'coordinates', 7,  'lon lat')
+         CALL check_err (iret)
 #endif
 !   define global attribute
          CALL date_and_time (dd,tt,zz,vv)
@@ -481,10 +561,26 @@ use gather_scatter
 !----------------------------------------------------------
  
          t0_cdf = month -1 !need to test 
-         iret = nf_put_var_real (ncid, lon_id, lon)
+
+         start2(1) = 1
+         start2(2) = 1
+         count2(1) = lon_len
+         count2(2) = lat_len
+
+         if(mytid==0) then
+         iret = nf_put_vara_real (ncid, lon_id,start2, count2,  lon_o)
          CALL check_err (iret)
-         iret = nf_put_var_real (ncid, lat_id, lat)
+         endif !mytid==0
+
+         if(mytid==0) then
+         iret = nf_put_vara_real (ncid, lat_id, start2, count2, lat_o)
          CALL check_err (iret)
+         endif !mytid==0
+         
+!ZWP         iret = nf_put_var_real (ncid, lon_id, lon)
+!ZWP         CALL check_err (iret)
+!ZWP         iret = nf_put_var_real (ncid, lat_id, lat)
+!ZWP         CALL check_err (iret)
          iret = nf_put_var_real (ncid, lev_id, lev)
          CALL check_err (iret)
          iret = nf_put_var_real (ncid, lev1_id, lev1)
@@ -798,25 +894,37 @@ use gather_scatter
      end if
 !
      if (diag_msf) then
-         start3 (1)= 1
-         start3 (2)= 1
-         start3 (3)= 1
-         count3 (1)= lat_len
-         count3 (2)= lev1_len
-         count3 (3)= 1
+         start4 (1)= 1
+         start4 (2)= 1
+         start4 (3)= 1
+         start4 (4)= 1
+         count4 (1)= basin_len
+         count4 (2)= lat_len
+         count4 (3)= lev1_len
+         count4 (4)= 1 
         call msf
         if (mytid ==0 ) then
-            iret = nf_put_vara_real (ncid,psi_id,start3, count3, psi(:,:,1))
+            iret = nf_put_vara_real (ncid,psi_id,start4, count4, psi)
             CALL check_err (iret)
         end if
      end if
 !
      if (diag_mth) then
+         start3 (1)= 1
+         start3 (2)= 1
+         start3 (3)= 1
+         count3 (1)= basin_len
+         count3 (2)= lat_len
+         count3 (3)= 1 
         call diag_heat_transport(1)
-        call diag_heat_transport(2)
         if (mytid ==0 ) then
+!        write(911,*) mth
             iret = nf_put_vara_real (ncid,mth_id,start3, count3, mth)
             CALL check_err (iret)
+        end if
+        call diag_heat_transport(2)
+        if (mytid ==0 ) then
+!        write(912,*) mth
         end if
      end if
 !

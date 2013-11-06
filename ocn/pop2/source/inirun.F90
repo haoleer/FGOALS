@@ -135,24 +135,24 @@ use hmix_del4
       CALL YY00
 !
  
-      MONTH = 1
  
-      IF (NSTART == 1) THEN
+      IF (NSTART == 1 .or. boundary_restore > 0 ) THEN
 !
+      MONTH = 1
       allocate(buffer(imt_global,jmt_global))
-      number_day = 1
  
+     
+!
+      if (mytid==0) then
+       iret=nf_open('TSinitial',nf_nowrite,ncid)
+       call check_err (iret)
+      end if
+!
 !     ------------------------------------------------------------------
 !     READ LEVITUS ANNUAL MEAN TEMPERATURE AND SALINITY
 !     ------------------------------------------------------------------
 !----------------------------------------------------
 ! Open netCDF file.
-!----------------------------------------------------
-      if (mytid==0) then
-       iret=nf_open('TSinitial',nf_nowrite,ncid)
-       call check_err (iret)
-      end if
-
 !----------------------------------------------------
 !   Retrieve data
 !----------------------------------------------------
@@ -217,18 +217,21 @@ use hmix_del4
          END DO
       END DO
 !
-!$OMP PARALLEL DO PRIVATE (K)
-            DO K = 1,KM
-                     ATB (:,:,K,N,:) = AT (:,:,K,N,:)
-#if (defined BOUNDARY)
-                     RESTORE (:,:,K,N,:) = AT (:,:,K,N,:)
-#endif
-            END DO
- 
-      ATB (:,:,0,N,:) = 0.0D0
-      u = 0.0d0
-      v = 0.0d0
-      h0= 0.0d0
+      RESTORE = AT
+      deallocate(buffer)
+!
+      end if
+    
+      IF ( NSTART == 1) THEN 
+!
+         DO K = 1,KM
+               ATB (:,:,K,:,:) = AT (:,:,K,:,:)
+         END DO
+         ATB (:,:,0,:,:) = 0.0D0
+         number_day = 1
+         u = 0.0d0
+         v = 0.0d0
+         h0= 0.0d0
 !M
 !$OMP PARALLEL DO PRIVATE (IBLOCK,J,I)            
             do iblock = 1, nblocks_clinic
@@ -244,101 +247,12 @@ use hmix_del4
             end do
             end do
             end do 
-        deallocate(buffer)
       ELSE
  
 !     ------------------------------------------------------------------
 !     READ INTERMEDIATE RESULTS (fort.22/fort.21)
 !     ------------------------------------------------------------------
  
-#if (defined BOUNDARY)
-      allocate(buffer(imt_global,jmt_global))
-         if (mytid==0) then
-!----------------------------------------------------
-! Open netCDF file.
-!----------------------------------------------------
-      iret=nf_open('TSinitial',nf_nowrite,ncid)
-      call check_err (iret)
-
-          end if
-!----------------------------------------------------
-!   Retrieve data
-!----------------------------------------------------
-     
-      do k=1,km
-!
-      if (mytid == 0) then
-      start(1)=1 ; count(1)=imt_global
-      start(2)=1 ; count(2)=jmt_global
-      start(3)=k ; count(3)=1
-      start(4)=1 ; count(4)=1
-
-      iret=nf_get_vara_double(ncid,   8,start,count, buffer)
-      call check_err (iret)
-        do j=1 ,jmt_global/2
-        do i=1, imt_global
-           xx = buffer(i,j)
-           yy = buffer(i,jmt_global+1-j)
-           buffer(i,jmt_global+1-j) = xx
-           buffer(i,j) = yy
-        end do
-        end do
-      end if
-!
-      call scatter_global(at(:,:,k,1.:),buffer, master_task, distrb_clinic, &
-                          field_loc_center, field_type_scalar)
-!
-      if (mytid == 0 ) then
-      start(1)=1 ; count(1)=imt_global
-      start(2)=1 ; count(2)=jmt_global
-      start(3)=k ; count(3)=1
-      start(4)=1 ; count(4)=1
-      iret=nf_get_vara_double(ncid,   7,start,count, buffer)
-      call check_err (iret)
-        do j=1 ,jmt_global/2
-        do i=1, imt_global
-           xx = buffer(i,j)
-           yy = buffer(i,jmt_global+1-j)
-           buffer(i,jmt_global+1-j) = xx
-           buffer(i,j) = yy
-        end do
-        end do
-      end if
-!
-      call scatter_global(at(:,:,k,2.:), buffer, master_task, distrb_clinic, &
-                          field_loc_center, field_type_scalar)
-!
-       end do
-!
-      if (mytid == 0 ) then
-      iret = nf_close (ncid)
-      call check_err (iret)
-      end if
-      deallocate (buffer)
-!!!!!!!!!!!!!!!!!!!!!!!
-       call POP_HaloUpdate(at(:,:,:,1,:) , POP_haloClinic, POP_gridHorzLocCenter,&
-                       POP_fieldKindScalar, errorCode, fillValue = 0_r8)
-       call POP_HaloUpdate(at(:,:,:,2,:) , POP_haloClinic, POP_gridHorzLocCenter,&
-                       POP_fieldKindScalar, errorCode, fillValue = 0_r8)
- 
-!----------------------------------------------------
-!   assign 0 to land grids of TSinital
-!----------------------------------------------------
-!$OMP PARALLEL DO PRIVATE (IBLOCK,K,J,I)
-     DO IBLOCK= 1, NBLOCKS_CLINIC
-         DO K = 1,KM
-            DO J = 1,JMT
-               DO I = 1,IMT
-                  RESTORE (I,J,K,1,IBLOCK) = at (I,J,K,1,IBLOCK)*VIT(I,J,K,IBLOCK) 
-                  RESTORE (I,J,K,2,IBLOCK) = (at (I,J,K,2,IBLOCK) - 35.0)*0.001*VIT(I,J,K,IBLOCK) 
-               END DO
-            END DO
-         END DO
-      END DO
-!
-      deallocate(buffer)
-#endif
-!
        if (mytid==0) then
           open (17,file='rpointer.ocn',form='formatted')
           read(17,'(a18)') fname
@@ -492,6 +406,7 @@ use hmix_del4
           call scatter_global(q ,buffer,  master_task, distrb_clinic, &
                           field_loc_center, field_type_scalar)
           deallocate(buffer)
+
           if (mytid == 0) CLOSE(22)
 !
          end if

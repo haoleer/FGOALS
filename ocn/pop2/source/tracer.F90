@@ -390,7 +390,11 @@ use distribution
                   IF (KMT(I,J,IBLOCK) > 0)THEN
 #ifdef COUP
 !                     STF (I,J,IBLOCK) = SSF(I,J,IBLOCK)
-                     STF (I,J,IBLOCK) = SSF(I,J,IBLOCK)/ODZP(1)
+                     if (boundary_restore == 2) then
+                         STF (I,J,IBLOCK) = SSF(I,J,IBLOCK)/ODZP(1) + GAMMA * (RESTORE (I,J,1,N,iblock) - ATB (I,J,1,2,IBLOCK))/ODZP(1)
+                     else
+                         STF (I,J,IBLOCK) = SSF(I,J,IBLOCK)/ODZP(1)
+                     end if
 #else
 #ifdef FRC_CORE
                      STF (I,J,IBLOCK) = (fresh(i,j)*35.0/1000.0/1000.0&
@@ -440,7 +444,7 @@ use distribution
         END DO
     END IF
  
-#if (defined BOUNDARY)
+     if ( boundary_restore == 1) then
 !-----------------------------------------------------------------------
 !    boundary condition
 !-----------------------------------------------------------------------
@@ -468,7 +472,7 @@ use distribution
          END DO
     END DO
  
-#endif
+   end if 
 !-----------------------------------------------------------------------
 !     SOLVE FOR "TAU+1" TRACER AT CENTER OF "T" CELLS
 !-----------------------------------------------------------------------

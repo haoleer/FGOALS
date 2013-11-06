@@ -218,10 +218,30 @@ use cforce_mod
 !---------------------------------------------------------------------
     LOGMSG()
    call init_domain_blocks
+      if (mytid == 0) then
+      write(111,*)"OK------3"
+      close(111)
+      end if
    call init_grid1
+      if (mytid == 0) then
+      write(111,*)"OK------3.1"
+      close(111)
+      end if
    call init_domain_distribution(KMT_G)
+      if (mytid == 0) then
+      write(111,*)"OK------3.2"
+      close(111)
+      end if
    call init_grid2
+      if (mytid == 0) then
+      write(111,*)"OK------3.3"
+      close(111)
+      end if
    CALL GRIDS
+      if (mytid == 0) then
+      write(111,*)"OK------3.4"
+      close(111)
+      end if
    call calc_coeff
       if (mytid == 0) then
       write(111,*)"OK------4"

@@ -27,9 +27,6 @@ use param_mod
 #endif
 !lhl
 !
-!
-#if (defined BOUNDARY)
-      real(r8),dimension(imt,jmt,km,ntra,max_blocks_clinic)::restore
-#endif
+       real(r8),dimension(imt,jmt,km,ntra,max_blocks_clinic)::restore
        real(r8),dimension(imt,jmt,max_blocks_clinic):: tsf,ssf
 end module forc_mod

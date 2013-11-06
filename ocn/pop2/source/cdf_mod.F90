@@ -14,10 +14,10 @@ use param_mod
       integer:: ncid
 
 !     dimension id
-      integer:: lon_dim,lat_dim,lev1_dim,lev_dim,time_dim
+      integer:: lon_dim,lat_dim,lev1_dim,lev_dim,time_dim, basin_dim,y_dim, x_dim!ZWP2013-10-17
 
 !     dimension lenth
-      integer, parameter :: lon_len=imt_global,lat_len=jmt_global,lev_len=km,lev1_len=km+1,time_len=1
+      integer, parameter :: lon_len=imt_global,lat_len=jmt_global,lev_len=km,lev1_len=km+1,time_len=1, basin_len=2 ! ZWP2013-10-17
 
 !     variable id
 #if (defined SMAG_OUT)
@@ -28,18 +28,21 @@ use param_mod
                ic1_id,ic2_id, net1_id, net2_id, ts_id,  ss_id,us_id,vs_id,ws_id, psi_id, bsf_id,&
                mth_id,mld_id,akm_id,akt_id,aks_id &
                ,su_id,sv_id,sshf_id,lthf_id,lwv_id,swv_id&
-             ,h0_id,u_id,v_id,t_id,s_id,h1_id,h2_id,h3_id,month_id, day_id
+             ,h0_id,u_id,v_id,t_id,s_id,h1_id,h2_id,h3_id,month_id, day_id, basin_id!ZWP2013-10-17
 
 !     variable rank
 !YU
-      integer, parameter ::lat_rank=1,lon_rank=1,lev_rank=1,time_rank=1,z0_rank=3,hi_rank=3, &
+!ZWP      integer, parameter ::lat_rank=1,lon_rank=1,lev_rank=1,time_rank=1,z0_rank=3,hi_rank=3, &
+      integer, parameter ::lev_rank=1,time_rank=1,z0_rank=3,hi_rank=3, &
                             hd_rank=3,ic1_rank=3,ic2_rank=3, net1_rank=3,net2_rank=3,ts_rank=4,ss_rank=4, &
-                            us_rank=4, vs_rank=4, ws_rank=4, psi_rank=3,lev1_rank=1, bsf_rank=3,&
+                            us_rank=4, vs_rank=4, ws_rank=4, psi_rank=4,lev1_rank=1, bsf_rank=3,&
                mth_rank=3,mld_rank=3,akm_rank=4,akt_rank=4,aks_rank=4 &
               ,su_rank=3,sv_rank=3,sshf_rank=3,lthf_rank=3,lwv_rank=3,swv_rank=3&
-             ,h0_rank=2,u_rank=3,v_rank=3,t_rank=3,s_rank=3,h1_rank=2,h2_rank=2,h3_rank=2,month_rank=1, day_rank=1
+             ,h0_rank=2,u_rank=3,v_rank=3,t_rank=3,s_rank=3,h1_rank=2,h2_rank=2,h3_rank=2,month_rank=1, day_rank=1,&
+              basin_rank=1,lat_rank=2,lon_rank=2!zwp2013-10-17
 !
 !     variable shapes
+!ZWP      integer::  lat_dims(lat_rank),lon_dims(lon_rank),lev_dims(lev_rank),time_dims(time_rank), &
       integer::  lat_dims(lat_rank),lon_dims(lon_rank),lev_dims(lev_rank),time_dims(time_rank), &
                 z0_dims( z0_rank), hi_dims( hi_rank), hd_dims( hd_rank), ic1_dims( ic1_rank), &
                ic2_dims(ic2_rank),net1_dims(net1_rank), net2_dims(net2_rank),ts_dims( ts_rank), ss_dims( ss_rank), &
@@ -49,7 +52,7 @@ use param_mod
              ,su_dims(su_rank),sv_dims(sv_rank)&
              ,sshf_dims(sshf_rank),lthf_dims(lthf_rank),lwv_dims(lwv_rank),swv_dims(swv_rank)&
              ,h0_dims(h0_rank),u_dims(u_rank),v_dims(v_rank),t_dims(t_rank),s_dims(s_rank)&
-             ,h1_dims(h1_rank),h2_dims(h2_rank),h3_dims(h3_rank)
+             ,h1_dims(h1_rank),h2_dims(h2_rank),h3_dims(h3_rank),basin_dims(basin_rank)!ZWP2013-10-17
 
       real(r8) t0_cdf 
       real(r4),dimension(imt_global,jmt_global,1):: t2_cdf 
